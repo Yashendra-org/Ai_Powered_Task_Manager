@@ -89,3 +89,95 @@ My Habit Tracker bridges daily execution with long-term consistency through four
 ### 📊 Unified Calendar & Productivity Analytics
 | | Feature | Details |
 |---|---|---|
+| 🗓️ | **Unified Monthly Calendar** | Merges daily scheduled tasks, academic assignment deadlines, and habit completions into one interactive calendar |
+| 📊 | **Chart.js Velocity Chart** | 7-day completion velocity bar chart illustrating daily output and productivity momentum |
+| 🍩 | **Category Doughnut Chart** | Visual breakdown of time and tasks allocated across academic, personal, and work domains |
+| 🔒 | **Multi-Tenant Data Isolation** | Strict `user=request.user` query scoping across all views preventing cross-account data leakage |
+
+---
+
+## 🧱 System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client["Client Interface (Zero-Reload Browser Shell)"]
+        UI[Student / User] -->|Clicks or Inputs| Engine[app.js Dynamic Engine]
+        Engine -->|Link Navigation| PJAX[PJAX Router: Swap main + TopLoader]
+        Engine -->|Task / Habit Toggle| AJAX[Optimistic UI + Fetch API]
+        Engine -->|Toast Alert| Toast[Floating Toast Notification System]
+    end
+
+    subgraph DjangoApp["Modular Django Monolith (apps/)"]
+        PJAX --> Views[Django View Layer]
+        AJAX --> Views
+
+        Views --> Auth["apps.accounts (Custom User UUID, Timezone)"]
+        Views --> Tasks["apps.tasks (TaskService, TaskHistory, Soft-Delete)"]
+        Views --> Assign["apps.assignments (Subjects, Teachers, Deadlines)"]
+        Views --> Habits["apps.habits (HabitLog, Streak Engine)"]
+        Views --> Notes["apps.notes (Search, Pinned Notes)"]
+        Views --> Remind["apps.reminders (Notification Center)"]
+        Views --> Analytics["apps.analytics (Velocity & Category Metrics)"]
+        Views --> ML["apps.ml_engine (Routine Analyzer & Daily Review)"]
+    end
+
+    subgraph AsyncWorkers["Background & Scheduling"]
+        Celery[Celery Worker & Celery Beat] -->|21:30 Daily Review Trigger| Remind
+        Celery -->|Deadline Alerts| Remind
+        Redis[(Redis Message Broker)] <--> Celery
+    end
+
+    subgraph Storage["Data Persistence"]
+        Tasks --> DB[(PostgreSQL 16 / SQLite 3)]
+        Assign --> DB
+        Habits --> DB
+        Notes --> DB
+        ML --> DB
+    end
+
+    Views -->|JSON / HTML Response| Engine
+```
+
+---
+
+## 🔄 Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Student / User
+    participant Browser as Browser Shell (app.js)
+    participant Django as Django Backend
+    participant DB as Database (Audit & Tasks)
+    participant ML as ML Engine / Celery
+
+    User->>Browser: Opens /tasks/today/ (My Day)
+    Browser->>Django: GET /tasks/today/
+    Django-->>Browser: Render today's focus tasks
+
+    User->>Browser: Types quick task "DSA Practice" & hits Enter
+    Browser->>Django: POST /tasks/today/ (AJAX with CSRF)
+    Django->>DB: TaskService.create_task() + TaskHistory audit log
+    Django-->>Browser: JSON {success: true, task: {...}, rate: 75%}
+    Browser-->>User: Card slides into list immediately (Zero Reload) + Toast
+
+    User->>Browser: Checks off task (1-click)
+    Browser-->>User: Optimistic strike-through & checkmark
+    Browser->>Django: POST /tasks/<id>/toggle/ (AJAX)
+    Django->>DB: TaskService.toggle_completion()
+    Django-->>Browser: JSON {is_completed: true, today_rate: 100%}
+
+    Note over Django,ML: At 21:30 Evening Review Trigger
+    ML->>DB: Scan unfinished tasks & tomorrow's deadlines
+    ML->>Django: Prompt user for guided rollover at /review/
+```
+
+---
+
+## 📂 Project Structure
+
+```
+AI_powered_Task_Manager/
+├── config/                          # Core project settings & configuration
+│   ├── settings.py                  # Environment config, WhiteNoise, DB switch, Celery
+│   ├── urls.py                      # Root URL routing table
