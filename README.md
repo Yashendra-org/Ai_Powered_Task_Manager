@@ -272,3 +272,95 @@ AI_powered_Task_Manager/
 <tr><td valign="top"><b>Backend & Framework</b></td><td>
 
 - **Python 3.11+ / 3.12**
+- **Django 5.0 / 6.0**: Modular monolith architecture with strict service layers (`services.py`)
+- **Django REST Framework**: Structured serialization and JSON response support
+
+</td></tr>
+<tr><td valign="top"><b>Machine Learning & Recommendations</b></td><td>
+
+- **Scikit-Learn**: Historical task completion classifier and feature engineering pipeline
+- **Pattern Analyzer**: Frequency and temporal pattern analysis for routine detection
+- **Feedback Loop Engine**: User accept/reject tracking to iteratively refine confidence scores
+
+</td></tr>
+<tr><td valign="top"><b>Asynchronous Queue & Scheduling</b></td><td>
+
+- **Celery 5.4**: Distributed task queue handling scheduled notifications and daily review triggers
+- **Redis 7**: High-performance in-memory message broker and caching layer
+
+</td></tr>
+<tr><td valign="top"><b>Database & Persistence</b></td><td>
+
+- **SQLite 3**: Zero-configuration default for local development
+- **PostgreSQL 16**: Production-ready relational storage configured via environment variables
+- **Audit Logging**: `TaskHistory` and `HabitLog` tracking all temporal state transitions
+
+</td></tr>
+<tr><td valign="top"><b>Security & Tenant Isolation</b></td><td>
+
+- **Tenant Isolation**: Mandatory `user=request.user` query filtering across all 8 modules
+- **CSRF & XSS Defense**: Django CSRF token verification on all asynchronous requests
+- **Cryptographic Hashing**: Secure Argon2 / PBKDF2 password protection
+
+</td></tr>
+</table>
+
+---
+
+## ⚙️ Installation & Setup
+
+### 🔹 1. Clone the repository
+
+```bash
+git clone https://github.com/Yashendra-org/Ai_Powered_Task_Manager.git
+cd Ai_Powered_Task_Manager
+```
+
+### 🔹 2. Create and activate a virtual environment
+
+```bash
+# Windows (PowerShell)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# macOS / Linux
+python -m venv .venv
+source .venv/bin/activate
+```
+
+### 🔹 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 🔹 4. Configure environment variables
+
+Create a `.env` file in the root directory (or copy `.env.example`):
+
+```bash
+cp .env.example .env
+```
+
+Your `.env` file can be configured as follows:
+```env
+SECRET_KEY=your-secure-random-secret-key
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+DATABASE_URL=sqlite:///db.sqlite3
+CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+DEFAULT_TIMEZONE=Asia/Kolkata
+```
+
+### 🔹 5. Run database migrations & seed development data
+
+```bash
+# Apply database migrations across all 8 applications
+python manage.py migrate
+
+# Seed sample academic courses, assignments, habits, and tasks
+python manage.py seed_dev_data
+```
+> **Default Test Account:**
+> - **Username:** `student`
+> - **Password:** `password123`
