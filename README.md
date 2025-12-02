@@ -181,3 +181,94 @@ AI_powered_Task_Manager/
 ├── config/                          # Core project settings & configuration
 │   ├── settings.py                  # Environment config, WhiteNoise, DB switch, Celery
 │   ├── urls.py                      # Root URL routing table
+│   ├── celery.py                    # Celery application & beat schedule definitions
+│   ├── wsgi.py                      # Production WSGI application
+│   ├── asgi.py                      # ASGI application
+│   └── __init__.py
+│
+├── apps/                            # Modular domain applications
+│   ├── accounts/                    # Custom User (UUID, Timezone, Review Time)
+│   │   ├── models.py, views.py, urls.py, forms.py, admin.py, tests.py
+│   │   └── management/commands/seed_dev_data.py
+│   │
+│   ├── tasks/                       # Core daily tasks & categories
+│   │   ├── models.py                # Task, Category, TaskHistory (Audit)
+│   │   ├── services.py              # TaskService business logic & state transitions
+│   │   ├── views.py                 # My Day, All Tasks, Soft-Delete & Trash
+│   │   ├── calendar_views.py        # Monthly unified calendar renderer
+│   │   ├── forms.py, urls.py, admin.py, tests.py
+│   │   └── migrations/
+│   │
+│   ├── assignments/                 # Academic assignment tracker
+│   │   ├── models.py                # Subject, Teacher, Assignment, File Attachments
+│   │   ├── views.py                 # Assignment hub, subject/teacher directory
+│   │   ├── forms.py, urls.py, admin.py, tests.py
+│   │   └── migrations/
+│   │
+│   ├── habits/                      # Recurring habit consistency & streaks
+│   │   ├── models.py                # Habit, HabitLog
+│   │   ├── views.py                 # 7-day weekly matrix, 1-click check-off
+│   │   ├── forms.py, urls.py, admin.py, tests.py
+│   │   └── migrations/
+│   │
+│   ├── notes/                       # Quick scratchpad notes
+│   │   ├── models.py                # Note (pinned, markdown content)
+│   │   ├── views.py                 # Searchable card grid, pin-to-top
+│   │   └── forms.py, urls.py, admin.py, tests.py
+│   │
+│   ├── reminders/                   # In-app notifications & Celery alerts
+│   │   ├── models.py                # Reminder, Notification
+│   │   ├── views.py                 # Notification center, mark-as-read
+│   │   └── urls.py, admin.py, tests.py
+│   │
+│   ├── analytics/                   # Productivity intelligence & Chart.js
+│   │   ├── views.py                 # 7-day velocity chart, category breakdown
+│   │   └── urls.py, admin.py, tests.py
+│   │
+│   └── ml_engine/                   # Hybrid recommendations & daily review
+│       ├── models.py                # MLRecommendation, DailySummary
+│       ├── services.py              # RecommendationEngine (Pattern Analysis)
+│       ├── views.py                 # End-of-Day Review (/review/), Smart Assistant
+│       └── urls.py, admin.py, tests.py
+│
+├── static/                          # Static assets
+│   ├── css/main.css                 # Custom scrollbars, animations, design tokens
+│   └── js/app.js                    # Seamless zero-reload engine & PJAX router
+│
+├── templates/                       # Semantic HTML5 UI templates
+│   ├── base.html                    # Master layout with responsive sidebar & toast mount
+│   ├── dashboard/index.html         # Executive overview dashboard
+│   ├── accounts/                    # login.html, register.html, settings.html
+│   ├── tasks/                       # my_day.html, all_tasks.html, trash.html, forms
+│   ├── assignments/                 # list.html, subject_list.html, teacher_list.html
+│   ├── habits/                      # list.html (7-day matrix), form.html
+│   ├── notes/                       # list.html, form.html
+│   ├── calendar/index.html          # Unified chronological calendar
+│   ├── analytics/dashboard.html     # Chart.js velocity & breakdown graphs
+│   ├── reminders/list.html          # In-app notification center
+│   └── ml_engine/                   # review.html (End-of-Day Review), assistant.html
+│
+├── media/                           # User-uploaded coursework attachments
+├── manage.py                        # Django CLI entrypoint
+├── requirements.txt                 # Pinned dependencies
+├── .env.example                     # Environment blueprint
+├── .gitignore                       # Git ignore definitions
+└── README.md                        # Master project documentation
+```
+
+---
+
+## 🛠️ Technology Stack
+
+<table>
+<tr><td valign="top" width="25%"><b>Frontend & UI</b></td><td>
+
+- **Tailwind CSS 3.4**: Clean, modern design system with curated slate/blue color palette
+- **Vanilla JavaScript Engine (`app.js`)**: Zero-reload PJAX router, optimistic task toggles, and dynamic DOM injection
+- **Lucide Icons**: Crisp, lightweight vector iconography
+- **Chart.js**: Dynamic productivity velocity bar charts and category distribution doughnuts
+
+</td></tr>
+<tr><td valign="top"><b>Backend & Framework</b></td><td>
+
+- **Python 3.11+ / 3.12**
