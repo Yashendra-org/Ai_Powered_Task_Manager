@@ -37,3 +37,16 @@ staticfiles/
 # Environment Variables
 .env
 
+# Internal AI Specification & Prompt Rulebooks (Local only, not for GitHub)
+PRD.md
+DESIGN.md
+ARCHITECTURE.md
+DATABASE.md
+API.md
+AGENTS.md
+PLAN.md
+SETUP.md
+FEATURES.md
+AUTH_SECURITY.md
+MCP.md
+INTEGRATIONS.md
