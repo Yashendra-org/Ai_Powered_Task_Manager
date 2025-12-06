@@ -50,3 +50,16 @@ FEATURES.md
 AUTH_SECURITY.md
 MCP.md
 INTEGRATIONS.md
+TESTING.md
+DEBUGGING.md
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
