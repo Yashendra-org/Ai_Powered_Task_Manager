@@ -28,3 +28,34 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Third-party apps
+    'rest_framework',
+
+    # Local modular apps
+    'apps.accounts.apps.AccountsConfig',
+    'apps.tasks.apps.TasksConfig',
+    'apps.assignments.apps.AssignmentsConfig',
+    'apps.habits.apps.HabitsConfig',
+    'apps.notes.apps.NotesConfig',
+    'apps.reminders.apps.RemindersConfig',
+    'apps.analytics.apps.AnalyticsConfig',
+    'apps.ml_engine.apps.MlEngineConfig',
+]
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'config.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],
