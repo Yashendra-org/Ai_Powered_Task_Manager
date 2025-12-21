@@ -12,3 +12,17 @@ class AuthenticationAndDashboardTests(TestCase):
         self.login_url = reverse('login')
         self.dashboard_url = reverse('dashboard')
         self.settings_url = reverse('settings')
+
+    def test_registration_view_renders(self):
+        response = self.client.get(self.register_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'accounts/register.html')
+
+    def test_login_view_renders(self):
+        response = self.client.get(self.login_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'accounts/login.html')
+
+    def test_user_registration_and_login_flow(self):
+        post_data = {
+            'username': 'student_yashendra',
