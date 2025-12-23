@@ -38,3 +38,43 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full font-sans text-slate-900 antialiased bg-slate-50 flex overflow-hidden">
+
+    {% if user.is_authenticated %}
+    <!-- Left Navigation Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-30 transition-all duration-200" id="sidebar">
+        <!-- Brand Logo & Header -->
+        <div class="h-16 px-6 flex items-center justify-between border-b border-slate-100">
+            <a href="{% url 'dashboard' %}" class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-200">
+                    <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                </div>
+                <span class="font-bold text-lg text-slate-900 tracking-tight">Habbit<span class="text-blue-600">Tracker</span></span>
+            </a>
+        </div>
+
+        <!-- Sidebar Navigation Menu -->
+        <nav class="flex-1 px-4 py-5 space-y-1 overflow-y-auto">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-3 mb-2">Main</div>
+            
+            <a href="{% url 'dashboard' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 mr-3 {% if request.resolver_match.url_name == 'dashboard' %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
+                Dashboard
+            </a>
+
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-3 pt-4 mb-2">Productivity</div>
+
+            <a href="{% url 'my_day' %}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'my_day' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <div class="flex items-center">
+                    <i data-lucide="sun" class="w-4 h-4 mr-3 {% if request.resolver_match.url_name == 'my_day' %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
+                    My Day
+                </div>
+            </a>
+
+            <a href="{% url 'all_tasks' %}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'all_tasks' or request.resolver_match.url_name == 'task_create' or request.resolver_match.url_name == 'task_edit' or request.resolver_match.url_name == 'trash' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <div class="flex items-center">
