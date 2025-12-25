@@ -8,3 +8,14 @@ from .forms import UserRegisterForm, UserLoginForm, UserProfileForm
 
 def register_view(request):
     if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, f"Welcome to My Habbit Tracker, {user.username}!")
+            return redirect('dashboard')
+    else:
+        form = UserRegisterForm()
