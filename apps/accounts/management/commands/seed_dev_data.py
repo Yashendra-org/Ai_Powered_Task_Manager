@@ -42,3 +42,26 @@ class Command(BaseCommand):
         t1, _ = Task.objects.get_or_create(
             user=user,
             title="Complete DSA practice — Graphs & Trees",
+            defaults={
+                "category": cat_coding,
+                "priority": "high",
+                "status": "completed",
+                "due_at": now.replace(hour=18, minute=0),
+                "estimated_duration": 60,
+                "completed_at": now,
+            }
+        )
+
+        t2, _ = Task.objects.get_or_create(
+            user=user,
+            title="Study Machine Learning — Supervised Algorithms",
+            defaults={
+                "category": cat_college,
+                "priority": "high",
+                "status": "pending",
+                "due_at": now.replace(hour=20, minute=0),
+                "estimated_duration": 45,
+            }
+        )
+
+        t3, _ = Task.objects.get_or_create(
