@@ -9,3 +9,14 @@
         <p class="text-sm text-slate-500 mt-1">Manage your account profile, timezone, and productivity notification schedule.</p>
     </div>
 
+    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+        <h2 class="text-lg font-semibold text-slate-900 mb-6 flex items-center">
+            <i data-lucide="user" class="w-5 h-5 mr-2 text-blue-600"></i>
+            User Profile & Timezone
+        </h2>
+
+        <form method="POST" action="{% url 'settings' %}" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
