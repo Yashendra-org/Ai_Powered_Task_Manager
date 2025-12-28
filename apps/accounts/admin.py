@@ -4,3 +4,6 @@ from .models import User
 
 
 @admin.register(User)
+class UserAdmin(BaseUserAdmin):
+    list_display = ("username", "email", "timezone", "daily_review_time", "is_staff", "is_active")
+    list_filter = ("is_staff", "is_superuser", "is_active", "timezone")
