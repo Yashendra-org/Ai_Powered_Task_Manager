@@ -275,3 +275,142 @@ async function handleQuickAddTask(form, e) {
                 requestAnimationFrame(() => {
                     taskCard.style.transition = 'all 0.3s ease-out';
                     taskCard.classList.remove('-translate-y-2', 'opacity-0');
+                    taskCard.classList.add('translate-y-0', 'opacity-100');
+                });
+            }
+
+            // Update stats badge
+            const rateBadge = document.getElementById('my-day-completion-rate');
+            if (rateBadge && data.today_total !== undefined) {
+                rateBadge.textContent = `${data.today_completed} of ${data.today_total} Done (${data.today_rate}%)`;
+            }
+
+            showToast(data.message, 'success');
+        }
+    } catch (err) {
+        console.error("Quick add task error:", err);
+        showToast("Error creating task. Please try again.", "error");
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+// --- Task Soft Delete ---
+async function handleTaskDelete(form, e) {
+    if (e) e.preventDefault();
+    if (!confirm("Move this task to Recently Deleted?")) return;
+
+    const card = form.closest('.group') || form.closest('.rounded-xl');
+    if (card) {
+        card.style.transition = 'all 0.25s ease-out';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+        card.style.maxHeight = '0px';
+        card.style.paddingTop = '0';
+        card.style.paddingBottom = '0';
+        card.style.marginTop = '0';
+        card.style.marginBottom = '0';
+        card.style.overflow = 'hidden';
+    }
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken(form),
+                'Accept': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            setTimeout(() => { if (card) card.remove(); }, 250);
+            
+            // Update stats badge
+            const rateBadge = document.getElementById('my-day-completion-rate');
+            if (rateBadge && data.today_total !== undefined) {
+                rateBadge.textContent = `${data.today_completed} of ${data.today_total} Done (${data.today_rate}%)`;
+            }
+
+            showToast(data.message || "Task moved to Trash.", 'info');
+        }
+    } catch (err) {
+        console.error("Task delete error:", err);
+        if (card) card.style.opacity = '1';
+        showToast("Error moving task to trash.", "error");
+    }
+}
+
+// --- Habit 7-Day Matrix Toggle ---
+async function handleHabitToggle(form, e) {
+    if (e) e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    const isCompleted = btn && btn.classList.contains('bg-emerald-600');
+    const newStatus = !isCompleted;
+
+    // Optimistic toggle
+    if (btn) {
+        if (newStatus) {
+            btn.className = "w-7 h-7 rounded-lg border flex items-center justify-center mx-auto transition-all bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-200";
+        } else {
+            btn.className = "w-7 h-7 rounded-lg border flex items-center justify-center mx-auto transition-all border-slate-200 hover:border-emerald-400 bg-white text-transparent hover:text-slate-300";
+        }
+    }
+
+    try {
+        const formData = new FormData(form);
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken(form),
+                'Accept': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            // Update streak pill if returned
+            const row = form.closest('tr');
+            if (row && data.streak !== undefined) {
+                const streakBadge = row.querySelector('td:nth-child(2) span');
+                if (streakBadge) {
+                    streakBadge.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 mr-1 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>${data.streak}d`;
+                }
+            }
+            showToast(data.message, 'success');
+        }
+    } catch (err) {
+        console.error("Habit toggle error:", err);
+        showToast("Error updating habit log.", "error");
+    }
+}
+
+// --- Assignment Submission Toggle ---
+async function handleAssignmentToggle(form, e) {
+    if (e) e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    const card = form.closest('.rounded-2xl');
+    const badge = card ? card.querySelector('span.rounded-full') : null;
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken(form),
+                'Accept': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            if (data.is_submitted) {
+                if (btn) {
+                    btn.textContent = "Mark In Progress";
+                    btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200";
+                }
+                if (badge) {
+                    badge.textContent = "Submitted";
