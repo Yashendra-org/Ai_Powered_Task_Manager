@@ -26,3 +26,17 @@ class AuthenticationAndDashboardTests(TestCase):
     def test_user_registration_and_login_flow(self):
         post_data = {
             'username': 'student_yashendra',
+            'email': 'student@example.com',
+            'timezone': 'Asia/Kolkata',
+            'password1': 'StrongP@ssw0rd123!',
+            'password2': 'StrongP@ssw0rd123!',
+        }
+        response = self.client.post(self.register_url, post_data, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['user'].is_authenticated)
+        self.assertEqual(response.context['user'].username, 'student_yashendra')
+        self.assertEqual(response.context['user'].timezone, 'Asia/Kolkata')
+        self.assertTemplateUsed(response, 'dashboard/index.html')
+
+    def test_dashboard_requires_authentication(self):
+        response = self.client.get(self.dashboard_url)
