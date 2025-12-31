@@ -28,3 +28,18 @@ class UserRegisterForm(UserCreationForm):
         model = User
         fields = ('username', 'email', 'timezone')
         widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 placeholder-slate-400',
+                'placeholder': 'username'
+            })
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for fieldname in ['password1', 'password2']:
+            if fieldname in self.fields:
+                self.fields[fieldname].widget.attrs.update({
+                    'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 placeholder-slate-400',
+                    'placeholder': '••••••••'
+                })
+
