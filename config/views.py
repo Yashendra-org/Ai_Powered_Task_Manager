@@ -36,3 +36,22 @@ def dashboard_view(request):
     else:
         completion_rate = 0.0
 
+    # 2. Upcoming college assignments (next 7 days, unsubmitted)
+    upcoming_assignments = Assignment.objects.filter(
+        user=user
+    ).exclude(status='submitted').order_by('due_at')[:4]
+
+    # 3. Habits today
+    user_habits = Habit.objects.filter(user=user, is_active=True)
+    habits_today = []
+    completed_habits_count = 0
+    for h in user_habits:
+        is_done = HabitLog.objects.filter(habit=h, date=today, status='completed').exists()
+        if is_done:
+            completed_habits_count += 1
+        habits_today.append({
+            'habit': h,
+            'is_completed': is_done,
+            'streak': h.current_streak(),
+        })
+
