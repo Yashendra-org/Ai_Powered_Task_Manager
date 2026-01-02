@@ -19,3 +19,13 @@ def register_view(request):
             return redirect('dashboard')
     else:
         form = UserRegisterForm()
+    
+    return render(request, 'accounts/register.html', {'form': form})
+
+
+class CustomLoginView(LoginView):
+    form_class = UserLoginForm
+    template_name = 'accounts/login.html'
+    redirect_authenticated_user = True
+
+    def form_valid(self, form):
