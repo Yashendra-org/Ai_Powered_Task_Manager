@@ -8,3 +8,8 @@ from apps.tasks.calendar_views import calendar_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', root_redirect, name='root'),
+    path('dashboard/', dashboard_view, name='dashboard'),
+    path('tasks/', include('apps.tasks.urls')),
+    path('assignments/', include('apps.assignments.urls')),
+    path('habits/', include('apps.habits.urls')),
+    path('notes/', include('apps.notes.urls')),
