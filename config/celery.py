@@ -6,3 +6,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 app = Celery('my_habbit_tracker')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
+
+
+@app.task(bind=True, ignore_result=True)
