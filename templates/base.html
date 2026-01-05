@@ -78,3 +78,44 @@
 
             <a href="{% url 'all_tasks' %}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'all_tasks' or request.resolver_match.url_name == 'task_create' or request.resolver_match.url_name == 'task_edit' or request.resolver_match.url_name == 'trash' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
                 <div class="flex items-center">
+                    <i data-lucide="check-square" class="w-4 h-4 mr-3 {% if request.resolver_match.url_name == 'all_tasks' %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
+                    All Tasks
+                </div>
+            </a>
+
+            <a href="{% url 'assignment_list' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'assignments' in request.path %}bg-indigo-50 text-indigo-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <i data-lucide="graduation-cap" class="w-4 h-4 mr-3 {% if 'assignments' in request.path %}text-indigo-600{% else %}text-slate-400{% endif %}"></i>
+                Assignments
+            </a>
+
+            <a href="{% url 'habit_list' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'habits' in request.path %}bg-emerald-50 text-emerald-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <i data-lucide="flame" class="w-4 h-4 mr-3 {% if 'habits' in request.path %}text-emerald-600{% else %}text-slate-400{% endif %}"></i>
+                Habit Tracker
+            </a>
+
+            <a href="{% url 'calendar' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'calendar' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <i data-lucide="calendar" class="w-4 h-4 mr-3 {% if 'calendar' in request.path %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
+                Calendar
+            </a>
+
+            <a href="{% url 'note_list' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'notes' in request.path %}bg-amber-50 text-amber-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <i data-lucide="sticky-note" class="w-4 h-4 mr-3 {% if 'notes' in request.path %}text-amber-600{% else %}text-slate-400{% endif %}"></i>
+                Quick Notes
+            </a>
+
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-3 pt-4 mb-2">Intelligence</div>
+
+            <a href="{% url 'analytics_dashboard' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'analytics' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 mr-3 {% if 'analytics' in request.path %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
+                Analytics
+            </a>
+
+            <a href="{% url 'smart_assistant' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'assistant' in request.path or 'review' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <i data-lucide="sparkles" class="w-4 h-4 mr-3 {% if 'assistant' in request.path or 'review' in request.path %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
+                Smart Assistant
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer / User Profile -->
+        <div class="p-4 border-t border-slate-100">
+            <div class="flex items-center justify-between">
