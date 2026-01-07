@@ -65,3 +65,25 @@ class Command(BaseCommand):
         )
 
         t3, _ = Task.objects.get_or_create(
+            user=user,
+            title="Revise DBMS Normalization notes",
+            defaults={
+                "category": cat_college,
+                "priority": "medium",
+                "status": "pending",
+                "due_at": now.replace(hour=21, minute=0),
+                "estimated_duration": 30,
+            }
+        )
+
+        # 4. Subjects & Assignments
+        subject_dbms, _ = Subject.objects.get_or_create(user=user, name="Database Management Systems", defaults={"code": "CS302"})
+        teacher_sharma, _ = Teacher.objects.get_or_create(user=user, name="Dr. R. Sharma", defaults={"email": "sharma@college.edu"})
+
+        Assignment.objects.get_or_create(
+            user=user,
+            title="DBMS Assignment 3: B+ Trees & Indexing",
+            subject=subject_dbms,
+            defaults={
+                "teacher": teacher_sharma,
+                "description": "Solve exercise problems 1 to 10 on B+ Trees indexing.",
