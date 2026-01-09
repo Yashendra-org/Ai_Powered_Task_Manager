@@ -43,3 +43,18 @@ class UserRegisterForm(UserCreationForm):
                     'placeholder': '••••••••'
                 })
 
+
+class UserLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 placeholder-slate-400',
+            'placeholder': 'username or email'
+        })
+        self.fields['password'].widget.attrs.update({
+            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 placeholder-slate-400',
+            'placeholder': '••••••••'
+        })
+
+
+class UserProfileForm(forms.ModelForm):
