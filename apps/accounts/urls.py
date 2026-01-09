@@ -4,3 +4,5 @@ from .views import register_view, CustomLoginView, custom_logout_view, settings_
 urlpatterns = [
     path('register/', register_view, name='register'),
     path('login/', CustomLoginView.as_view(), name='login'),
+    path('logout/', custom_logout_view, name='logout'),
+    path('settings/', settings_view, name='settings'),
