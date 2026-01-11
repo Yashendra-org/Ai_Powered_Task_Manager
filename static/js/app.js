@@ -414,3 +414,142 @@ async function handleAssignmentToggle(form, e) {
                 }
                 if (badge) {
                     badge.textContent = "Submitted";
+                    badge.className = "text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200";
+                }
+                if (card) card.classList.add('opacity-80', 'bg-slate-50/50');
+            } else {
+                if (btn) {
+                    btn.textContent = "Submit";
+                    btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors bg-green-50 text-green-700 hover:bg-green-100 border border-green-200";
+                }
+                if (badge) {
+                    badge.textContent = "In Progress";
+                    badge.className = "text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200";
+                }
+                if (card) card.classList.remove('opacity-80', 'bg-slate-50/50');
+            }
+            showToast(data.message, 'success');
+        }
+    } catch (err) {
+        console.error("Assignment toggle error:", err);
+        showToast("Error updating assignment status.", "error");
+    }
+}
+
+// --- Note Pin / Delete Toggle ---
+async function handleNoteAction(form, e) {
+    if (e) e.preventDefault();
+    const isDelete = form.action.includes('/delete/');
+    if (isDelete && !confirm("Delete this note?")) return;
+
+    const card = form.closest('.rounded-2xl') || form.closest('.p-5');
+    if (isDelete && card) {
+        card.style.transition = 'all 0.25s ease-out';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+    }
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken(form),
+                'Accept': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            if (isDelete && card) {
+                setTimeout(() => card.remove(), 250);
+            } else if (!isDelete && card) {
+                // Pin toggle - reload partial view seamlessly
+                loadPage(window.location.href, false);
+            }
+            showToast(data.message, 'info');
+        }
+    } catch (err) {
+        console.error("Note action error:", err);
+        showToast("Error processing note.", "error");
+    }
+}
+
+// --- Recommendation Feedback (Accept / Dismiss) ---
+async function handleRecommendationFeedback(form, e) {
+    if (e) e.preventDefault();
+    const card = form.closest('.rounded-2xl') || form.closest('.p-5');
+    if (card) {
+        card.style.transition = 'all 0.25s ease-out';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+    }
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken(form),
+                'Accept': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            setTimeout(() => card.remove(), 250);
+            showToast(data.message, 'success');
+        }
+    } catch (err) {
+        console.error("Feedback error:", err);
+        showToast("Error recording feedback.", "error");
+    }
+}
+
+// ==========================================================================
+// 5. Global Form Event Delegation
+// ==========================================================================
+document.addEventListener('submit', function (e) {
+    const form = e.target;
+    if (!form || !form.action) return;
+
+    const action = form.action.toLowerCase();
+
+    // 1. Task Toggle
+    if (action.includes('/tasks/') && action.includes('/toggle/')) {
+        handleTaskToggle(form, e);
+        return;
+    }
+
+    // 2. Quick Add Task
+    if (form.id === 'quick-add-task-form' || (action.includes('/tasks/today/') && form.method.toLowerCase() === 'post')) {
+        handleQuickAddTask(form, e);
+        return;
+    }
+
+    // 3. Task Delete
+    if (action.includes('/tasks/') && action.includes('/delete/')) {
+        handleTaskDelete(form, e);
+        return;
+    }
+
+    // 4. Habit Toggle Log
+    if (action.includes('/habits/') && action.includes('/log/')) {
+        handleHabitToggle(form, e);
+        return;
+    }
+
+    // 5. Assignment Submit Toggle
+    if (action.includes('/assignments/') && action.includes('/submit-toggle/')) {
+        handleAssignmentToggle(form, e);
+        return;
+    }
+
+    // 6. Note Pin or Delete
+    if (action.includes('/notes/') && (action.includes('/pin/') || action.includes('/delete/'))) {
+        handleNoteAction(form, e);
+        return;
+    }
+
+    // 7. Assistant Feedback
+    if (action.includes('/assistant/feedback/')) {
