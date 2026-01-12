@@ -40,3 +40,17 @@ class AuthenticationAndDashboardTests(TestCase):
 
     def test_dashboard_requires_authentication(self):
         response = self.client.get(self.dashboard_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.url.startswith('/login/'))
+
+    def test_settings_view_updates_preferences(self):
+        user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='TestPassword123!',
+            timezone='Asia/Kolkata',
+            daily_review_time='21:30'
+        )
+        self.client.login(username='testuser', password='TestPassword123!')
+        
+        response = self.client.get(self.settings_url)
