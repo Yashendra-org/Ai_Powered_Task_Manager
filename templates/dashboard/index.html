@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — My Habbit Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-7xl mx-auto">
+    <!-- Header with Greeting & Date -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{{ greeting }}, {{ user.username }}!</h1>
+            <p class="text-sm text-slate-500 mt-1 flex items-center">
+                <i data-lucide="calendar" class="w-4 h-4 mr-1.5 text-slate-400"></i>
+                {{ current_date }}
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'habit_list' %}" class="inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 shadow-sm transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-2 text-slate-500"></i>
+                Log Habit
+            </a>
+            <a href="{% url 'task_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                Add Task
+            </a>
+        </div>
+    </div>
+
+    <!-- Smart Suggestions Banner (ML / System) -->
+    {% if recommendations %}
+    <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl flex items-start space-x-4">
+        <div class="p-2 bg-blue-600 text-white rounded-xl shadow-sm flex-shrink-0 mt-0.5">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+        </div>
+        <div class="flex-1">
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Assistant Insight</span>
+                <h3 class="text-sm font-semibold text-slate-900">{{ recommendations.0.title }}</h3>
+            </div>
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed">{{ recommendations.0.explanation }}</p>
+        </div>
+        <button class="text-slate-400 hover:text-slate-600 p-1">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Metric Stat Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Total Tasks -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
