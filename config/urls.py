@@ -13,3 +13,8 @@ urlpatterns = [
     path('assignments/', include('apps.assignments.urls')),
     path('habits/', include('apps.habits.urls')),
     path('notes/', include('apps.notes.urls')),
+    path('notifications/', include('apps.reminders.urls')),
+    path('analytics/', include('apps.analytics.urls')),
+    path('calendar/', calendar_view, name='calendar'),
+    path('', include('apps.ml_engine.urls')),
+    path('', include('apps.accounts.urls')),
