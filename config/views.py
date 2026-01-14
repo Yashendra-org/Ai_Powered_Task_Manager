@@ -55,3 +55,22 @@ def dashboard_view(request):
             'streak': h.current_streak(),
         })
 
+    # Context for Dashboard
+    context = {
+        'current_date': now.strftime('%A, %d %B %Y'),
+        'greeting': get_greeting(now.hour),
+        'total_tasks_count': total_tasks_count,
+        'completed_tasks_count': completed_tasks_count,
+        'pending_tasks_count': pending_tasks_count,
+        'overdue_tasks_count': overdue_tasks_count,
+        'completion_rate': completion_rate,
+        'today_tasks': today_tasks,
+        'upcoming_assignments': upcoming_assignments,
+        'habits_today': habits_today,
+        'completed_habits_count': completed_habits_count,
+        'total_habits_count': len(habits_today),
+        'recommendations': [
+            {
+                'title': 'Foundation & Database Ready',
+                'explanation': f'Phase 1 active. {total_tasks_count} tasks and {upcoming_assignments.count()} assignments tracked for today.',
+                'type': 'system'
