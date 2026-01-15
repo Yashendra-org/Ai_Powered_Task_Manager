@@ -45,3 +45,19 @@
                 {{ form.timezone }}
                 {% if form.timezone.errors %}
                 <p class="mt-1 text-xs text-red-600">{{ form.timezone.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_password1" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ form.password1.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_password2" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Confirm Password</label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ form.password2.errors.0 }}</p>
