@@ -87,3 +87,26 @@ class Command(BaseCommand):
             defaults={
                 "teacher": teacher_sharma,
                 "description": "Solve exercise problems 1 to 10 on B+ Trees indexing.",
+                "assigned_date": today,
+                "due_at": now + timezone.timedelta(days=2),
+                "priority": "high",
+                "status": "in_progress",
+            }
+        )
+
+        # 5. Habits
+        h_dsa, _ = Habit.objects.get_or_create(
+            user=user,
+            title="Daily DSA Practice",
+            defaults={"frequency": "daily", "is_active": True}
+        )
+        HabitLog.objects.get_or_create(habit=h_dsa, date=today, defaults={"status": "completed"})
+
+        h_read, _ = Habit.objects.get_or_create(
+            user=user,
+            title="Read Technical Paper / Tech Book",
+            defaults={"frequency": "daily", "is_active": True}
+        )
+
+        self.stdout.write(self.style.SUCCESS("Sample data seeded successfully!"))
+
