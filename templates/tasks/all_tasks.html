@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}All Tasks — My Habbit Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl mx-auto">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">All Tasks</h1>
+            <p class="text-sm text-slate-500 mt-1">Manage, filter, and organize all your discrete obligations</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'trash' %}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5 mr-1.5 text-slate-400"></i>
+                Trash
+            </a>
+            <a href="{% url 'category_create' %}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                <i data-lucide="folder-plus" class="w-3.5 h-3.5 mr-1.5 text-slate-400"></i>
+                New Category
+            </a>
+            <a href="{% url 'task_create' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+                New Task
+            </a>
+        </div>
+    </div>
+
