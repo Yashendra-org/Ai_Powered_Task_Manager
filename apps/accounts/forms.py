@@ -58,3 +58,19 @@ class UserLoginForm(AuthenticationForm):
 
 
 class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('email', 'timezone', 'daily_review_time')
+        widgets = {
+            'email': forms.EmailInput(attrs={
+                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800'
+            }),
+            'timezone': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800'
+            }),
+            'daily_review_time': forms.TimeInput(attrs={
+                'type': 'time',
+                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800'
+            }),
+        }
+
