@@ -10,3 +10,6 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
         ("Productivity Preferences", {"fields": ("timezone", "daily_review_time")}),
     )
+    add_fieldsets = BaseUserAdmin.add_fieldsets + (
+        ("Productivity Preferences", {"fields": ("email", "timezone", "daily_review_time")}),
+    )
