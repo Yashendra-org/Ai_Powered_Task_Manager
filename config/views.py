@@ -74,3 +74,22 @@ def dashboard_view(request):
                 'title': 'Foundation & Database Ready',
                 'explanation': f'Phase 1 active. {total_tasks_count} tasks and {upcoming_assignments.count()} assignments tracked for today.',
                 'type': 'system'
+            }
+        ]
+    }
+    return render(request, 'dashboard/index.html', context)
+
+
+def get_greeting(hour):
+    if hour < 12:
+        return "Good morning"
+    elif hour < 17:
+        return "Good afternoon"
+    else:
+        return "Good evening"
+
+
+def root_redirect(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return redirect('login')
