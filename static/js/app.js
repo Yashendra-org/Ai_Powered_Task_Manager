@@ -553,3 +553,142 @@ document.addEventListener('submit', function (e) {
 
     // 7. Assistant Feedback
     if (action.includes('/assistant/feedback/')) {
+        handleRecommendationFeedback(form, e);
+        return;
+    }
+});
+
+// ==========================================================================
+// 6. Seamless SPA (PJAX) Page Router
+// ==========================================================================
+async function loadPage(url, pushState = true) {
+    TopLoader.start();
+    const mainEl = document.querySelector('main');
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'X-PJAX': 'true',
+            }
+        });
+
+        if (!response.ok) {
+            window.location.href = url;
+            return;
+        }
+
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const newMain = doc.querySelector('main');
+        if (!newMain || !mainEl) {
+            window.location.href = url;
+            return;
+        }
+
+        // Fade transition
+        mainEl.style.transition = 'opacity 0.12s ease-out';
+        mainEl.style.opacity = '0';
+
+        setTimeout(() => {
+            mainEl.innerHTML = newMain.innerHTML;
+            document.title = doc.title || document.title;
+
+            // Execute any dynamic script tags inside newMain (e.g. Chart.js)
+            const scripts = mainEl.querySelectorAll('script');
+            scripts.forEach(s => {
+                const newScript = document.createElement('script');
+                if (s.src) newScript.src = s.src;
+                else newScript.textContent = s.textContent;
+                document.body.appendChild(newScript);
+                newScript.remove();
+            });
+
+            // Re-render Lucide icons
+            if (window.lucide) lucide.createIcons();
+
+            // Update active state in sidebar navigation
+            updateSidebarActiveLinks(url);
+
+            mainEl.style.opacity = '1';
+            TopLoader.done();
+
+            if (pushState) {
+                window.history.pushState({ url }, '', url);
+            }
+        }, 120);
+
+    } catch (err) {
+        console.error("PJAX load error:", err);
+        TopLoader.done();
+        window.location.href = url;
+    }
+}
+
+function updateSidebarActiveLinks(currentUrl) {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    const currentPath = new URL(currentUrl, window.location.origin).pathname;
+    const links = sidebar.querySelectorAll('nav a');
+
+    links.forEach(link => {
+        const linkPath = new URL(link.href, window.location.origin).pathname;
+        const icon = link.querySelector('[data-lucide], i, svg');
+        
+        let isActive = false;
+        if (linkPath === '/' && currentPath === '/') {
+            isActive = true;
+        } else if (linkPath !== '/' && currentPath.startsWith(linkPath)) {
+            isActive = true;
+        }
+
+        if (isActive) {
+            link.className = "flex items-center px-3 py-2.5 text-sm font-semibold rounded-lg bg-blue-50 text-blue-700 transition-colors";
+            if (icon) {
+                icon.classList.remove('text-slate-400');
+                icon.classList.add('text-blue-600');
+            }
+        } else {
+            link.className = "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors";
+            if (icon) {
+                icon.classList.remove('text-blue-600');
+                icon.classList.add('text-slate-400');
+            }
+        }
+    });
+}
+
+// Intercept internal link navigation
+document.addEventListener('click', function (e) {
+    const link = e.target.closest('a');
+    if (!link || !link.href) return;
+
+    // Check if internal navigation link
+    const targetUrl = new URL(link.href, window.location.origin);
+    const isSameOrigin = targetUrl.origin === window.location.origin;
+
+    if (!isSameOrigin) return;
+    if (link.target === '_blank') return;
+    if (link.hasAttribute('download')) return;
+    if (link.getAttribute('href').startsWith('#')) return;
+    if (targetUrl.pathname === '/logout/' || targetUrl.pathname === '/login/' || targetUrl.pathname === '/register/') return;
+    if (targetUrl.pathname.startsWith('/admin/')) return;
+    if (targetUrl.pathname.startsWith('/media/')) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+    e.preventDefault();
+    loadPage(link.href, true);
+});
+
+// Handle browser Back / Forward buttons
+window.addEventListener('popstate', function (e) {
+    loadPage(window.location.href, false);
+});
+
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.lucide) lucide.createIcons();
+});
+
