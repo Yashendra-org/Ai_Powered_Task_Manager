@@ -54,3 +54,18 @@ class AuthenticationAndDashboardTests(TestCase):
         self.client.login(username='testuser', password='TestPassword123!')
         
         response = self.client.get(self.settings_url)
+        self.assertEqual(response.status_code, 200)
+
+        # Update settings
+        update_data = {
+            'email': 'updated@example.com',
+            'timezone': 'UTC',
+            'daily_review_time': '22:00:00',
+        }
+        post_response = self.client.post(self.settings_url, update_data, follow=True)
+        self.assertEqual(post_response.status_code, 200)
+        
+        user.refresh_from_db()
+        self.assertEqual(user.email, 'updated@example.com')
+        self.assertEqual(user.timezone, 'UTC')
+        self.assertEqual(str(user.daily_review_time), '22:00:00')
