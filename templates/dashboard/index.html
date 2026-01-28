@@ -49,3 +49,54 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <!-- Total Tasks -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Tasks</p>
+                <h3 class="text-2xl font-bold text-slate-900 mt-1">{{ total_tasks_count }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Scheduled for today</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <i data-lucide="layers" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Completed Tasks -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Completed</p>
+                <h3 data-metric="completed-tasks" class="text-2xl font-bold text-green-600 mt-1">{{ completed_tasks_count }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Done and logged</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                <i data-lucide="check-circle" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Pending Tasks -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pending</p>
+                <h3 class="text-2xl font-bold text-amber-600 mt-1">{{ pending_tasks_count }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Awaiting execution</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <i data-lucide="clock" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Overdue Tasks -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Overdue</p>
+                <h3 class="text-2xl font-bold text-red-600 mt-1">{{ overdue_tasks_count }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Past target deadline</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+                <i data-lucide="alert-circle" class="w-6 h-6"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Progress Bar -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+            <div>
