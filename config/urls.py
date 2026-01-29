@@ -18,3 +18,8 @@ urlpatterns = [
     path('calendar/', calendar_view, name='calendar'),
     path('', include('apps.ml_engine.urls')),
     path('', include('apps.accounts.urls')),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
