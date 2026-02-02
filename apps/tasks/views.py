@@ -57,3 +57,62 @@ def my_day_view(request):
                     'today_completed': comp,
                     'today_rate': rate,
                 })
+            messages.success(request, "Task added to My Day!")
+            return redirect('my_day')
+        else:
+            is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+            if is_ajax:
+                return JsonResponse({'success': False, 'errors': quick_form.errors}, status=400)
+    else:
+        quick_form = QuickTaskForm()
+
+    tasks = Task.objects.active().filter(user=user, due_at__date=today).order_by('status', '-priority', 'due_at')
+    categories = Category.objects.filter(user=user)
+
+    total_count = tasks.count()
+    completed_count = tasks.filter(status='completed').count()
+    pending_count = tasks.filter(status='pending').count()
+    completion_rate = round((completed_count / total_count * 100), 1) if total_count > 0 else 0.0
+
+    context = {
+        'tasks': tasks,
+        'categories': categories,
+        'quick_form': quick_form,
+        'today_date': now.strftime('%A, %d %B'),
+        'total_count': total_count,
+        'completed_count': completed_count,
+        'pending_count': pending_count,
+        'completion_rate': completion_rate,
+    }
+    return render(request, 'tasks/my_day.html', context)
+
+
+@login_required
+def all_tasks_view(request):
+    """
+    Comprehensive task list with filters by status, priority, category and search.
+    """
+    user = request.user
+    tasks = Task.objects.active().filter(user=user)
+    categories = Category.objects.filter(user=user)
+
+    # Search filter
+    query = request.GET.get('q', '').strip()
+    if query:
+        tasks = tasks.filter(Q(title__icontains=query) | Q(description__icontains=query))
+
+    # Status tab filter
+    status_filter = request.GET.get('status', 'all')
+    now = timezone.now()
+    if status_filter == 'pending':
+        tasks = tasks.filter(status='pending')
+    elif status_filter == 'completed':
+        tasks = tasks.filter(status='completed')
+    elif status_filter == 'overdue':
+        tasks = tasks.filter(due_at__lt=now, status__in=['pending', 'in_progress'])
+
+    # Category filter
+    category_id = request.GET.get('category')
+    if category_id:
+        tasks = tasks.filter(category_id=category_id)
+
