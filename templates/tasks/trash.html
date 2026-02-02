@@ -11,3 +11,16 @@
                     <i data-lucide="trash-2" class="w-5 h-5"></i>
                 </div>
                 <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Recently Deleted</h1>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">Deleted tasks can be recovered or permanently purged.</p>
+        </div>
+        <a href="{% url 'all_tasks' %}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5 mr-1.5"></i>
+            Back to All Tasks
+        </a>
+    </div>
+
+    <div class="space-y-3">
+        {% if tasks %}
+            {% for task in tasks %}
+            <div class="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex items-center justify-between">
