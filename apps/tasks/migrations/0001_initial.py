@@ -28,3 +28,18 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Categories',
                 'db_table': 'tasks_category',
                 'ordering': ['name'],
+                'unique_together': {('user', 'name')},
+            },
+        ),
+        migrations.CreateModel(
+            name='Task',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('title', models.CharField(max_length=255)),
+                ('description', models.TextField(blank=True)),
+                ('priority', models.CharField(choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='medium', max_length=10)),
+                ('status', models.CharField(choices=[('pending', 'Pending'), ('in_progress', 'In Progress'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='pending', max_length=15)),
+                ('scheduled_start', models.DateTimeField(blank=True, null=True)),
+                ('due_at', models.DateTimeField(blank=True, null=True)),
+                ('estimated_duration', models.PositiveIntegerField(default=30, help_text='Estimated minutes')),
+                ('actual_duration', models.PositiveIntegerField(blank=True, help_text='Actual minutes taken', null=True)),
