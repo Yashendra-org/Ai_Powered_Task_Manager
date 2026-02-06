@@ -19,3 +19,24 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
+class TaskQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(deleted_at__isnull=True)
+
+    def deleted(self):
+        return self.filter(deleted_at__isnull=False)
+
+    def pending(self):
+        return self.active().filter(status='pending')
+
+    def completed(self):
+        return self.active().filter(status='completed')
+
+    def for_today(self, user):
+        today = timezone.localdate()
+        return self.active().filter(user=user, due_at__date=today)
+
+
+class Task(models.Model):
+    PRIORITY_CHOICES = [
