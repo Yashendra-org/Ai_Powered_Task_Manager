@@ -43,3 +43,26 @@
     <div id="task-list-container" class="space-y-3">
         {% if tasks %}
             {% for task in tasks %}
+            <div class="group p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all flex items-center justify-between {% if task.status == 'completed' %}opacity-75 bg-slate-50/50{% endif %}">
+                <div class="flex items-center space-x-3.5 flex-1 min-w-0 mr-4">
+                    <!-- Checkbox Toggle -->
+                    <form method="POST" action="{% url 'task_toggle' task.id %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="w-5 h-5 rounded-md border flex items-center justify-center transition-colors {% if task.status == 'completed' %}bg-green-600 border-green-600 text-white{% else %}border-slate-300 hover:border-blue-500 bg-white{% endif %}" title="Toggle Complete">
+                            {% if task.status == 'completed' %}
+                            <i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>
+                            {% endif %}
+                        </button>
+                    </form>
+
+                    <!-- Task Information -->
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium {% if task.status == 'completed' %}line-through text-slate-400{% else %}text-slate-900 group-hover:text-blue-600{% endif %} transition-colors truncate">
+                                {{ task.title }}
+                            </span>
+                        </div>
+                        <div class="flex items-center flex-wrap gap-2 text-xs text-slate-400 mt-1">
+                            {% if task.category %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700">
+                                {{ task.category.name }}
