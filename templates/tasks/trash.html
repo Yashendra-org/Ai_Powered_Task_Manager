@@ -24,3 +24,16 @@
         {% if tasks %}
             {% for task in tasks %}
             <div class="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex items-center justify-between">
+                <div>
+                    <h4 class="text-sm font-semibold text-slate-900 line-through">{{ task.title }}</h4>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Deleted on {{ task.deleted_at|date:"D, d M - H:i" }}
+                    </p>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <form method="POST" action="{% url 'task_restore' task.id %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1"></i>
+                            Restore
