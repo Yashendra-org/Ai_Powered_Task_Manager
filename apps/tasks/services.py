@@ -12,3 +12,18 @@ class TaskService:
             description=description,
             category=category,
             priority=priority,
+            scheduled_start=scheduled_start,
+            due_at=due_at or timezone.now(),
+            estimated_duration=estimated_duration,
+            status='pending',
+        )
+        TaskHistory.objects.create(
+            task=task,
+            previous_status='none',
+            new_status='pending',
+            action='created'
+        )
+        return task
+
+    @staticmethod
+    def toggle_completion(task):
