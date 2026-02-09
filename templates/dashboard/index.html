@@ -152,3 +152,54 @@
                     <span class="text-xs font-semibold px-2 py-0.5 rounded-full {% if task.priority == 'high' %}bg-red-50 text-red-600{% elif task.priority == 'medium' %}bg-amber-50 text-amber-600{% else %}bg-slate-100 text-slate-600{% endif %}">
                         {{ task.get_priority_display }}
                     </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="flex-1 flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-100 rounded-xl">
+                <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
+                    <i data-lucide="check-square" class="w-6 h-6"></i>
+                </div>
+                <p class="text-sm font-medium text-slate-700">No tasks planned for today</p>
+                <p class="text-xs text-slate-400 mt-1 max-w-xs">Tasks you create will appear right here with priority and check-off controls.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Academic Assignments Column -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center space-x-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>
+                    <h2 class="text-base font-bold text-slate-900">College Assignments</h2>
+                </div>
+                <a href="{% url 'assignment_list' %}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">View All</a>
+            </div>
+
+            {% if upcoming_assignments %}
+            <div class="space-y-3">
+                {% for assignment in upcoming_assignments %}
+                <div class="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 transition-colors shadow-sm flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700">
+                                {{ assignment.subject.code|default:assignment.subject.name }}
+                            </span>
+                            <h4 class="text-sm font-semibold text-slate-900">{{ assignment.title }}</h4>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1 flex items-center">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 mr-1 text-slate-400"></i>
+                            Due {{ assignment.due_at|date:"D, d M - H:i" }}
+                        </p>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                        {{ assignment.get_status_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="flex-1 flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-100 rounded-xl">
+                <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
