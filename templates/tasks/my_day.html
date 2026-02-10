@@ -20,3 +20,26 @@
             <span id="my-day-completion-rate" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-100">
                 {{ completed_count }} of {{ total_count }} Done ({{ completion_rate }}%)
             </span>
+            <a href="{% url 'task_create' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+                Detailed Task
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Add Input Bar -->
+    <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+        <form id="quick-add-task-form" method="POST" action="{% url 'my_day' %}" class="relative flex items-center">
+            {% csrf_token %}
+            <i data-lucide="plus-circle" class="w-5 h-5 absolute left-3.5 text-blue-600 pointer-events-none"></i>
+            {{ quick_form.title }}
+            <button type="submit" class="absolute right-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors">
+                Add
+            </button>
+        </form>
+    </div>
+
+    <!-- Daily Task List -->
+    <div id="task-list-container" class="space-y-3">
+        {% if tasks %}
+            {% for task in tasks %}
