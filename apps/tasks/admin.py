@@ -12,3 +12,8 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'category', 'priority', 'status', 'due_at', 'completed_at', 'deleted_at')
+    list_filter = ('status', 'priority', 'category', 'user')
+    search_fields = ('title', 'description')
+    date_hierarchy = 'due_at'
+
+
