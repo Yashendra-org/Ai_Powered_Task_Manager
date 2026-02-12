@@ -99,3 +99,37 @@ class TaskModuleTests(TestCase):
     def test_toggle_complete_task(self):
         # Toggle to completed
         response = self.client.post(reverse('task_toggle', args=[self.task.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, 'completed')
+        self.assertIsNotNone(self.task.completed_at)
+        self.assertTrue(TaskHistory.objects.filter(task=self.task, action='completed').exists())
+
+        # Toggle back to pending
+        response = self.client.post(reverse('task_toggle', args=[self.task.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, 'pending')
+        self.assertIsNone(self.task.completed_at)
+        self.assertTrue(TaskHistory.objects.filter(task=self.task, action='marked_incomplete').exists())
+
+    def test_toggle_complete_task_ajax(self):
+        response = self.client.post(
+            reverse('task_toggle', args=[self.task.id]),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['status'], 'completed')
+        self.assertTrue(data['is_completed'])
+
+    def test_soft_delete_and_restore(self):
+        # Soft delete
+        response = self.client.post(reverse('task_delete', args=[self.task.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.task.refresh_from_db()
+        self.assertIsNotNone(self.task.deleted_at)
+        self.assertFalse(Task.objects.active().filter(id=self.task.id).exists())
+        self.assertTrue(Task.objects.deleted().filter(id=self.task.id).exists())
+
