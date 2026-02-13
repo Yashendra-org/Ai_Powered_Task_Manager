@@ -46,3 +46,19 @@
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Priority Level</label>
                     {{ form.priority }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Scheduled Start</label>
+                    {{ form.scheduled_start }}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Due Date & Time</label>
+                    {{ form.due_at }}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Duration (Mins)</label>
