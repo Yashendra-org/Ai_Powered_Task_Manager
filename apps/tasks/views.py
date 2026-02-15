@@ -176,3 +176,62 @@ def task_edit_view(request, task_id):
         form = TaskForm(instance=task, user=user)
 
     return render(request, 'tasks/task_form.html', {'form': form, 'task': task, 'title': 'Edit Task'})
+
+
+@login_required
+@require_POST
+def task_toggle_complete_view(request, task_id):
+    """
+    Toggle task between pending and completed.
+    Supports both AJAX and standard POST requests.
+    """
+    user = request.user
+    task = get_object_or_404(Task.objects.active(), id=task_id, user=user)
+    TaskService.toggle_completion(task)
+
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        today = timezone.localdate()
+        today_tasks = Task.objects.active().filter(user=user, due_at__date=today)
+        tot = today_tasks.count()
+        comp = today_tasks.filter(status='completed').count()
+        rate = round((comp / tot * 100), 1) if tot > 0 else 0.0
+
+        return JsonResponse({
+            'success': True,
+            'task_id': str(task.id),
+            'title': task.title,
+            'status': task.status,
+            'is_completed': task.status == 'completed',
+            'today_total': tot,
+            'today_completed': comp,
+            'today_rate': rate,
+            'message': f"Task '{task.title}' marked as {task.get_status_display().lower()}!",
+        })
+
+    messages.success(request, f"Task '{task.title}' marked as {task.get_status_display().lower()}!")
+    return redirect(request.META.get('HTTP_REFERER', 'my_day'))
+
+
+@login_required
+@require_POST
+def task_delete_view(request, task_id):
+    """
+    Soft delete a task, moving it to Recently Deleted.
+    """
+    user = request.user
+    task = get_object_or_404(Task.objects.active(), id=task_id, user=user)
+    TaskService.soft_delete(task)
+
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        today = timezone.localdate()
+        today_tasks = Task.objects.active().filter(user=user, due_at__date=today)
+        tot = today_tasks.count()
+        comp = today_tasks.filter(status='completed').count()
+        rate = round((comp / tot * 100), 1) if tot > 0 else 0.0
+        return JsonResponse({
+            'success': True,
+            'task_id': str(task.id),
+            'today_total': tot,
+            'today_completed': comp,
