@@ -74,3 +74,22 @@ class QuickTaskForm(forms.Form):
     )
     estimated_duration = forms.IntegerField(
         initial=30,
+        required=False,
+    )
+
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name', 'color']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
+                'placeholder': 'e.g. College, Coding, Reading'
+            }),
+            'color': forms.TextInput(attrs={
+                'type': 'color',
+                'class': 'h-10 w-20 p-1 bg-white border border-slate-300 rounded-lg cursor-pointer'
+            }),
+        }
+
