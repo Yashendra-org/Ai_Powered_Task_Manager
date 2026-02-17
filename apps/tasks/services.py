@@ -27,3 +27,18 @@ class TaskService:
 
     @staticmethod
     def toggle_completion(task):
+        previous_status = task.status
+        now = timezone.now()
+        
+        if task.status == 'completed':
+            task.status = 'pending'
+            task.completed_at = None
+            action = 'marked_incomplete'
+        else:
+            task.status = 'completed'
+            task.completed_at = now
+            action = 'completed'
+
+        task.save(update_fields=['status', 'completed_at', 'updated_at'])
+
+        TaskHistory.objects.create(
