@@ -58,3 +58,19 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='TaskHistory',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('previous_status', models.CharField(max_length=50)),
+                ('new_status', models.CharField(max_length=50)),
+                ('action', models.CharField(help_text='created, completed, postponed, rescheduled', max_length=50)),
+                ('recorded_at', models.DateTimeField(auto_now_add=True)),
+                ('task', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='history', to='tasks.task')),
+            ],
+            options={
+                'verbose_name_plural': 'Task histories',
+                'db_table': 'tasks_task_history',
+                'ordering': ['-recorded_at'],
+            },
+        ),
+    ]
