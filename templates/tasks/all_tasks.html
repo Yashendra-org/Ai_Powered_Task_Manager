@@ -117,3 +117,33 @@
 
                 <!-- Priority & Actions -->
                 <div class="flex items-center space-x-3 flex-shrink-0">
+                    <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full {% if task.priority == 'high' %}bg-red-50 text-red-700 border border-red-200{% elif task.priority == 'medium' %}bg-amber-50 text-amber-700 border border-amber-200{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+                        {{ task.get_priority_display }}
+                    </span>
+
+                    <a href="{% url 'task_edit' task.id %}" class="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-all" title="Edit Task">
+                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                    </a>
+
+                    <form method="POST" action="{% url 'task_delete' task.id %}" class="inline" onsubmit="return confirm('Move this task to Recently Deleted?');">
+                        {% csrf_token %}
+                        <button type="submit" class="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all" title="Delete Task">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="check-square" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-base font-semibold text-slate-900">No tasks found</h3>
+                <p class="text-xs text-slate-500 mt-1">Try changing your filters or search query, or create a new task.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
