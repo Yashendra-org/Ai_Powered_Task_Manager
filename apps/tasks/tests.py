@@ -65,3 +65,37 @@ class TaskModuleTests(TestCase):
 
         # 2. Search filter
         response = self.client.get(reverse('all_tasks') + '?q=LeetCode')
+        self.assertContains(response, 'Solve LeetCode #15')
+
+        # 3. Status filter
+        response = self.client.get(reverse('all_tasks') + '?status=pending')
+        self.assertContains(response, 'Solve LeetCode #15')
+
+        response = self.client.get(reverse('all_tasks') + '?status=completed')
+        self.assertNotContains(response, 'Solve LeetCode #15')
+
+    def test_task_create_view(self):
+        response = self.client.post(reverse('task_create'), {
+            'title': 'Revise Operating Systems',
+            'description': 'Virtual Memory and Paging',
+            'category': self.category.id,
+            'priority': 'high',
+            'estimated_duration': 60,
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Task.objects.filter(user=self.user, title='Revise Operating Systems').exists())
+
+    def test_task_edit_view(self):
+        response = self.client.post(reverse('task_edit', args=[self.task.id]), {
+            'title': 'Solve LeetCode #15 - Updated',
+            'priority': 'low',
+            'estimated_duration': 20,
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.title, 'Solve LeetCode #15 - Updated')
+        self.assertEqual(self.task.priority, 'low')
+
+    def test_toggle_complete_task(self):
+        # Toggle to completed
+        response = self.client.post(reverse('task_toggle', args=[self.task.id]), follow=True)
