@@ -89,3 +89,26 @@
                         <i data-lucide="edit-3" class="w-4 h-4"></i>
                     </a>
 
+                    <form method="POST" action="{% url 'task_delete' task.id %}" class="inline" onsubmit="return confirm('Move this task to Recently Deleted?');">
+                        {% csrf_token %}
+                        <button type="submit" class="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all" title="Delete Task">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="sun" class="w-7 h-7"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-900">Your day is clear!</h3>
+                <p class="text-sm text-slate-500 mt-1 max-w-sm mx-auto">Use the quick add bar above to plan what you want to accomplish today.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
