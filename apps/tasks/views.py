@@ -116,3 +116,63 @@ def all_tasks_view(request):
     if category_id:
         tasks = tasks.filter(category_id=category_id)
 
+    # Priority filter
+    priority_filter = request.GET.get('priority')
+    if priority_filter:
+        tasks = tasks.filter(priority=priority_filter)
+
+    tasks = tasks.order_by('status', '-priority', 'due_at')
+
+    context = {
+        'tasks': tasks,
+        'categories': categories,
+        'current_status': status_filter,
+        'current_category': category_id,
+        'current_priority': priority_filter,
+        'search_query': query,
+        'total_active': Task.objects.active().filter(user=user).count(),
+    }
+    return render(request, 'tasks/all_tasks.html', context)
+
+
+@login_required
+def task_create_view(request):
+    user = request.user
+    if request.method == 'POST':
+        form = TaskForm(request.POST, user=user)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.user = user
+            task.save()
+            TaskService.create_task(
+                user=user,
+                title=task.title,
+                description=task.description,
+                category=task.category,
+                priority=task.priority,
+                scheduled_start=task.scheduled_start,
+                due_at=task.due_at,
+                estimated_duration=task.estimated_duration
+            )
+            messages.success(request, f"Task '{task.title}' created successfully!")
+            return redirect('all_tasks')
+    else:
+        form = TaskForm(user=user)
+
+    return render(request, 'tasks/task_form.html', {'form': form, 'title': 'Create New Task'})
+
+
+@login_required
+def task_edit_view(request, task_id):
+    user = request.user
+    task = get_object_or_404(Task.objects.active(), id=task_id, user=user)
+    if request.method == 'POST':
+        form = TaskForm(request.POST, instance=task, user=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Task updated successfully!")
+            return redirect('all_tasks')
+    else:
+        form = TaskForm(instance=task, user=user)
+
+    return render(request, 'tasks/task_form.html', {'form': form, 'task': task, 'title': 'Edit Task'})
