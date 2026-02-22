@@ -133,3 +133,37 @@ class TaskModuleTests(TestCase):
         self.assertFalse(Task.objects.active().filter(id=self.task.id).exists())
         self.assertTrue(Task.objects.deleted().filter(id=self.task.id).exists())
 
+        # Check trash view contains it
+        trash_response = self.client.get(reverse('trash'))
+        self.assertContains(trash_response, 'Solve LeetCode #15')
+
+        # Restore
+        restore_response = self.client.post(reverse('task_restore', args=[self.task.id]), follow=True)
+        self.assertEqual(restore_response.status_code, 200)
+        self.task.refresh_from_db()
+        self.assertIsNone(self.task.deleted_at)
+        self.assertTrue(Task.objects.active().filter(id=self.task.id).exists())
+
+    def test_permanent_delete(self):
+        self.task.soft_delete()
+        response = self.client.post(reverse('task_permanent_delete', args=[self.task.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Task.objects.filter(id=self.task.id).exists())
+
+    def test_user_data_isolation(self):
+        # Log in as other_user
+        self.client.login(username='user2', password='Password123!')
+        
+        # User 2 should NOT see User 1's tasks in My Day or All Tasks
+        res = self.client.get(reverse('my_day'))
+        self.assertNotContains(res, 'Solve LeetCode #15')
+
+        # User 2 cannot edit or delete User 1's task (returns 404)
+        edit_res = self.client.get(reverse('task_edit', args=[self.task.id]))
+        self.assertEqual(edit_res.status_code, 404)
+
+        toggle_res = self.client.post(reverse('task_toggle', args=[self.task.id]))
+        self.assertEqual(toggle_res.status_code, 404)
+
+        delete_res = self.client.post(reverse('task_delete', args=[self.task.id]))
+        self.assertEqual(delete_res.status_code, 404)
