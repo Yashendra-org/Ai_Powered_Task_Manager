@@ -87,3 +87,33 @@
 
                     <!-- Task Information -->
                     <div class="min-w-0 flex-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium {% if task.status == 'completed' %}line-through text-slate-400{% else %}text-slate-900 group-hover:text-blue-600{% endif %} transition-colors truncate">
+                                {{ task.title }}
+                            </span>
+                        </div>
+                        <div class="flex items-center flex-wrap gap-2 text-xs text-slate-400 mt-1">
+                            {% if task.category %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700">
+                                {{ task.category.name }}
+                            </span>
+                            {% endif %}
+                            <span class="flex items-center">
+                                <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
+                                {{ task.estimated_duration }}m
+                            </span>
+                            {% if task.due_at %}
+                            <span class="flex items-center text-slate-500">
+                                <i data-lucide="calendar" class="w-3 h-3 mr-1"></i>
+                                {{ task.due_at|date:"D, d M" }}
+                            </span>
+                            {% endif %}
+                            {% if task.description %}
+                            <span class="text-slate-400 truncate max-w-xs">• {{ task.description }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority & Actions -->
+                <div class="flex items-center space-x-3 flex-shrink-0">
