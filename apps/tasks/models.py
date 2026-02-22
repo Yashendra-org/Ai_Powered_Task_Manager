@@ -62,3 +62,24 @@ class Task(models.Model):
     
     scheduled_start = models.DateTimeField(null=True, blank=True)
     due_at = models.DateTimeField(null=True, blank=True)
+    estimated_duration = models.PositiveIntegerField(default=30, help_text="Estimated minutes")
+    actual_duration = models.PositiveIntegerField(null=True, blank=True, help_text="Actual minutes taken")
+    
+    is_recurring = models.BooleanField(default=False)
+    recurrence_rule = models.CharField(max_length=50, blank=True, help_text="e.g. daily, weekly")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = TaskQuerySet.as_manager()
+
+    class Meta:
+        db_table = 'tasks_task'
+        ordering = ['due_at', '-priority', 'created_at']
+
+    def __str__(self):
+        return self.title
+
+    def soft_delete(self):
