@@ -17,3 +17,8 @@ class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'due_at'
 
 
+@admin.register(TaskHistory)
+class TaskHistoryAdmin(admin.ModelAdmin):
+    list_display = ('task', 'action', 'previous_status', 'new_status', 'recorded_at')
+    list_filter = ('action', 'recorded_at')
+    search_fields = ('task__title', 'action')
