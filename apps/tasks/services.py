@@ -42,3 +42,18 @@ class TaskService:
         task.save(update_fields=['status', 'completed_at', 'updated_at'])
 
         TaskHistory.objects.create(
+            task=task,
+            previous_status=previous_status,
+            new_status=task.status,
+            action=action
+        )
+        return task
+
+    @staticmethod
+    def soft_delete(task):
+        previous_status = task.status
+        task.soft_delete()
+        TaskHistory.objects.create(
+            task=task,
+            previous_status=previous_status,
+            new_status='deleted',
