@@ -14,3 +14,19 @@ class Subject(models.Model):
         unique_together = ('user', 'name')
         ordering = ['name']
 
+    def __str__(self):
+        return f"{self.name} ({self.code})" if self.code else self.name
+
+
+class Teacher(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='teachers')
+    name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True)
+
+    class Meta:
+        db_table = 'assignments_teacher'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
