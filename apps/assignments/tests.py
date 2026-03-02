@@ -14,3 +14,20 @@ class AssignmentModuleTests(TestCase):
             username='student1',
             email='student1@college.edu',
             password='Password123!'
+        )
+        self.other_user = User.objects.create_user(
+            username='student2',
+            email='student2@college.edu',
+            password='Password123!'
+        )
+        self.client.login(username='student1', password='Password123!')
+
+        self.subject = Subject.objects.create(
+            user=self.user,
+            name='Database Systems',
+            code='CS302'
+        )
+
+        now = timezone.now()
+        self.assignment = Assignment.objects.create(
+            user=self.user,
