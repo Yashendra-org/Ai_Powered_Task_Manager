@@ -83,3 +83,25 @@ class Task(models.Model):
         return self.title
 
     def soft_delete(self):
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['deleted_at'])
+
+    def restore(self):
+        self.deleted_at = None
+        self.save(update_fields=['deleted_at'])
+
+
+class TaskHistory(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='history')
+    previous_status = models.CharField(max_length=50)
+    new_status = models.CharField(max_length=50)
+    action = models.CharField(max_length=50, help_text="created, completed, postponed, rescheduled")
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'tasks_task_history'
+        verbose_name_plural = 'Task histories'
+        ordering = ['-recorded_at']
+
+    def __str__(self):
+        return f"{self.task.title} -> {self.action} ({self.recorded_at})"
