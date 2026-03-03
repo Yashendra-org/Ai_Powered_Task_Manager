@@ -78,3 +78,44 @@ def assignment_create_view(request):
         if form.is_valid():
             assignment = form.save(commit=False)
             assignment.user = user
+            assignment.save()
+            messages.success(request, f"Assignment '{assignment.title}' created successfully!")
+            return redirect('assignment_list')
+    else:
+        form = AssignmentForm(user=user)
+
+    return render(request, 'assignments/form.html', {'form': form, 'title': 'Add College Assignment'})
+
+
+@login_required
+def assignment_edit_view(request, assignment_id):
+    user = request.user
+    assignment = get_object_or_404(Assignment, id=assignment_id, user=user)
+    if request.method == 'POST':
+        form = AssignmentForm(request.POST, request.FILES, instance=assignment, user=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Assignment updated successfully!")
+            return redirect('assignment_list')
+    else:
+        form = AssignmentForm(instance=assignment, user=user)
+
+    return render(request, 'assignments/form.html', {'form': form, 'assignment': assignment, 'title': 'Edit Assignment'})
+
+
+@login_required
+@require_POST
+def assignment_delete_view(request, assignment_id):
+    user = request.user
+    assignment = get_object_or_404(Assignment, id=assignment_id, user=user)
+    title = assignment.title
+    assignment.delete()
+    messages.info(request, f"Assignment '{title}' deleted.")
+    return redirect('assignment_list')
+
+
+@login_required
+@require_POST
+def assignment_submit_toggle_view(request, assignment_id):
+    """
+    1-Click toggle to mark an assignment as officially submitted.
