@@ -7,3 +7,8 @@ class SubjectAdmin(admin.ModelAdmin):
     list_display = ('name', 'code', 'user')
     list_filter = ('user',)
     search_fields = ('name', 'code')
+
+
+@admin.register(Teacher)
+class TeacherAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'user')
