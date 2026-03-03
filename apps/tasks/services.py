@@ -57,3 +57,18 @@ class TaskService:
             task=task,
             previous_status=previous_status,
             new_status='deleted',
+            action='soft_deleted'
+        )
+        return task
+
+    @staticmethod
+    def restore(task):
+        task.restore()
+        TaskHistory.objects.create(
+            task=task,
+            previous_status='deleted',
+            new_status=task.status,
+            action='restored'
+        )
+        return task
+
