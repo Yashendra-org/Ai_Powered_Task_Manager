@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}College Assignments — My Habbit Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">College Assignments</h1>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">Never miss homework deadlines or academic submissions</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'subject_list' %}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                <i data-lucide="book-open" class="w-3.5 h-3.5 mr-1.5 text-slate-400"></i>
+                Subjects
+            </a>
+            <a href="{% url 'teacher_list' %}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                <i data-lucide="users" class="w-3.5 h-3.5 mr-1.5 text-slate-400"></i>
+                Instructors
+            </a>
+            <a href="{% url 'assignment_create' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+                Add Assignment
+            </a>
+        </div>
+    </div>
