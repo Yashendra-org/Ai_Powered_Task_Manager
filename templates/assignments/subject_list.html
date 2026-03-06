@@ -21,3 +21,15 @@
         <form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             {% csrf_token %}
             <div>{{ form.name }}</div>
+            <div>{{ form.code }}</div>
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm transition-colors">
+                Add Subject
+            </button>
+        </form>
+    </div>
+
+    <!-- Subjects List -->
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-100 font-semibold text-sm text-slate-900">
+            Active Subjects ({{ subjects.count }})
+        </div>
