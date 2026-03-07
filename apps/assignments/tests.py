@@ -31,3 +31,20 @@ class AssignmentModuleTests(TestCase):
         now = timezone.now()
         self.assignment = Assignment.objects.create(
             user=self.user,
+            subject=self.subject,
+            title='Homework 1: SQL Joins',
+            due_at=now + timezone.timedelta(days=2),
+            priority='high',
+            status='not_started'
+        )
+
+    def test_assignment_list_view(self):
+        response = self.client.get(reverse('assignment_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Homework 1: SQL Joins')
+        self.assertContains(response, 'CS302')
+
+    def test_deadline_categorization(self):
+        now = timezone.now()
+        # Due in 2 days -> due_soon
+        self.assertEqual(self.assignment.deadline_category, 'due_soon')
