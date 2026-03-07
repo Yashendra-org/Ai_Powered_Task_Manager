@@ -10,3 +10,7 @@ urlpatterns = [
     path('<uuid:task_id>/delete/', views.task_delete_view, name='task_delete'),
     path('<uuid:task_id>/restore/', views.task_restore_view, name='task_restore'),
     path('<uuid:task_id>/permanent-delete/', views.task_permanent_delete_view, name='task_permanent_delete'),
+    path('trash/', views.trash_view, name='trash'),
+    path('categories/create/', views.category_create_view, name='category_create'),
+]
+
