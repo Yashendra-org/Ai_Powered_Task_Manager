@@ -12,3 +12,8 @@ class SubjectAdmin(admin.ModelAdmin):
 @admin.register(Teacher)
 class TeacherAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'user')
+    list_filter = ('user',)
+    search_fields = ('name', 'email')
+
+
+@admin.register(Assignment)
