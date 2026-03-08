@@ -235,3 +235,63 @@ def task_delete_view(request, task_id):
             'task_id': str(task.id),
             'today_total': tot,
             'today_completed': comp,
+            'today_rate': rate,
+            'message': f"Task '{task.title}' moved to Trash.",
+        })
+
+    messages.info(request, f"Task moved to Trash. You can restore it anytime from Recently Deleted.")
+    return redirect(request.META.get('HTTP_REFERER', 'all_tasks'))
+
+
+@login_required
+@require_POST
+def task_restore_view(request, task_id):
+    """
+    Restore a soft-deleted task.
+    """
+    user = request.user
+    task = get_object_or_404(Task.objects.deleted(), id=task_id, user=user)
+    TaskService.restore(task)
+    messages.success(request, f"Task '{task.title}' restored successfully!")
+    return redirect('trash')
+
+
+@login_required
+@require_POST
+def task_permanent_delete_view(request, task_id):
+    """
+    Permanently delete a task from the database.
+    """
+    user = request.user
+    task = get_object_or_404(Task.objects.deleted(), id=task_id, user=user)
+    title = task.title
+    task.delete()
+    messages.warning(request, f"Task '{title}' has been permanently deleted.")
+    return redirect('trash')
+
+
+@login_required
+def trash_view(request):
+    """
+    View soft-deleted tasks with restore options.
+    """
+    user = request.user
+    deleted_tasks = Task.objects.deleted().filter(user=user).order_by('-deleted_at')
+    return render(request, 'tasks/trash.html', {'tasks': deleted_tasks})
+
+
+@login_required
+def category_create_view(request):
+    user = request.user
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save(commit=False)
+            category.user = user
+            category.save()
+            messages.success(request, f"Category '{category.name}' added!")
+            return redirect('all_tasks')
+    else:
+        form = CategoryForm()
+
+    return render(request, 'tasks/category_form.html', {'form': form})
