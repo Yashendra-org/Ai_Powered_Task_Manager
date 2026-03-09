@@ -38,3 +38,43 @@ def assignment_list_view(request):
         assignments = assignments.filter(due_at__date=today).exclude(status='submitted')
     elif filter_type == 'due_soon':
         soon_limit = today + timezone.timedelta(days=3)
+        assignments = assignments.filter(due_at__date__gt=today, due_at__date__lte=soon_limit).exclude(status='submitted')
+    elif filter_type == 'overdue':
+        assignments = assignments.filter(due_at__lt=now).exclude(status='submitted')
+    elif filter_type == 'submitted':
+        assignments = assignments.filter(status='submitted')
+    elif filter_type == 'pending':
+        assignments = assignments.exclude(status='submitted')
+
+    # Subject filter
+    subject_id = request.GET.get('subject')
+    if subject_id:
+        assignments = assignments.filter(subject_id=subject_id)
+
+    assignments = assignments.order_by('due_at', '-priority')
+
+    context = {
+        'assignments': assignments,
+        'subjects': subjects,
+        'current_filter': filter_type,
+        'current_subject': subject_id,
+        'search_query': query,
+        'total_count': Assignment.objects.filter(user=user).count(),
+        'pending_count': Assignment.objects.filter(user=user).exclude(status='submitted').count(),
+    }
+    return render(request, 'assignments/list.html', context)
+
+
+@login_required
+def assignment_create_view(request):
+    user = request.user
+    # Ensure user has at least one subject
+    if not Subject.objects.filter(user=user).exists():
+        messages.info(request, "Please create at least one subject before adding an assignment.")
+        return redirect('subject_list')
+
+    if request.method == 'POST':
+        form = AssignmentForm(request.POST, request.FILES, user=user)
+        if form.is_valid():
+            assignment = form.save(commit=False)
+            assignment.user = user
