@@ -52,3 +52,21 @@ class AssignmentForm(forms.ModelForm):
             'due_at',
             'priority',
             'status',
+            'attachment',
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
+                'placeholder': 'e.g. Assignment 3: B+ Trees & Indexing'
+            }),
+            'subject': forms.Select(attrs={
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors'
+            }),
+            'teacher': forms.Select(attrs={
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors'
+            }),
+            'description': forms.Textarea(attrs={
+                'rows': 3,
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
+                'placeholder': 'Instructions, problem numbers, or submission guidelines...'
+            }),
