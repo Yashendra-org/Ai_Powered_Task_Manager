@@ -47,3 +47,19 @@ class Assignment(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='assignments')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='assignments')
+    teacher = models.ForeignKey(Teacher, null=True, blank=True, on_delete=models.SET_NULL, related_name='assignments')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    assigned_date = models.DateField(default=timezone.localdate)
+    due_at = models.DateTimeField()
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='high')
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='not_started')
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    attachment = models.FileField(upload_to='assignments/%Y/%m/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'assignments_assignment'
+        ordering = ['due_at', '-priority']
+
