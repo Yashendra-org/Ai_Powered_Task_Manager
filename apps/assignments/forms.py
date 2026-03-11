@@ -16,3 +16,21 @@ class SubjectForm(forms.ModelForm):
                 'placeholder': 'e.g. CS302'
             }),
         }
+
+
+class TeacherForm(forms.ModelForm):
+    class Meta:
+        model = Teacher
+        fields = ['name', 'email']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
+                'placeholder': 'e.g. Dr. R. Sharma'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
+                'placeholder': 'sharma@college.edu'
+            }),
+        }
+
+
