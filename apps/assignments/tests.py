@@ -48,3 +48,20 @@ class AssignmentModuleTests(TestCase):
         now = timezone.now()
         # Due in 2 days -> due_soon
         self.assertEqual(self.assignment.deadline_category, 'due_soon')
+
+        # Due later today (in 4 hours) -> due_today
+        self.assignment.due_at = now + timezone.timedelta(hours=4)
+        self.assertEqual(self.assignment.deadline_category, 'due_today')
+
+        # Overdue (2 days ago)
+        self.assignment.due_at = now - timezone.timedelta(days=2)
+        self.assertEqual(self.assignment.deadline_category, 'overdue')
+
+    def test_submit_toggle(self):
+        response = self.client.post(reverse('assignment_submit_toggle', args=[self.assignment.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assignment.refresh_from_db()
+        self.assertEqual(self.assignment.status, 'submitted')
+        self.assertIsNotNone(self.assignment.submitted_at)
+
+        # Toggle back
