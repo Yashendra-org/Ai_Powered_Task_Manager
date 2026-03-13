@@ -159,3 +159,44 @@ def subject_list_view(request):
     subjects = Subject.objects.filter(user=user)
 
     if request.method == 'POST':
+        form = SubjectForm(request.POST)
+        if form.is_valid():
+            subject = form.save(commit=False)
+            subject.user = user
+            subject.save()
+            messages.success(request, f"Subject '{subject.name}' added successfully!")
+            return redirect('subject_list')
+    else:
+        form = SubjectForm()
+
+    return render(request, 'assignments/subject_list.html', {'subjects': subjects, 'form': form})
+
+
+@login_required
+@require_POST
+def subject_delete_view(request, subject_id):
+    user = request.user
+    subject = get_object_or_404(Subject, id=subject_id, user=user)
+    name = subject.name
+    subject.delete()
+    messages.info(request, f"Subject '{name}' deleted.")
+    return redirect('subject_list')
+
+
+@login_required
+def teacher_list_view(request):
+    user = request.user
+    teachers = Teacher.objects.filter(user=user)
+
+    if request.method == 'POST':
+        form = TeacherForm(request.POST)
+        if form.is_valid():
+            teacher = form.save(commit=False)
+            teacher.user = user
+            teacher.save()
+            messages.success(request, f"Teacher '{teacher.name}' added successfully!")
+            return redirect('teacher_list')
+    else:
+        form = TeacherForm()
+
+    return render(request, 'assignments/teacher_list.html', {'teachers': teachers, 'form': form})
