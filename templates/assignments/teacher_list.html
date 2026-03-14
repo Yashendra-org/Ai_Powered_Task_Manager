@@ -8,3 +8,14 @@
         <div>
             <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Instructors & Professors</h1>
             <p class="text-sm text-slate-500 mt-1">Keep track of your course teachers and contact emails</p>
+        </div>
+        <a href="{% url 'assignment_list' %}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5 mr-1.5"></i>
+            Back to Assignments
+        </a>
+    </div>
+
+    <!-- Create Teacher Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 mb-4">Add Instructor</h2>
+        <form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
