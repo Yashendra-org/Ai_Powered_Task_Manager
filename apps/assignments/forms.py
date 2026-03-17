@@ -34,3 +34,21 @@ class TeacherForm(forms.ModelForm):
         }
 
 
+class AssignmentForm(forms.ModelForm):
+    due_at = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={
+            'type': 'datetime-local',
+            'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors'
+        })
+    )
+
+    class Meta:
+        model = Assignment
+        fields = [
+            'title',
+            'subject',
+            'teacher',
+            'description',
+            'due_at',
+            'priority',
+            'status',
