@@ -133,3 +133,37 @@
 
                     <div class="flex items-center space-x-2">
                         <!-- Submit Toggle -->
+                        <form method="POST" action="{% url 'assignment_submit_toggle' item.id %}" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors {% if item.status == 'submitted' %}bg-slate-100 text-slate-600 hover:bg-slate-200{% else %}bg-green-50 text-green-700 hover:bg-green-100 border border-green-200{% endif %}">
+                                {% if item.status == 'submitted' %}Mark In Progress{% else %}Submit{% endif %}
+                            </button>
+                        </form>
+
+                        <a href="{% url 'assignment_edit' item.id %}" class="p-1 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-50">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </a>
+
+                        <form method="POST" action="{% url 'assignment_delete' item.id %}" class="inline" onsubmit="return confirm('Delete this assignment?');">
+                            {% csrf_token %}
+                            <button type="submit" class="p-1 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-span-full bg-white rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="graduation-cap" class="w-7 h-7"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-900">No assignments found</h3>
+                <p class="text-sm text-slate-500 mt-1 max-w-sm mx-auto">No assignments match your active filters. Enjoy your free time or add your next deliverable!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
