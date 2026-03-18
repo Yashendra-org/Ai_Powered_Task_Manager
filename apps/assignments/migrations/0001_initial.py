@@ -52,3 +52,17 @@ class Migration(migrations.Migration):
                 ('assigned_date', models.DateField(default=django.utils.timezone.localdate)),
                 ('due_at', models.DateTimeField()),
                 ('priority', models.CharField(choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='high', max_length=10)),
+                ('status', models.CharField(choices=[('not_started', 'Not Started'), ('in_progress', 'In Progress'), ('completed', 'Completed'), ('submitted', 'Submitted')], default='not_started', max_length=15)),
+                ('submitted_at', models.DateTimeField(blank=True, null=True)),
+                ('attachment', models.FileField(blank=True, null=True, upload_to='assignments/%Y/%m/')),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to=settings.AUTH_USER_MODEL)),
+                ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to='assignments.subject')),
+                ('teacher', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='assignments', to='assignments.teacher')),
+            ],
+            options={
+                'db_table': 'assignments_assignment',
+                'ordering': ['due_at', '-priority'],
+            },
+        ),
+    ]
