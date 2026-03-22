@@ -119,3 +119,43 @@ def assignment_delete_view(request, assignment_id):
 def assignment_submit_toggle_view(request, assignment_id):
     """
     1-Click toggle to mark an assignment as officially submitted.
+    """
+    user = request.user
+    assignment = get_object_or_404(Assignment, id=assignment_id, user=user)
+    if assignment.status == 'submitted':
+        assignment.status = 'in_progress'
+        assignment.submitted_at = None
+        is_submitted = False
+        msg = f"Assignment '{assignment.title}' marked as In Progress."
+    else:
+        assignment.status = 'submitted'
+        assignment.submitted_at = timezone.now()
+        is_submitted = True
+        msg = f"Assignment '{assignment.title}' marked as Submitted! 🎉"
+
+    assignment.save(update_fields=['status', 'submitted_at'])
+
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'assignment_id': str(assignment.id),
+            'status': assignment.status,
+            'is_submitted': is_submitted,
+            'deadline_category': assignment.deadline_category,
+            'message': msg,
+        })
+
+    if is_submitted:
+        messages.success(request, msg)
+    else:
+        messages.info(request, msg)
+    return redirect(request.META.get('HTTP_REFERER', 'assignment_list'))
+
+
+@login_required
+def subject_list_view(request):
+    user = request.user
+    subjects = Subject.objects.filter(user=user)
+
+    if request.method == 'POST':
