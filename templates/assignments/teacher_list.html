@@ -40,3 +40,14 @@
                     <h4 class="text-sm font-medium text-slate-900">{{ t.name }}</h4>
                     {% if t.email %}
                     <p class="text-xs text-slate-400 mt-0.5">{{ t.email }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-8 text-center text-xs text-slate-400">No instructors added yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
