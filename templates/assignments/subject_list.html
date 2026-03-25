@@ -33,3 +33,15 @@
         <div class="px-6 py-4 border-b border-slate-100 font-semibold text-sm text-slate-900">
             Active Subjects ({{ subjects.count }})
         </div>
+        <div class="divide-y divide-slate-100">
+            {% for sub in subjects %}
+            <div class="px-6 py-3.5 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 mr-2">
+                        {{ sub.code|default:"No Code" }}
+                    </span>
+                    <span class="text-sm font-medium text-slate-900">{{ sub.name }}</span>
+                </div>
+                <form method="POST" action="{% url 'subject_delete' sub.id %}" onsubmit="return confirm('Delete this subject and all its assignments?');">
+                    {% csrf_token %}
+                    <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50">
