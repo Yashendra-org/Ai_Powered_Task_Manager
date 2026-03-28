@@ -17,3 +17,8 @@ class TeacherAdmin(admin.ModelAdmin):
 
 
 @admin.register(Assignment)
+class AssignmentAdmin(admin.ModelAdmin):
+    list_display = ('title', 'subject', 'user', 'due_at', 'priority', 'status', 'submitted_at')
+    list_filter = ('status', 'priority', 'subject', 'user')
+    search_fields = ('title', 'description')
+    date_hierarchy = 'due_at'
