@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Habit Tracker — My Habbit Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <i data-lucide="flame" class="w-5 h-5"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Habit Tracker</h1>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">Week of {{ start_of_week }} – {{ end_of_week }} • Build unbroken routines</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <span class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
+                Today: {{ completed_today }} of {{ total_habits }} Done ({{ completion_rate }}%)
+            </span>
+            <a href="{% url 'habit_create' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-colors">
