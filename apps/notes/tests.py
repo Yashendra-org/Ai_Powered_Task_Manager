@@ -16,3 +16,12 @@ class NoteModuleTests(TestCase):
         )
         self.client.login(username='note_user', password='Password123!')
 
+        self.note = Note.objects.create(
+            user=self.user,
+            title='Project Ideas',
+            content='Build Habit Tracker with ML',
+            is_pinned=False
+        )
+
+    def test_note_list_view(self):
+        response = self.client.get(reverse('note_list'))
