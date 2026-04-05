@@ -45,3 +45,15 @@
                 <form method="POST" action="{% url 'subject_delete' sub.id %}" onsubmit="return confirm('Delete this subject and all its assignments?');">
                     {% csrf_token %}
                     <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
+            {% empty %}
+            <div class="p-8 text-center text-xs text-slate-400">No subjects registered yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
