@@ -63,3 +63,20 @@ class Assignment(models.Model):
         db_table = 'assignments_assignment'
         ordering = ['due_at', '-priority']
 
+    def __str__(self):
+        return f"{self.title} - {self.subject.name}"
+
+    @property
+    def deadline_category(self):
+        now = timezone.now()
+        if self.due_at < now and self.status != 'submitted':
+            return 'overdue'
+        days_until_due = (self.due_at.date() - timezone.localdate()).days
+        if days_until_due == 0:
+            return 'due_today'
+        elif days_until_due == 1:
+            return 'due_tomorrow'
+        elif 1 < days_until_due <= 3:
+            return 'due_soon'
+        else:
+            return 'upcoming'
