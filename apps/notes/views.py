@@ -35,3 +35,21 @@ def note_list_view(request):
 def note_create_view(request):
     user = request.user
     if request.method == 'POST':
+        form = NoteForm(request.POST)
+        if form.is_valid():
+            note = form.save(commit=False)
+            note.user = user
+            note.save()
+            messages.success(request, f"Note '{note.title}' created!")
+            return redirect('note_list')
+    else:
+        form = NoteForm()
+
+    return render(request, 'notes/form.html', {'form': form, 'title': 'Create Note'})
+
+
+@login_required
+def note_edit_view(request, note_id):
+    user = request.user
+    note = get_object_or_404(Note, id=note_id, user=user)
+    if request.method == 'POST':
