@@ -65,3 +65,20 @@ class AssignmentModuleTests(TestCase):
         self.assertIsNotNone(self.assignment.submitted_at)
 
         # Toggle back
+        response = self.client.post(reverse('assignment_submit_toggle', args=[self.assignment.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assignment.refresh_from_db()
+        self.assertEqual(self.assignment.status, 'in_progress')
+        self.assertIsNone(self.assignment.submitted_at)
+
+    def test_user_data_isolation(self):
+        self.client.login(username='student2', password='Password123!')
+        res = self.client.get(reverse('assignment_list'))
+        self.assertNotContains(res, 'Homework 1: SQL Joins')
+
+        # Attempt to edit or delete User 1's assignment
+        edit_res = self.client.get(reverse('assignment_edit', args=[self.assignment.id]))
+        self.assertEqual(edit_res.status_code, 404)
+
+        del_res = self.client.post(reverse('assignment_delete', args=[self.assignment.id]))
+        self.assertEqual(del_res.status_code, 404)
