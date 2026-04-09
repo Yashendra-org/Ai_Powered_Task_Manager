@@ -9,3 +9,6 @@ urlpatterns = [
     path('<uuid:assignment_id>/submit/', views.assignment_submit_toggle_view, name='assignment_submit_toggle'),
     path('subjects/', views.subject_list_view, name='subject_list'),
     path('subjects/<int:subject_id>/delete/', views.subject_delete_view, name='subject_delete'),
+    path('teachers/', views.teacher_list_view, name='teacher_list'),
+]
+
