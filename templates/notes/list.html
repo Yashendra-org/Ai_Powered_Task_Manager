@@ -31,3 +31,20 @@
             <input type="text" name="q" value="{{ search_query }}" placeholder="Search through all your notes..." class="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-800 placeholder-slate-400">
         </form>
     </div>
+
+    <!-- Notes Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% if notes %}
+            {% for note in notes %}
+            <div class="bg-white rounded-2xl border {% if note.is_pinned %}border-amber-300 ring-2 ring-amber-100 shadow-sm{% else %}border-slate-200 hover:border-amber-200 hover:shadow-sm{% endif %} p-5 flex flex-col justify-between transition-all group">
+                <div>
+                    <div class="flex items-start justify-between gap-2">
+                        <h3 class="text-sm font-bold text-slate-900 leading-snug">{{ note.title }}</h3>
+                        
+                        <!-- Pin Button -->
+                        <form method="POST" action="{% url 'note_toggle_pin' note.id %}" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="p-1 rounded-lg transition-colors {% if note.is_pinned %}text-amber-500 hover:text-amber-600 bg-amber-50{% else %}text-slate-300 hover:text-amber-500 opacity-0 group-hover:opacity-100{% endif %}" title="{% if note.is_pinned %}Unpin{% else %}Pin to top{% endif %}">
+                                <i data-lucide="pin" class="w-3.5 h-3.5 fill-current"></i>
+                            </button>
+                        </form>
