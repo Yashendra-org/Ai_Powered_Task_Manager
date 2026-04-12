@@ -102,3 +102,38 @@ def habit_edit_view(request, habit_id):
     if request.method == 'POST':
         form = HabitForm(request.POST, instance=habit)
         if form.is_valid():
+            habit = form.save(commit=False)
+            habit.scheduled_days = form.cleaned_data['scheduled_days']
+            habit.save()
+            messages.success(request, "Habit updated successfully!")
+            return redirect('habit_list')
+    else:
+        form = HabitForm(instance=habit, initial={'scheduled_days': [str(d) for d in habit.scheduled_days]})
+
+    return render(request, 'habits/form.html', {'form': form, 'habit': habit, 'title': 'Edit Habit'})
+
+
+@login_required
+@require_POST
+def habit_delete_view(request, habit_id):
+    user = request.user
+    habit = get_object_or_404(Habit, id=habit_id, user=user)
+    title = habit.title
+    habit.delete()
+    messages.info(request, f"Habit '{title}' removed.")
+    return redirect('habit_list')
+
+
+@login_required
+@require_POST
+def habit_toggle_log_view(request, habit_id):
+    """
+    1-Click daily check-off toggle for a habit.
+    """
+    user = request.user
+    habit = get_object_or_404(Habit, id=habit_id, user=user)
+    
+    date_str = request.POST.get('date') or request.GET.get('date')
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
