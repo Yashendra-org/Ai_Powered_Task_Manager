@@ -32,3 +32,38 @@ def habit_list_view(request):
         })
 
     habits = Habit.objects.filter(user=user, is_active=True)
+    habit_rows = []
+    total_today = habits.count()
+    completed_today = 0
+
+    for habit in habits:
+        # Get logs for this habit for the current week
+        week_logs = set(
+            HabitLog.objects.filter(
+                habit=habit,
+                date__range=[start_of_week, start_of_week + timedelta(days=6)],
+                status='completed'
+            ).values_list('date', flat=True)
+        )
+
+        day_statuses = []
+        for day in week_days:
+            is_done = day['date'] in week_logs
+            if day['is_today'] and is_done:
+                completed_today += 1
+            day_statuses.append({
+                'date_str': day['date_str'],
+                'is_completed': is_done,
+                'is_today': day['is_today'],
+            })
+
+        habit_rows.append({
+            'habit': habit,
+            'streak': habit.current_streak(),
+            'days': day_statuses,
+        })
+
+    completion_rate = round((completed_today / total_today * 100), 1) if total_today > 0 else 0.0
+
+    context = {
+        'habit_rows': habit_rows,
