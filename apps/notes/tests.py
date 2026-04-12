@@ -25,3 +25,12 @@ class NoteModuleTests(TestCase):
 
     def test_note_list_view(self):
         response = self.client.get(reverse('note_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Project Ideas')
+
+    def test_note_create(self):
+        response = self.client.post(reverse('note_create'), {
+            'title': 'DBMS Notes',
+            'content': 'Third Normal Form requirements',
+            'is_pinned': True,
+        }, follow=True)
