@@ -11,3 +11,16 @@ class Habit(models.Model):
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='habits')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, default='daily')
+    scheduled_days = models.JSONField(default=list, blank=True, help_text="List of day indices [0=Mon, 6=Sun]")
+    target_time = models.TimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'habits_habit'
+        ordering = ['title']
+
+    def __str__(self):
