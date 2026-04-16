@@ -37,3 +37,16 @@ class Habit(models.Model):
         # If today is not logged, start checking from yesterday
         if current not in logs:
             current -= timezone.timedelta(days=1)
+        while current in logs:
+            streak += 1
+            current -= timezone.timedelta(days=1)
+        return streak
+
+
+class HabitLog(models.Model):
+    STATUS_CHOICES = [
+        ('completed', 'Completed'),
+        ('missed', 'Missed'),
+        ('skipped', 'Skipped'),
+    ]
+
