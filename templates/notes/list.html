@@ -14,3 +14,20 @@
                 <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Quick Notes</h1>
             </div>
             <p class="text-sm text-slate-500 mt-1">Capture ideas, reference points, and study thoughts</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'note_create' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-amber-600 hover:bg-amber-700 shadow-sm shadow-amber-200 transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+                New Note
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <form method="GET" class="relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search through all your notes..." class="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-800 placeholder-slate-400">
+        </form>
+    </div>
