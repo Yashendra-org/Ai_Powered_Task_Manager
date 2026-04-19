@@ -12,3 +12,7 @@ class Note(models.Model):
 
     class Meta:
         db_table = 'notes_note'
+        ordering = ['-is_pinned', '-updated_at']
+
+    def __str__(self):
+        return self.title
