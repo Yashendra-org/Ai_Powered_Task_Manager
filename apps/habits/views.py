@@ -67,3 +67,38 @@ def habit_list_view(request):
 
     context = {
         'habit_rows': habit_rows,
+        'week_days': week_days,
+        'total_habits': total_today,
+        'completed_today': completed_today,
+        'completion_rate': completion_rate,
+        'start_of_week': start_of_week.strftime('%d %b'),
+        'end_of_week': (start_of_week + timedelta(days=6)).strftime('%d %b %Y'),
+    }
+    return render(request, 'habits/list.html', context)
+
+
+@login_required
+def habit_create_view(request):
+    user = request.user
+    if request.method == 'POST':
+        form = HabitForm(request.POST)
+        if form.is_valid():
+            habit = form.save(commit=False)
+            habit.user = user
+            habit.scheduled_days = form.cleaned_data['scheduled_days']
+            habit.save()
+            messages.success(request, f"Habit '{habit.title}' added to your tracker!")
+            return redirect('habit_list')
+    else:
+        form = HabitForm()
+
+    return render(request, 'habits/form.html', {'form': form, 'title': 'Create New Habit'})
+
+
+@login_required
+def habit_edit_view(request, habit_id):
+    user = request.user
+    habit = get_object_or_404(Habit, id=habit_id, user=user)
+    if request.method == 'POST':
+        form = HabitForm(request.POST, instance=habit)
+        if form.is_valid():
