@@ -137,3 +137,38 @@ def habit_toggle_log_view(request, habit_id):
     if date_str:
         try:
             target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            target_date = timezone.localdate()
+    else:
+        target_date = timezone.localdate()
+
+    log = HabitLog.objects.filter(habit=habit, date=target_date).first()
+    if log and log.status == 'completed':
+        log.delete()
+        is_completed = False
+        msg = f"Unchecked '{habit.title}' for {target_date.strftime('%a, %d %b')}."
+    else:
+        HabitLog.objects.update_or_create(
+            habit=habit,
+            date=target_date,
+            defaults={'status': 'completed', 'completed_at': timezone.now()}
+        )
+        is_completed = True
+        msg = f"Logged '{habit.title}' for {target_date.strftime('%a, %d %b')}! 🔥"
+
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'habit_id': str(habit.id),
+            'date_str': target_date.strftime('%Y-%m-%d'),
+            'is_completed': is_completed,
+            'streak': habit.current_streak(),
+            'message': msg,
+        })
+
+    if is_completed:
+        messages.success(request, msg)
+    else:
+        messages.info(request, msg)
+    return redirect(request.META.get('HTTP_REFERER', 'habit_list'))
