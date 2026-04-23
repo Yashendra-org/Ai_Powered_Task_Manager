@@ -44,3 +44,26 @@
                         <th class="py-4 px-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Actions</th>
                     </tr>
                 </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% if habit_rows %}
+                        {% for row in habit_rows %}
+                        <tr class="hover:bg-slate-50/50 transition-colors group">
+                            <!-- Habit Details -->
+                            <td class="py-4 px-6">
+                                <h4 class="text-sm font-semibold text-slate-900">{{ row.habit.title }}</h4>
+                                <div class="flex items-center space-x-2 text-xs text-slate-400 mt-0.5">
+                                    <span class="capitalize">{{ row.habit.get_frequency_display }}</span>
+                                    {% if row.habit.target_time %}
+                                    <span>• {{ row.habit.target_time|time:"H:i" }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <!-- Streak Badge -->
+                            <td class="py-4 px-4 text-center">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold {% if row.streak > 0 %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-slate-100 text-slate-500{% endif %}">
+                                    <i data-lucide="flame" class="w-3.5 h-3.5 mr-1 text-emerald-600"></i>
+                                    {{ row.streak }}d
+                                </span>
+                            </td>
+
