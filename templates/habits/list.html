@@ -90,3 +90,27 @@
                                         {% csrf_token %}
                                         <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10" class="py-12 text-center">
+                                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                                    <i data-lucide="flame" class="w-6 h-6"></i>
+                                </div>
+                                <h4 class="text-sm font-semibold text-slate-900">No habits tracked yet</h4>
+                                <p class="text-xs text-slate-500 mt-1">Start building consistency by adding your first daily habit.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
