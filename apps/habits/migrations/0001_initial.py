@@ -39,3 +39,14 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateField(default=django.utils.timezone.localdate)),
                 ('status', models.CharField(choices=[('completed', 'Completed'), ('missed', 'Missed'), ('skipped', 'Skipped')], default='completed', max_length=15)),
+                ('completed_at', models.DateTimeField(blank=True, null=True)),
+                ('notes', models.TextField(blank=True)),
+                ('habit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='logs', to='habits.habit')),
+            ],
+            options={
+                'db_table': 'habits_habit_log',
+                'ordering': ['-date'],
+                'unique_together': {('habit', 'date')},
+            },
+        ),
+    ]
