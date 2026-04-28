@@ -49,3 +49,16 @@ class HabitModuleTests(TestCase):
             follow=True
         )
         self.assertEqual(response.status_code, 200)
+        self.assertFalse(HabitLog.objects.filter(habit=self.habit, date=today).exists())
+        self.assertEqual(self.habit.current_streak(), 0)
+
+    def test_streak_calculation(self):
+        today = timezone.localdate()
+        # Log yesterday and day before
+        HabitLog.objects.create(habit=self.habit, date=today - timezone.timedelta(days=1), status='completed')
+        HabitLog.objects.create(habit=self.habit, date=today - timezone.timedelta(days=2), status='completed')
+        self.assertEqual(self.habit.current_streak(), 2)
+
+        # Log today as well -> streak is 3
+        HabitLog.objects.create(habit=self.habit, date=today, status='completed')
+        self.assertEqual(self.habit.current_streak(), 3)
