@@ -24,3 +24,10 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notes', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'db_table': 'notes_note',
+                'ordering': ['-is_pinned', '-updated_at'],
+            },
+        ),
+    ]
