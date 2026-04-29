@@ -24,3 +24,16 @@ class Habit(models.Model):
         ordering = ['title']
 
     def __str__(self):
+        return self.title
+
+    def current_streak(self):
+        """Calculates the consecutive streak ending today or yesterday."""
+        logs = set(self.logs.filter(status='completed').values_list('date', flat=True))
+        if not logs:
+            return 0
+        streak = 0
+        today = timezone.localdate()
+        current = today
+        # If today is not logged, start checking from yesterday
+        if current not in logs:
+            current -= timezone.timedelta(days=1)
