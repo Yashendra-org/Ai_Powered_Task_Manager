@@ -23,3 +23,16 @@ class HabitModuleTests(TestCase):
             frequency='daily'
         )
 
+    def test_habit_list_view(self):
+        response = self.client.get(reverse('habit_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'DSA Daily Practice')
+
+    def test_habit_toggle_log(self):
+        today = timezone.localdate()
+        today_str = today.strftime('%Y-%m-%d')
+
+        # Check in for today
+        response = self.client.post(
+            reverse('habit_toggle_log', args=[self.habit.id]),
+            {'date': today_str},
