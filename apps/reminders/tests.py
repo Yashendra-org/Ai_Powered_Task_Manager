@@ -16,3 +16,12 @@ class ReminderModuleTests(TestCase):
         )
         self.client.login(username='rem_user', password='Password123!')
 
+        self.notif = Notification.objects.create(
+            user=self.user,
+            title='Upcoming Assignment',
+            message='DBMS Assignment 3 is due soon.',
+            notification_type='deadline',
+            is_read=False
+        )
+
+    def test_notification_list_view(self):
