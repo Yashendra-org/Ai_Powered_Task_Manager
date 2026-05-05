@@ -53,3 +53,22 @@ def note_edit_view(request, note_id):
     user = request.user
     note = get_object_or_404(Note, id=note_id, user=user)
     if request.method == 'POST':
+        form = NoteForm(request.POST, instance=note)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Note updated successfully!")
+            return redirect('note_list')
+    else:
+        form = NoteForm(instance=note)
+
+    return render(request, 'notes/form.html', {'form': form, 'note': note, 'title': 'Edit Note'})
+
+
+@login_required
+@require_POST
+def note_delete_view(request, note_id):
+    user = request.user
+    note = get_object_or_404(Note, id=note_id, user=user)
+    title = note.title
+    note.delete()
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
