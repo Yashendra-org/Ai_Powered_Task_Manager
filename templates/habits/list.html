@@ -67,3 +67,26 @@
                                 </span>
                             </td>
 
+                            <!-- 7-Day Checkboxes -->
+                            {% for day in row.days %}
+                            <td class="py-4 px-3 text-center {% if day.is_today %}bg-emerald-50/30{% endif %}">
+                                <form method="POST" action="{% url 'habit_toggle_log' row.habit.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="date" value="{{ day.date_str }}">
+                                    <button type="submit" class="w-7 h-7 rounded-lg border flex items-center justify-center mx-auto transition-all {% if day.is_completed %}bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-200{% else %}border-slate-200 hover:border-emerald-400 bg-white text-transparent hover:text-slate-300{% endif %}" title="Log {{ day.date_str }}">
+                                        <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            {% endfor %}
+
+                            <!-- Actions -->
+                            <td class="py-4 px-4 text-right">
+                                <div class="inline-flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href="{% url 'habit_edit' row.habit.id %}" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100">
+                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                    </a>
+                                    <form method="POST" action="{% url 'habit_delete' row.habit.id %}" class="inline" onsubmit="return confirm('Delete this habit?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
