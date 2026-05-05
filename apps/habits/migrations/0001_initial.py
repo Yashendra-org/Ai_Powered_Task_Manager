@@ -29,3 +29,13 @@ class Migration(migrations.Migration):
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='habits', to=settings.AUTH_USER_MODEL)),
             ],
             options={
+                'db_table': 'habits_habit',
+                'ordering': ['title'],
+            },
+        ),
+        migrations.CreateModel(
+            name='HabitLog',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('date', models.DateField(default=django.utils.timezone.localdate)),
+                ('status', models.CharField(choices=[('completed', 'Completed'), ('missed', 'Missed'), ('skipped', 'Skipped')], default='completed', max_length=15)),
