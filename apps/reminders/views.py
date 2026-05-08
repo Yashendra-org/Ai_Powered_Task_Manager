@@ -27,3 +27,13 @@ def notification_list_view(request):
 @require_POST
 def notification_mark_read_view(request, notification_id):
     user = request.user
+    notification = get_object_or_404(Notification, id=notification_id, user=user)
+    notification.is_read = True
+    notification.save(update_fields=['is_read'])
+    unread_count = Notification.objects.filter(user=user, is_read=False).count()
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        return JsonResponse({'success': True, 'notification_id': str(notification_id), 'unread_count': unread_count})
+    return redirect(request.META.get('HTTP_REFERER', 'notification_list'))
+
+
