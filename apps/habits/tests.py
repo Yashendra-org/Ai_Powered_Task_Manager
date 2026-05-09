@@ -36,3 +36,16 @@ class HabitModuleTests(TestCase):
         response = self.client.post(
             reverse('habit_toggle_log', args=[self.habit.id]),
             {'date': today_str},
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(HabitLog.objects.filter(habit=self.habit, date=today, status='completed').exists())
+        self.assertEqual(self.habit.current_streak(), 1)
+
+        # Uncheck
+        response = self.client.post(
+            reverse('habit_toggle_log', args=[self.habit.id]),
+            {'date': today_str},
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
