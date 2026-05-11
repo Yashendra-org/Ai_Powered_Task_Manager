@@ -10,3 +10,7 @@ class HabitAdmin(admin.ModelAdmin):
 
 
 @admin.register(HabitLog)
+class HabitLogAdmin(admin.ModelAdmin):
+    list_display = ('habit', 'date', 'status', 'completed_at')
+    list_filter = ('status', 'date')
+    search_fields = ('habit__title',)
