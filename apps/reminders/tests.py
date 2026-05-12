@@ -34,3 +34,12 @@ class ReminderModuleTests(TestCase):
         response = self.client.post(reverse('notification_mark_read', args=[self.notif.id]), follow=True)
         self.assertEqual(response.status_code, 200)
         self.notif.refresh_from_db()
+        self.assertTrue(self.notif.is_read)
+
+    def test_mark_all_read(self):
+        Notification.objects.create(user=self.user, title='N2', message='M2', is_read=False)
+        self.assertEqual(Notification.objects.filter(user=self.user, is_read=False).count(), 2)
+
+        response = self.client.post(reverse('notification_mark_all_read'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Notification.objects.filter(user=self.user, is_read=False).count(), 0)
