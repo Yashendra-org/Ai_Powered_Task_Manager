@@ -34,3 +34,12 @@ class NoteModuleTests(TestCase):
             'content': 'Third Normal Form requirements',
             'is_pinned': True,
         }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Note.objects.filter(user=self.user, title='DBMS Notes', is_pinned=True).exists())
+
+    def test_note_toggle_pin(self):
+        self.assertFalse(self.note.is_pinned)
+        response = self.client.post(reverse('note_toggle_pin', args=[self.note.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.note.refresh_from_db()
+        self.assertTrue(self.note.is_pinned)
