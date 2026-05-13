@@ -37,3 +37,13 @@ def notification_mark_read_view(request, notification_id):
     return redirect(request.META.get('HTTP_REFERER', 'notification_list'))
 
 
+@login_required
+@require_POST
+def notification_mark_all_read_view(request):
+    user = request.user
+    Notification.objects.filter(user=user, is_read=False).update(is_read=True)
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        return JsonResponse({'success': True, 'unread_count': 0, 'message': 'All notifications marked as read.'})
+    messages.success(request, "All notifications marked as read.")
+    return redirect('notification_list')
