@@ -39,3 +39,14 @@ class Migration(migrations.Migration):
                 ('scheduled_at', models.DateTimeField()),
                 ('reminder_type', models.CharField(choices=[('task_start', 'Task Start'), ('assignment_due', 'Assignment Due'), ('daily_review', 'Daily Review')], max_length=20)),
                 ('status', models.CharField(choices=[('pending', 'Pending'), ('sent', 'Sent'), ('cancelled', 'Cancelled')], default='pending', max_length=15)),
+                ('sent_at', models.DateTimeField(blank=True, null=True)),
+                ('assignment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='reminders', to='assignments.assignment')),
+                ('task', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='reminders', to='tasks.task')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reminders', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'db_table': 'reminders_reminder',
+                'ordering': ['scheduled_at'],
+            },
+        ),
+    ]
