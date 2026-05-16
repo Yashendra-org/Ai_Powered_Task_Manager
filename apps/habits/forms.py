@@ -37,3 +37,13 @@ class HabitForm(forms.ModelForm):
             }),
             'target_time': forms.TimeInput(attrs={
                 'type': 'time',
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors'
+            }),
+        }
+
+    def clean_scheduled_days(self):
+        days = self.cleaned_data.get('scheduled_days')
+        if days:
+            return [int(d) for d in days]
+        return []
+
