@@ -72,3 +72,22 @@ def note_delete_view(request, note_id):
     title = note.title
     note.delete()
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        return JsonResponse({'success': True, 'note_id': str(note_id), 'message': f"Note '{title}' deleted."})
+    messages.info(request, f"Note '{title}' deleted.")
+    return redirect('note_list')
+
+
+@login_required
+@require_POST
+def note_toggle_pin_view(request, note_id):
+    user = request.user
+    note = get_object_or_404(Note, id=note_id, user=user)
+    note.is_pinned = not note.is_pinned
+    note.save(update_fields=['is_pinned', 'updated_at'])
+    msg = f"Note '{note.title}' {'pinned to top' if note.is_pinned else 'unpinned'}."
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        return JsonResponse({'success': True, 'note_id': str(note.id), 'is_pinned': note.is_pinned, 'message': msg})
+    messages.info(request, msg)
+    return redirect('note_list')
