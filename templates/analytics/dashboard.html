@@ -70,3 +70,40 @@
                 <p class="text-xs text-slate-500 mt-1">Daily consistency</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <i data-lucide="flame" class="w-6 h-6"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- 7-Day Completion Velocity (Bar Chart) -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">7-Day Completion Velocity</h3>
+                    <p class="text-xs text-slate-500">Planned vs. Completed tasks per day</p>
+                </div>
+            </div>
+            <div class="h-72">
+                <canvas id="velocityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Task Distribution by Category (Doughnut Chart) -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Category Breakdown</h3>
+                    <p class="text-xs text-slate-500">Task distribution by category</p>
+                </div>
+            </div>
+            <div class="h-72 flex items-center justify-center">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
