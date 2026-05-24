@@ -30,3 +30,19 @@ def analytics_dashboard_view(request):
         day_tasks = Task.objects.active().filter(user=user, due_at__date=d)
         total_d = day_tasks.count()
         done_d = day_tasks.filter(status='completed').count()
+
+        planned_series.append(total_d)
+        completed_series.append(done_d)
+
+    # 2. Category Distribution
+    categories = Category.objects.filter(user=user)
+    category_labels = []
+    category_counts = []
+    category_colors = []
+
+    for cat in categories:
+        cnt = Task.objects.active().filter(user=user, category=cat).count()
+        if cnt > 0:
+            category_labels.append(cat.name)
+            category_counts.append(cnt)
+            category_colors.append(cat.color or '#2563EB')
