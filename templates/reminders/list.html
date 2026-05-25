@@ -13,3 +13,18 @@
                 <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Notifications</h1>
             </div>
             <p class="text-sm text-slate-500 mt-1">Deadlines, daily review alerts, and system notices</p>
+        </div>
+
+        {% if unread_count > 0 %}
+        <form method="POST" action="{% url 'notification_mark_all_read' %}">
+            {% csrf_token %}
+            <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
+                Mark All as Read ({{ unread_count }})
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Notification List -->
+    <div class="space-y-3">
+        {% if notifications %}
