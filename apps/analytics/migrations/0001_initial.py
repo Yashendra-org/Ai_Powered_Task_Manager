@@ -20,3 +20,11 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateField(default=django.utils.timezone.localdate)),
+                ('total_tasks', models.PositiveIntegerField(default=0)),
+                ('completed_tasks', models.PositiveIntegerField(default=0)),
+                ('pending_tasks', models.PositiveIntegerField(default=0)),
+                ('overdue_tasks', models.PositiveIntegerField(default=0)),
+                ('completion_percentage', models.FloatField(default=0.0)),
+                ('generated_at', models.DateTimeField(auto_now_add=True)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='daily_summaries', to=settings.AUTH_USER_MODEL)),
+            ],
