@@ -11,3 +11,8 @@ class DailySummary(models.Model):
     pending_tasks = models.PositiveIntegerField(default=0)
     overdue_tasks = models.PositiveIntegerField(default=0)
     completion_percentage = models.FloatField(default=0.0)
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'analytics_daily_summary'
+        verbose_name_plural = 'Daily summaries'
