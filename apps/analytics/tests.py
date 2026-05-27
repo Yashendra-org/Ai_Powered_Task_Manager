@@ -20,3 +20,11 @@ class AnalyticsAndCalendarTests(TestCase):
         cat = Category.objects.create(user=self.user, name='Study')
         Task.objects.create(
             user=self.user,
+            title='Task 1',
+            category=cat,
+            status='completed',
+            due_at=timezone.now()
+        )
+
+    def test_analytics_dashboard_view(self):
+        response = self.client.get(reverse('analytics_dashboard'))
