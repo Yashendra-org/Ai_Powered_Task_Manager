@@ -54,3 +54,22 @@ def calendar_view(request):
     habits_by_date = {}
     for h in habits_range:
         d = h.date
+        habits_by_date.setdefault(d, []).append(h)
+
+    # Build calendar grid structure
+    weeks = []
+    for week in month_days:
+        days = []
+        for day in week:
+            days.append({
+                'date': day,
+                'day_num': day.day,
+                'is_current_month': day.month == month,
+                'is_today': day == today,
+                'tasks': tasks_by_date.get(day, []),
+                'assignments': assignments_by_date.get(day, []),
+                'habits': habits_by_date.get(day, []),
+            })
+        weeks.append(days)
+
+    month_name = calendar.month_name[month]
