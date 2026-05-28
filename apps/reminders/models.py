@@ -20,3 +20,15 @@ class Reminder(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reminders')
     task = models.ForeignKey(Task, null=True, blank=True, on_delete=models.CASCADE, related_name='reminders')
     assignment = models.ForeignKey(Assignment, null=True, blank=True, on_delete=models.CASCADE, related_name='reminders')
+    scheduled_at = models.DateTimeField()
+    reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'reminders_reminder'
+        ordering = ['scheduled_at']
+
+    def __str__(self):
+        target = self.task.title if self.task else (self.assignment.title if self.assignment else 'General')
+        return f"Reminder: {target} at {self.scheduled_at}"
