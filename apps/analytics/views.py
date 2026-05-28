@@ -46,3 +46,19 @@ def analytics_dashboard_view(request):
             category_labels.append(cat.name)
             category_counts.append(cnt)
             category_colors.append(cat.color or '#2563EB')
+
+    # Add general uncategorized if any
+    uncat_cnt = Task.objects.active().filter(user=user, category__isnull=True).count()
+    if uncat_cnt > 0:
+        category_labels.append("General")
+        category_counts.append(uncat_cnt)
+        category_colors.append("#64748B")
+
+    # 3. Overall Stats
+    all_tasks = Task.objects.active().filter(user=user)
+    total_lifetime = all_tasks.count()
+    completed_lifetime = all_tasks.filter(status='completed').count()
+    overall_rate = round((completed_lifetime / total_lifetime * 100), 1) if total_lifetime > 0 else 0.0
+
+    # 4. Habits Consistency
+    total_habits = Habit.objects.filter(user=user, is_active=True).count()
