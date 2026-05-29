@@ -28,3 +28,19 @@
     <!-- Notification List -->
     <div class="space-y-3">
         {% if notifications %}
+            {% for n in notifications %}
+            <div class="p-4 bg-white rounded-2xl border {% if not n.is_read %}border-blue-200 bg-blue-50/20 shadow-sm{% else %}border-slate-200 opacity-75{% endif %} flex items-start justify-between transition-colors">
+                <div class="flex items-start space-x-3.5">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 {% if n.notification_type == 'deadline' %}bg-red-50 text-red-600{% elif n.notification_type == 'recommendation' %}bg-indigo-50 text-indigo-600{% else %}bg-blue-50 text-blue-600{% endif %}">
+                        {% if n.notification_type == 'deadline' %}
+                        <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                        {% elif n.notification_type == 'recommendation' %}
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        {% else %}
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h4 class="text-sm font-semibold text-slate-900">{{ n.title }}</h4>
+                            {% if not n.is_read %}
