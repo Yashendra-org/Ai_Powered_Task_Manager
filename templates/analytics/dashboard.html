@@ -143,3 +143,40 @@
                         ticks: { stepSize: 1 }
                     }
                 },
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // 2. Category Doughnut Chart
+        const catCtx = document.getElementById('categoryChart').getContext('2d');
+        const catLabels = {{ category_labels_json|safe }};
+        const catCounts = {{ category_counts_json|safe }};
+        const catColors = {{ category_colors_json|safe }};
+
+        if (catLabels.length > 0) {
+            new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels,
+                    datasets: [{
+                        data: catCounts,
+                        backgroundColor: catColors,
+                        borderWidth: 2,
+                        borderColor: '#FFFFFF'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
