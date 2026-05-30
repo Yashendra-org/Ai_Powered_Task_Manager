@@ -17,3 +17,13 @@ def notification_list_view(request):
     unread_count = notifications.filter(is_read=False).count()
 
     context = {
+        'notifications': notifications,
+        'unread_count': unread_count,
+    }
+    return render(request, 'reminders/list.html', context)
+
+
+@login_required
+@require_POST
+def notification_mark_read_view(request, notification_id):
+    user = request.user
