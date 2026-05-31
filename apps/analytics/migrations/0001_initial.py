@@ -28,3 +28,11 @@ class Migration(migrations.Migration):
                 ('generated_at', models.DateTimeField(auto_now_add=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='daily_summaries', to=settings.AUTH_USER_MODEL)),
             ],
+            options={
+                'verbose_name_plural': 'Daily summaries',
+                'db_table': 'analytics_daily_summary',
+                'ordering': ['-date'],
+                'unique_together': {('user', 'date')},
+            },
+        ),
+    ]
