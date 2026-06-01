@@ -16,3 +16,8 @@ class DailySummary(models.Model):
     class Meta:
         db_table = 'analytics_daily_summary'
         verbose_name_plural = 'Daily summaries'
+        unique_together = ('user', 'date')
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.date}: {self.completion_percentage}%"
