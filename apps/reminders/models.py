@@ -32,3 +32,14 @@ class Reminder(models.Model):
     def __str__(self):
         target = self.task.title if self.task else (self.assignment.title if self.assignment else 'General')
         return f"Reminder: {target} at {self.scheduled_at}"
+
+
+class Notification(models.Model):
+    NOTIFICATION_TYPE_CHOICES = [
+        ('reminder', 'Reminder'),
+        ('deadline', 'Deadline Alert'),
+        ('system', 'System Message'),
+        ('recommendation', 'AI Recommendation'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
