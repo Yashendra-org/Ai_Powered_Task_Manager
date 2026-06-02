@@ -25,3 +25,12 @@ class ReminderModuleTests(TestCase):
         )
 
     def test_notification_list_view(self):
+        response = self.client.get(reverse('notification_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Upcoming Assignment')
+
+    def test_mark_as_read(self):
+        self.assertFalse(self.notif.is_read)
+        response = self.client.post(reverse('notification_mark_read', args=[self.notif.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.notif.refresh_from_db()
