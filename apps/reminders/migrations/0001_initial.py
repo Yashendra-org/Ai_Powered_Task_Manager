@@ -29,3 +29,13 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'reminders_notification',
+                'ordering': ['-created_at'],
+            },
+        ),
+        migrations.CreateModel(
+            name='Reminder',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('scheduled_at', models.DateTimeField()),
+                ('reminder_type', models.CharField(choices=[('task_start', 'Task Start'), ('assignment_due', 'Assignment Due'), ('daily_review', 'Daily Review')], max_length=20)),
+                ('status', models.CharField(choices=[('pending', 'Pending'), ('sent', 'Sent'), ('cancelled', 'Cancelled')], default='pending', max_length=15)),
