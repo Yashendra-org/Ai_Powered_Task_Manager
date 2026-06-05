@@ -62,3 +62,19 @@ def analytics_dashboard_view(request):
 
     # 4. Habits Consistency
     total_habits = Habit.objects.filter(user=user, is_active=True).count()
+    today_habits_done = HabitLog.objects.filter(habit__user=user, date=today, status='completed').count()
+
+    context = {
+        'total_lifetime': total_lifetime,
+        'completed_lifetime': completed_lifetime,
+        'overall_rate': overall_rate,
+        'total_habits': total_habits,
+        'today_habits_done': today_habits_done,
+        'velocity_labels_json': json.dumps(velocity_labels),
+        'completed_series_json': json.dumps(completed_series),
+        'planned_series_json': json.dumps(planned_series),
+        'category_labels_json': json.dumps(category_labels),
+        'category_counts_json': json.dumps(category_counts),
+        'category_colors_json': json.dumps(category_colors),
+    }
+    return render(request, 'analytics/dashboard.html', context)
