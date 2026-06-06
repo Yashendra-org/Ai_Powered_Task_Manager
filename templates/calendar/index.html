@@ -67,3 +67,21 @@
                         {% endfor %}
 
                         {% for a in day.assignments|slice:":2" %}
+                        <div class="px-1.5 py-0.5 rounded text-[10px] truncate font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100" title="{{ a.title }} ({{ a.subject.code|default:a.subject.name }})">
+                            <i data-lucide="graduation-cap" class="w-2.5 h-2.5 inline mr-0.5"></i>
+                            {{ a.title }}
+                        </div>
+                        {% endfor %}
+
+                        {% if day.tasks|length > 2 or day.assignments|length > 2 %}
+                        <span class="text-[9px] text-slate-400 block text-right font-semibold">+ more</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
