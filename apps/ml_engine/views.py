@@ -28,3 +28,33 @@ def end_of_day_review_view(request):
     unfinished_tasks = Task.objects.active().filter(
         user=user,
         due_at__date=today,
+        status__in=['pending', 'in_progress']
+    )
+
+    # Upcoming assignment deadlines (next 48h)
+    upcoming_assignments = Assignment.objects.filter(
+        user=user,
+        due_at__range=[timezone.now(), timezone.now() + timedelta(days=2)]
+    ).exclude(status='submitted')
+
+    context = {
+        'summary': summary,
+        'today_date': today.strftime('%A, %d %B %Y'),
+        'unfinished_tasks': unfinished_tasks,
+        'upcoming_assignments': upcoming_assignments,
+    }
+    return render(request, 'ml_engine/review.html', context)
+
+
+@login_required
+@require_POST
+def apply_rollover_view(request):
+    """
+    Applies user-approved task rescheduling actions.
+    Never reschedules tasks without explicit approval.
+    """
+    user = request.user
+    tomorrow = timezone.now() + timedelta(days=1)
+    
+    # Process each task action
+    task_ids = request.POST.getlist('task_ids')
