@@ -17,3 +17,23 @@
         </div>
         <a href="{% url 'end_of_day_review' %}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
             <i data-lucide="moon" class="w-3.5 h-3.5 mr-1.5"></i>
+            End-of-Day Review
+        </a>
+    </div>
+
+    <!-- Active Suggestions -->
+    <div class="space-y-4">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Pending Suggestions</h2>
+
+        {% if recommendations %}
+            <div class="space-y-3">
+                {% for rec in recommendations %}
+                <div class="p-5 bg-white rounded-2xl border border-blue-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-start space-x-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700">
+                                    {{ rec.get_recommendation_type_display }}
