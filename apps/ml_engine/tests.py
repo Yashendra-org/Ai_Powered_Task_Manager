@@ -31,3 +31,20 @@ class MLEngineModuleTests(TestCase):
         self.assertEqual(summary.total_tasks, 1)
         self.assertEqual(summary.pending_tasks, 1)
         self.assertEqual(summary.completed_tasks, 0)
+        self.assertEqual(summary.completion_percentage, 0.0)
+
+    def test_end_of_day_review_view(self):
+        response = self.client.get(reverse('end_of_day_review'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Pending Task for Review')
+        self.assertContains(response, 'End-of-Day Review')
+
+    def test_apply_rollover_to_tomorrow(self):
+        response = self.client.post(reverse('apply_rollover'), {
+            'action': 'rollover_tomorrow',
+            'task_ids': [str(self.task.id)],
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.task.refresh_from_db()
+        self.assertGreater(self.task.due_at, timezone.now())
+        self.assertTrue(TaskHistory.objects.filter(task=self.task, action='rolled_over_to_tomorrow').exists())
