@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Calendar Planner — My Habbit Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{{ month_name }} {{ year }}</h1>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">Unified view of tasks, college deadlines, and habit completions</p>
+        </div>
