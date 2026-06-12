@@ -37,3 +37,23 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700">
                                     {{ rec.get_recommendation_type_display }}
+                                </span>
+                                {% if rec.confidence_score %}
+                                <span class="text-[10px] font-semibold text-slate-400">
+                                    Confidence: {{ rec.confidence_score|floatformat:2 }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <h3 class="text-base font-bold text-slate-900 mt-1">{{ rec.title }}</h3>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">{{ rec.explanation }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 flex-shrink-0">
+                        <form method="POST" action="{% url 'recommendation_feedback' rec.id 'reject' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-500 bg-slate-50 hover:bg-slate-100 transition-colors">
+                                Dismiss
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'recommendation_feedback' rec.id 'accept' %}">
