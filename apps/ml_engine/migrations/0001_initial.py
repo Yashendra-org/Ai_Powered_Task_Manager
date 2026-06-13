@@ -12,3 +12,10 @@ class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
+
+    operations = [
+        migrations.CreateModel(
+            name='MLRecommendation',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('recommendation_type', models.CharField(choices=[('routine_task', 'Routine Task Suggestion'), ('optimal_time', 'Optimal Time Recommendation'), ('reschedule', 'Smart Rescheduling'), ('completion_risk', 'Completion Risk Warning')], max_length=20)),
