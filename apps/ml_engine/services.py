@@ -46,3 +46,28 @@ class RecommendationEngine:
             task__user=user,
             action='completed',
             recorded_at__gte=past_two_weeks
+        ).values_list('task__title', flat=True)
+
+        title_counts = {}
+        for title in completed_hist:
+            title_counts[title] = title_counts.get(title, 0) + 1
+
+        for title, count in title_counts.items():
+            if count >= 3:
+                # Check if already scheduled for today
+                already_scheduled = Task.objects.active().filter(user=user, title=title, due_at__date=today).exists()
+                if not already_scheduled:
+                    rec, _ = MLRecommendation.objects.get_or_create(
+                        user=user,
+                        recommendation_type='routine_task',
+                        title=f"Scheduled Routine: '{title}'",
+                        defaults={
+                            'explanation': f"You completed '{title}' {count} times in the past 2 weeks. Would you like to add it to today's plan?",
+                            'suggested_date': today,
+                            'confidence_score': min(0.5 + (count * 0.1), 0.98),
+                            'status': 'pending'
+                        }
+                    )
+                    recommendations.append(rec)
+
+        # 3. Optimal Time Suggestion
