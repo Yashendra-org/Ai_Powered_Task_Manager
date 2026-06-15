@@ -3,3 +3,5 @@ from .models import MLRecommendation
 
 
 @admin.register(MLRecommendation)
+class MLRecommendationAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'recommendation_type', 'confidence_score', 'status', 'created_at')
