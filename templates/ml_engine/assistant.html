@@ -57,3 +57,23 @@
                             </button>
                         </form>
                         <form method="POST" action="{% url 'recommendation_feedback' rec.id 'accept' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors">
+                                Accept
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white rounded-2xl border border-slate-200 p-10 text-center">
+                <i data-lucide="check-circle-2" class="w-8 h-8 text-blue-600 mx-auto mb-2"></i>
+                <h4 class="text-sm font-semibold text-slate-900">No pending recommendations</h4>
+                <p class="text-xs text-slate-500 mt-1">The hybrid engine analyzes your completed task history and will surface routine insights automatically.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- History / Past Feedback Log -->
+    {% if history %}
