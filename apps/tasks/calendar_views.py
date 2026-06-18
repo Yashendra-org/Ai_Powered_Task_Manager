@@ -16,3 +16,22 @@ def calendar_view(request):
     """
     user = request.user
     today = timezone.localdate()
+
+    # Get requested year and month, defaulting to current
+    year = int(request.GET.get('year', today.year))
+    month = int(request.GET.get('month', today.month))
+
+    # Clamp month bounds
+    if month < 1:
+        month = 12
+        year -= 1
+    elif month > 12:
+        month = 1
+        year += 1
+
+    cal = calendar.Calendar(firstweekday=0) # Monday first
+    month_days = cal.monthdatescalendar(year, month)
+
+    start_date = month_days[0][0]
+    end_date = month_days[-1][-1]
+
