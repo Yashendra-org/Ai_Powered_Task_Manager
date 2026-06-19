@@ -6,3 +6,5 @@ urlpatterns = [
     path('review/apply/', views.apply_rollover_view, name='apply_rollover'),
     path('assistant/', views.smart_assistant_view, name='smart_assistant'),
     path('assistant/recommendations/<int:rec_id>/<str:action>/', views.recommendation_feedback_view, name='recommendation_feedback'),
+]
+
