@@ -118,3 +118,33 @@ def recommendation_feedback_view(request, rec_id, action):
         rec.status = 'accepted'
         rec.save(update_fields=['status'])
 
+        # If it was a routine task suggestion, auto-create the task
+        if rec.recommendation_type == 'routine_task':
+            TaskService.create_task(
+                user=user,
+                title=rec.title.replace("Scheduled Routine: '", "").rstrip("'"),
+                due_at=timezone.now(),
+                priority='medium',
+                estimated_duration=45
+            )
+            msg = "Accepted recommendation: Created task for today!"
+        else:
+            msg = "Recommendation accepted! Training feedback stored."
+
+    elif action == 'reject':
+        rec.status = 'rejected'
+        rec.save(update_fields=['status'])
+        msg = "Recommendation dismissed. Your feedback will refine future suggestions."
+    else:
+        msg = "Action recorded."
+
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        return JsonResponse({'success': True, 'rec_id': str(rec.id), 'action': action, 'message': msg})
+
+    if action == 'accept':
+        messages.success(request, msg)
+    else:
+        messages.info(request, msg)
+
+    return redirect('smart_assistant')
