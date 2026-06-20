@@ -77,3 +77,23 @@
 
     <!-- History / Past Feedback Log -->
     {% if history %}
+    <div class="pt-6 border-t border-slate-200 space-y-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Feedback History</h2>
+        <div class="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200 overflow-hidden text-xs">
+            {% for h in history %}
+            <div class="px-5 py-3 flex items-center justify-between">
+                <div>
+                    <span class="font-semibold text-slate-800">{{ h.title }}</span>
+                    <span class="text-slate-400 ml-2">• {{ h.created_at|date:"d M H:i" }}</span>
+                </div>
+                <span class="px-2 py-0.5 rounded font-bold uppercase text-[10px] {% if h.status == 'accepted' %}bg-green-50 text-green-700{% else %}bg-slate-100 text-slate-500{% endif %}">
+                    {{ h.get_status_display }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
