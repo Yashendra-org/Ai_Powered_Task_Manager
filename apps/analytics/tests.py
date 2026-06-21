@@ -13,3 +13,10 @@ class AnalyticsAndCalendarTests(TestCase):
         self.user = User.objects.create_user(
             username='analytics_user',
             email='au@example.com',
+            password='Password123!'
+        )
+        self.client.login(username='analytics_user', password='Password123!')
+
+        cat = Category.objects.create(user=self.user, name='Study')
+        Task.objects.create(
+            user=self.user,
