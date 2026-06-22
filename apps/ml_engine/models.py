@@ -26,3 +26,10 @@ class MLRecommendation(models.Model):
     confidence_score = models.FloatField(null=True, blank=True, help_text="Calibrated confidence [0.0 - 1.0]")
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'ml_engine_recommendation'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.recommendation_type}] {self.title} ({self.status})"
