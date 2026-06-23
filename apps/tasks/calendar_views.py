@@ -35,3 +35,22 @@ def calendar_view(request):
     start_date = month_days[0][0]
     end_date = month_days[-1][-1]
 
+    # Pre-fetch user items for the visible date range
+    tasks_range = Task.objects.active().filter(user=user, due_at__date__range=[start_date, end_date])
+    assignments_range = Assignment.objects.filter(user=user, due_at__date__range=[start_date, end_date])
+    habits_range = HabitLog.objects.filter(habit__user=user, date__range=[start_date, end_date], status='completed')
+
+    # Group items by date
+    tasks_by_date = {}
+    for t in tasks_range:
+        d = t.due_at.date()
+        tasks_by_date.setdefault(d, []).append(t)
+
+    assignments_by_date = {}
+    for a in assignments_range:
+        d = a.due_at.date()
+        assignments_by_date.setdefault(d, []).append(a)
+
+    habits_by_date = {}
+    for h in habits_range:
+        d = h.date
