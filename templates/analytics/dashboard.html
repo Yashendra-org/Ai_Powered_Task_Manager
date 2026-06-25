@@ -107,3 +107,39 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. Velocity Chart
+        const velocityCtx = document.getElementById('velocityChart').getContext('2d');
+        const velocityLabels = {{ velocity_labels_json|safe }};
+        const completedData = {{ completed_series_json|safe }};
+        const plannedData = {{ planned_series_json|safe }};
+
+        new Chart(velocityCtx, {
+            type: 'bar',
+            data: {
+                labels: velocityLabels,
+                datasets: [
+                    {
+                        label: 'Completed Tasks',
+                        data: completedData,
+                        backgroundColor: '#16A34A',
+                        borderRadius: 6,
+                    },
+                    {
+                        label: 'Total Planned',
+                        data: plannedData,
+                        backgroundColor: '#E2E8F0',
+                        borderRadius: 6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                },
