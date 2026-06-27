@@ -1,4 +1,4 @@
-# Stage 2/5: Progressive implementation
+# Stage 3/5: Progressive implementation
 from django import forms
 from .models import Habit
 
@@ -25,3 +25,15 @@ class HabitForm(forms.ModelForm):
         fields = ['title', 'description', 'frequency', 'scheduled_days', 'target_time', 'monthly_goal', 'color']
         widgets = {
             'title': forms.TextInput(attrs={
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors',
+                'placeholder': 'e.g. Daily DSA Practice (1 Hour)'
+            }),
+            'description': forms.Textarea(attrs={
+                'rows': 2,
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors',
+                'placeholder': 'Why this habit matters or what milestones you want to hit...'
+            }),
+            'frequency': forms.Select(attrs={
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors'
+            }),
+            'target_time': forms.TimeInput(attrs={
