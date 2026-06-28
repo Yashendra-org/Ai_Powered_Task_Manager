@@ -1,4 +1,4 @@
-# Stage 3/5: Progressive implementation
+# Stage 4/5: Progressive implementation
 from django import forms
 from .models import Habit
 
@@ -37,3 +37,15 @@ class HabitForm(forms.ModelForm):
                 'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors'
             }),
             'target_time': forms.TimeInput(attrs={
+                'type': 'time',
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors'
+            }),
+            'monthly_goal': forms.NumberInput(attrs={
+                'class': 'w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors',
+                'min': '1',
+                'max': '365',
+                'placeholder': 'e.g. 20'
+            }),
+            'color': forms.TextInput(attrs={
+                'type': 'color',
+                'class': 'h-10 w-24 p-1 bg-white border border-slate-300 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500'
