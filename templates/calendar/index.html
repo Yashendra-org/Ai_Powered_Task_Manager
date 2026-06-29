@@ -50,3 +50,20 @@
                 <div class="min-h-[110px] p-2 flex flex-col justify-between transition-colors {% if not day.is_current_month %}bg-slate-50/50 text-slate-400{% else %}bg-white{% endif %} {% if day.is_today %}ring-2 ring-blue-500 ring-inset{% endif %}">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold {% if day.is_today %}w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center{% elif day.is_current_month %}text-slate-800{% else %}text-slate-400{% endif %}">
+                            {{ day.day_num }}
+                        </span>
+
+                        {% if day.habits %}
+                        <span class="w-2 h-2 rounded-full bg-emerald-500" title="{{ day.habits|length }} habits logged"></span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Events Container -->
+                    <div class="space-y-1 mt-1 flex-1 overflow-hidden">
+                        {% for task in day.tasks|slice:":2" %}
+                        <div class="px-1.5 py-0.5 rounded text-[10px] truncate font-medium {% if task.status == 'completed' %}bg-slate-100 text-slate-500 line-through{% else %}bg-blue-50 text-blue-700{% endif %}" title="{{ task.title }}">
+                            {{ task.title }}
+                        </div>
+                        {% endfor %}
+
+                        {% for a in day.assignments|slice:":2" %}
