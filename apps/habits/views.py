@@ -1,10 +1,16 @@
+# Stage 1/5: Progressive implementation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from collections import defaultdict
+import calendar
+import json
+import csv
+
 from .models import Habit, HabitLog
 from .forms import HabitForm
 
@@ -12,163 +18,90 @@ from .forms import HabitForm
 @login_required
 def habit_list_view(request):
     """
-    Weekly Habit Matrix & Consistency Tracker (Module 4).
-    Displays habits alongside 7-day completion checkboxes and streaks.
+    Advanced Multi-Timeline Habit Tracker (Day / Week / Month / Year / Custom Timeline).
+    Replicates the executive dashboard with:
+    - Real-time line trend chart
+    - Full-month 28-31 day matrix grid with color-coded checkmarks
+    - Goal progress bars per habit
+    - 3 Circular Donut Progress Gauges (Period, Normalized Elapsed, Momentum)
+    - 1-Click Zero-Reload AJAX check-off
     """
     user = request.user
     today = timezone.localdate()
 
-    # Calculate Monday of current week
-    start_of_week = today - timedelta(days=today.weekday())
-    week_days = []
-    for i in range(7):
-        day_date = start_of_week + timedelta(days=i)
-        week_days.append({
-            'date': day_date,
-            'name': day_date.strftime('%a'),
-            'day_num': day_date.day,
-            'is_today': day_date == today,
-            'date_str': day_date.strftime('%Y-%m-%d'),
-        })
+    # Timeline view mode: 'month' (default), 'week', 'day', 'year', 'custom'
+    view_mode = request.GET.get('view', 'month').lower()
+    if view_mode not in ['month', 'week', 'day', 'year', 'custom']:
+        view_mode = 'month'
 
-    habits = Habit.objects.filter(user=user, is_active=True)
-    habit_rows = []
-    total_today = habits.count()
-    completed_today = 0
+    habits = list(Habit.objects.filter(user=user, is_active=True).order_by('id'))
 
-    for habit in habits:
-        # Get logs for this habit for the current week
-        week_logs = set(
-            HabitLog.objects.filter(
-                habit=habit,
-                date__range=[start_of_week, start_of_week + timedelta(days=6)],
-                status='completed'
-            ).values_list('date', flat=True)
-        )
+    # Curated palette for distinct habit color-coding (matching executive spreadsheet dashboard)
+    default_palette = [
+        '#10B981',  # Teal / Emerald
+        '#3B82F6',  # Electric Blue
+        '#8B5CF6',  # Purple
+        '#F59E0B',  # Amber / Yellow
+        '#EF4444',  # Red / Coral
+        '#06B6D4',  # Cyan
+        '#6366F1',  # Indigo
+        '#F97316',  # Bright Orange
+        '#14B8A6',  # Dark Teal
+        '#EC4899',  # Pink / Magenta
+    ]
 
-        day_statuses = []
-        for day in week_days:
-            is_done = day['date'] in week_logs
-            if day['is_today'] and is_done:
-                completed_today += 1
-            day_statuses.append({
-                'date_str': day['date_str'],
-                'is_completed': is_done,
-                'is_today': day['is_today'],
-            })
+    for i, h in enumerate(habits):
+        if not h.color or h.color == '#10B981' or h.color == '#2563EB':
+            h.assigned_color = default_palette[i % len(default_palette)]
+        else:
+            h.assigned_color = h.color
 
-        habit_rows.append({
-            'habit': habit,
-            'streak': habit.current_streak(),
-            'days': day_statuses,
-        })
-
-    completion_rate = round((completed_today / total_today * 100), 1) if total_today > 0 else 0.0
-
-    context = {
-        'habit_rows': habit_rows,
-        'week_days': week_days,
-        'total_habits': total_today,
-        'completed_today': completed_today,
-        'completion_rate': completion_rate,
-        'start_of_week': start_of_week.strftime('%d %b'),
-        'end_of_week': (start_of_week + timedelta(days=6)).strftime('%d %b %Y'),
-    }
-    return render(request, 'habits/list.html', context)
-
-
-@login_required
-def habit_create_view(request):
-    user = request.user
-    if request.method == 'POST':
-        form = HabitForm(request.POST)
-        if form.is_valid():
-            habit = form.save(commit=False)
-            habit.user = user
-            habit.scheduled_days = form.cleaned_data['scheduled_days']
-            habit.save()
-            messages.success(request, f"Habit '{habit.title}' added to your tracker!")
-            return redirect('habit_list')
-    else:
-        form = HabitForm()
-
-    return render(request, 'habits/form.html', {'form': form, 'title': 'Create New Habit'})
-
-
-@login_required
-def habit_edit_view(request, habit_id):
-    user = request.user
-    habit = get_object_or_404(Habit, id=habit_id, user=user)
-    if request.method == 'POST':
-        form = HabitForm(request.POST, instance=habit)
-        if form.is_valid():
-            habit = form.save(commit=False)
-            habit.scheduled_days = form.cleaned_data['scheduled_days']
-            habit.save()
-            messages.success(request, "Habit updated successfully!")
-            return redirect('habit_list')
-    else:
-        form = HabitForm(instance=habit, initial={'scheduled_days': [str(d) for d in habit.scheduled_days]})
-
-    return render(request, 'habits/form.html', {'form': form, 'habit': habit, 'title': 'Edit Habit'})
-
-
-@login_required
-@require_POST
-def habit_delete_view(request, habit_id):
-    user = request.user
-    habit = get_object_or_404(Habit, id=habit_id, user=user)
-    title = habit.title
-    habit.delete()
-    messages.info(request, f"Habit '{title}' removed.")
-    return redirect('habit_list')
-
-
-@login_required
-@require_POST
-def habit_toggle_log_view(request, habit_id):
-    """
-    1-Click daily check-off toggle for a habit.
-    """
-    user = request.user
-    habit = get_object_or_404(Habit, id=habit_id, user=user)
-    
-    date_str = request.POST.get('date') or request.GET.get('date')
-    if date_str:
+    # Determine timeline boundaries
+    if view_mode == 'month':
         try:
-            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        except ValueError:
-            target_date = timezone.localdate()
-    else:
-        target_date = timezone.localdate()
+            year = int(request.GET.get('year', today.year))
+            month = int(request.GET.get('month', today.month))
+        except (ValueError, TypeError):
+            year = today.year
+            month = today.month
 
-    log = HabitLog.objects.filter(habit=habit, date=target_date).first()
-    if log and log.status == 'completed':
-        log.delete()
-        is_completed = False
-        msg = f"Unchecked '{habit.title}' for {target_date.strftime('%a, %d %b')}."
-    else:
-        HabitLog.objects.update_or_create(
-            habit=habit,
-            date=target_date,
-            defaults={'status': 'completed', 'completed_at': timezone.now()}
-        )
-        is_completed = True
-        msg = f"Logged '{habit.title}' for {target_date.strftime('%a, %d %b')}! 🔥"
+        if month < 1:
+            month = 12
+            year -= 1
+        elif month > 12:
+            month = 1
+            year += 1
 
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
-    if is_ajax:
-        return JsonResponse({
-            'success': True,
-            'habit_id': str(habit.id),
-            'date_str': target_date.strftime('%Y-%m-%d'),
-            'is_completed': is_completed,
-            'streak': habit.current_streak(),
-            'message': msg,
-        })
+        days_in_month = calendar.monthrange(year, month)[1]
+        start_date = date(year, month, 1)
+        end_date = date(year, month, days_in_month)
+        period_title = f"{start_date.strftime('%B %Y')}"
 
-    if is_completed:
-        messages.success(request, msg)
-    else:
-        messages.info(request, msg)
-    return redirect(request.META.get('HTTP_REFERER', 'habit_list'))
+        prev_month = month - 1 if month > 1 else 12
+        prev_year = year if month > 1 else year - 1
+        next_month = month + 1 if month < 12 else 1
+        next_year = year if month < 12 else year + 1
+
+        prev_url = f"?view=month&year={prev_year}&month={prev_month}"
+        next_url = f"?view=month&year={next_year}&month={next_month}"
+
+    elif view_mode == 'week':
+        ref_date_str = request.GET.get('date')
+        if ref_date_str:
+            try:
+                ref_date = datetime.strptime(ref_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                ref_date = today
+        else:
+            ref_date = today
+
+        start_date = ref_date - timedelta(days=ref_date.weekday())  # Monday
+        end_date = start_date + timedelta(days=6)                    # Sunday
+        period_title = f"Week: {start_date.strftime('%d %b')} – {end_date.strftime('%d %b %Y')}"
+
+        prev_url = f"?view=week&date={(start_date - timedelta(days=7)).strftime('%Y-%m-%d')}"
+        next_url = f"?view=week&date={(start_date + timedelta(days=7)).strftime('%Y-%m-%d')}"
+
+    elif view_mode == 'day':
+        day_str = request.GET.get('date')
+        if day_str:
