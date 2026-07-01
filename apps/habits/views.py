@@ -1,4 +1,4 @@
-# Stage 2/5: Progressive implementation
+# Stage 3/5: Progressive implementation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -190,3 +190,88 @@ def habit_list_view(request):
 
     for h in habits:
         completed_dates = logs_by_habit[h.id]
+        completed_in_period = len(completed_dates)
+
+        if view_mode == 'month':
+            goal = h.monthly_goal or 20
+        elif view_mode == 'week':
+            goal = max(1, round((h.monthly_goal or 20) * (7 / 30)))
+        elif view_mode == 'day':
+            goal = 1
+        elif view_mode == 'year':
+            goal = (h.monthly_goal or 20) * 12
+        else:
+            goal = max(1, round((h.monthly_goal or 20) * (total_days / 30)))
+
+        progress_rate = min(100, round((completed_in_period / goal) * 100)) if goal > 0 else 0
+
+        day_cells = []
+        for d_info in days_list:
+            is_done = d_info['date'] in completed_dates
+            day_cells.append({
+                'date_str': d_info['date_str'],
+                'day_num': d_info['day_num'],
+                'is_completed': is_done,
+                'is_today': d_info['is_today'],
+                'is_future': d_info['is_future'],
+            })
+
+        habit_rows.append({
+            'habit': h,
+            'color': h.assigned_color,
+            'goal': goal,
+            'completed_count': completed_in_period,
+            'progress_rate': progress_rate,
+            'streak': h.current_streak(),
+            'days': day_cells,
+        })
+
+        total_goals_sum += goal
+        total_completed_sum += completed_in_period
+
+    # Daily mini-bars and chart trend data
+    daily_totals = []
+    chart_labels = []
+    chart_data = []
+    for d_info in days_list:
+        cnt = daily_completed_counter[d_info['date']]
+        daily_totals.append({
+            'count': cnt,
+            'is_today': d_info['is_today'],
+            'day_num': d_info['day_num'],
+        })
+        chart_labels.append(str(d_info['day_num']))
+        chart_data.append(cnt)
+
+    # 3 Circular Progress Gauges (Matching screenshot)
+    # 1. Period Progress Gauge (e.g. 61.9%)
+    total_possible = len(habits) * total_days
+    period_progress_pct = round((total_completed_sum / total_possible) * 100, 1) if total_possible > 0 else 0.0
+
+    # 2. Normalized Elapsed Days Progress (e.g. 87.2%)
+    elapsed_days = max(1, (min(today, end_date) - start_date).days + 1) if start_date <= today else 1
+    normalized_possible = len(habits) * elapsed_days
+    normalized_progress_pct = round((total_completed_sum / normalized_possible) * 100, 1) if normalized_possible > 0 else 0.0
+    normalized_progress_pct = min(100.0, normalized_progress_pct)
+
+    # 3. Momentum Progress (Last 3 Days Progress, e.g. 73.8%)
+    momentum_start = max(start_date, today - timedelta(days=3))
+    momentum_days = max(1, (today - momentum_start).days + 1)
+    momentum_logs_count = sum(daily_completed_counter[momentum_start + timedelta(days=i)] for i in range(momentum_days))
+    momentum_possible = len(habits) * momentum_days
+    momentum_pct = round((momentum_logs_count / momentum_possible) * 100, 1) if momentum_possible > 0 else 0.0
+    momentum_pct = min(100.0, momentum_pct)
+
+    # Success rate badge calculation
+    overall_success_rate = round((total_completed_sum / total_goals_sum) * 100) if total_goals_sum > 0 else 0
+    if overall_success_rate >= 80:
+        badge_label = "GOOD JOB ❤️"
+    elif overall_success_rate >= 60:
+        badge_label = "ON TRACK 🔥"
+    elif overall_success_rate >= 40:
+        badge_label = "BUILDING UP ⚡"
+    else:
+        badge_label = "GET STARTED 🎯"
+
+    context = {
+        'habits': habits,
