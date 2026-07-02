@@ -1,4 +1,3 @@
-# Stage 4/5: Progressive implementation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -361,3 +360,67 @@ def habit_edit_view(request, habit_id):
             messages.success(request, "Habit updated successfully!")
             return redirect('habit_list')
     else:
+        form = HabitForm(instance=habit, initial={'scheduled_days': [str(d) for d in habit.scheduled_days]})
+
+    return render(request, 'habits/form.html', {'form': form, 'habit': habit, 'title': 'Edit Habit'})
+
+
+@login_required
+@require_POST
+def habit_delete_view(request, habit_id):
+    user = request.user
+    habit = get_object_or_404(Habit, id=habit_id, user=user)
+    title = habit.title
+    habit.delete()
+    messages.info(request, f"Habit '{title}' removed.")
+    return redirect('habit_list')
+
+
+@login_required
+@require_POST
+def habit_toggle_log_view(request, habit_id):
+    """
+    1-Click daily check-off toggle for a habit.
+    """
+    user = request.user
+    habit = get_object_or_404(Habit, id=habit_id, user=user)
+    
+    date_str = request.POST.get('date') or request.GET.get('date')
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            target_date = timezone.localdate()
+    else:
+        target_date = timezone.localdate()
+
+    log = HabitLog.objects.filter(habit=habit, date=target_date).first()
+    if log and log.status == 'completed':
+        log.delete()
+        is_completed = False
+        msg = f"Unchecked '{habit.title}' for {target_date.strftime('%a, %d %b')}."
+    else:
+        HabitLog.objects.update_or_create(
+            habit=habit,
+            date=target_date,
+            defaults={'status': 'completed', 'completed_at': timezone.now()}
+        )
+        is_completed = True
+        msg = f"Logged '{habit.title}' for {target_date.strftime('%a, %d %b')}! 🔥"
+
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'habit_id': str(habit.id),
+            'date_str': target_date.strftime('%Y-%m-%d'),
+            'is_completed': is_completed,
+            'streak': habit.current_streak(),
+            'message': msg,
+        })
+
+    if is_completed:
+        messages.success(request, msg)
+    else:
+        messages.info(request, msg)
+    return redirect(request.META.get('HTTP_REFERER', 'habit_list'))
