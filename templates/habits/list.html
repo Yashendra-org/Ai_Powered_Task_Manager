@@ -1,4 +1,4 @@
-<!-- Stage 2/5: Progressive implementation -->
+<!-- Stage 3/5: Progressive implementation -->
 {% extends 'base.html' %}
 
 {% block title %}Habit Tracker — {{ period_title }}{% endblock %}
@@ -211,3 +211,98 @@
                             </td>
                             {% endfor %}
 
+                            <!-- Progress Bar & Rate -->
+                            <td class="py-3 px-4 border-l border-slate-200">
+                                <div class="flex items-center space-x-2">
+                                    <div class="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
+                                        <div class="h-full rounded-full transition-all duration-300 habit-progress-bar"
+                                             style="width: {{ row.progress_rate }}%; background-color: {{ row.color }};"></div>
+                                    </div>
+                                    <span class="font-mono font-bold text-[11px] text-slate-700 w-10 text-right habit-progress-text">
+                                        {{ row.progress_rate }}%
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        <!-- Bottom Daily Totals Row (Matching Screenshot mini bars & counts) -->
+                        <tr class="bg-slate-50/90 font-bold border-t-2 border-slate-200 text-xs">
+                            <td class="py-3 px-4 sticky left-0 bg-slate-50 border-r border-slate-200 text-slate-500 uppercase tracking-wider text-[10px]">
+                                Daily Output
+                            </td>
+                            <td class="py-3 px-3 text-center border-r border-slate-200 text-slate-400 font-mono">
+                                ∑
+                            </td>
+                            {% for dt in daily_totals %}
+                            <td class="py-2 px-1 text-center border-r border-slate-200 {% if dt.is_today %}bg-blue-100/60 font-black text-blue-700{% endif %}">
+                                <!-- Mini vertical bar -->
+                                <div class="w-3.5 bg-slate-200 rounded-sm mx-auto mb-1 h-6 flex items-end overflow-hidden">
+                                    <div class="w-full bg-emerald-500 rounded-sm transition-all" style="height: {% widthratio dt.count 8 100 %}%;"></div>
+                                </div>
+                                <span class="block font-mono text-[11px] text-slate-700" id="day-total-{{ dt.day_num }}">{{ dt.count }}</span>
+                            </td>
+                            {% endfor %}
+                            <td class="py-3 px-4 text-center border-l border-slate-200 font-mono font-extrabold text-slate-900 text-sm" id="matrix-total-completed">
+                                {{ total_completed_sum }} / {{ total_goals_sum }}<br>
+                                <span class="text-[10px] text-slate-400 font-normal uppercase tracking-wider">Completed</span>
+                            </td>
+                        </tr>
+
+                    {% else %}
+                        <!-- Empty State -->
+                        <tr>
+                            <td colspan="{{ total_days|add:3 }}" class="py-16 text-center">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                                    <i data-lucide="flame" class="w-6 h-6"></i>
+                                </div>
+                                <h3 class="text-base font-bold text-slate-900">No habits tracked yet</h3>
+                                <p class="text-xs text-slate-500 mt-1">Start tracking habits to unlock this executive productivity matrix.</p>
+                                <a href="{% url 'habit_create' %}" class="mt-4 inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition-colors">
+                                    <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+                                    Add Your First Habit
+                                </a>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- BOTTOM SECTION: 3 CIRCULAR DONUT GAUGES (Matching Screenshot)     -->
+    <!-- ================================================================= -->
+    <div class="bg-[#111827] text-white rounded-3xl p-6 shadow-xl border border-slate-800">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+            <!-- 3 Gauges Container -->
+            <div class="flex flex-wrap items-center justify-center md:justify-start gap-8 flex-1">
+                <!-- Gauge 1: Monthly / Period Progress (Coral / Red) -->
+                <div class="flex items-center space-x-3.5">
+                    <div class="relative w-20 h-20 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-slate-800" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="text-rose-500 transition-all duration-700" stroke-dasharray="{{ period_progress_pct }}, 100" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <span class="absolute font-mono font-bold text-xs text-white">{{ period_progress_pct }}%</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-rose-400">Monthly Progress</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Total period fulfillment</p>
+                    </div>
+                </div>
+
+                <!-- Gauge 2: Normalized Elapsed Days Progress (Cyan / Teal) -->
+                <div class="flex items-center space-x-3.5">
+                    <div class="relative w-20 h-20 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-slate-800" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="text-cyan-400 transition-all duration-700" stroke-dasharray="{{ normalized_progress_pct }}, 100" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <span class="absolute font-mono font-bold text-xs text-white">{{ normalized_progress_pct }}%</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-cyan-400">{{ elapsed_days }} Days Active</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Normalized to today</p>
+                    </div>
+                </div>
