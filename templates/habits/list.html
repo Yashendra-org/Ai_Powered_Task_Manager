@@ -1,116 +1,119 @@
+<!-- Stage 1/5: Progressive implementation -->
 {% extends 'base.html' %}
 
-{% block title %}Habit Tracker — My Habbit Tracker{% endblock %}
+{% block title %}Habit Tracker — {{ period_title }}{% endblock %}
 
 {% block content %}
-<div class="space-y-6 max-w-6xl mx-auto">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <i data-lucide="flame" class="w-5 h-5"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Habit Tracker</h1>
-            </div>
-            <p class="text-sm text-slate-500 mt-1">Week of {{ start_of_week }} – {{ end_of_week }} • Build unbroken routines</p>
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
+    <!-- Top Action & Timeline Mode Switcher -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Timeline Navigation Tabs -->
+        <div class="inline-flex p-1 bg-slate-200/80 rounded-xl space-x-1 text-xs font-semibold text-slate-600">
+            <a href="?view=day{% if view_mode == 'day' %}&date={{ today_str }}{% endif %}" class="px-3.5 py-1.5 rounded-lg transition-all {% if view_mode == 'day' %}bg-white text-slate-900 shadow-sm font-bold{% else %}hover:text-slate-900 hover:bg-slate-100/50{% endif %}">
+                ☀️ Per Day
+            </a>
+            <a href="?view=week" class="px-3.5 py-1.5 rounded-lg transition-all {% if view_mode == 'week' %}bg-white text-slate-900 shadow-sm font-bold{% else %}hover:text-slate-900 hover:bg-slate-100/50{% endif %}">
+                📅 Week (7 Days)
+            </a>
+            <a href="?view=month" class="px-3.5 py-1.5 rounded-lg transition-all {% if view_mode == 'month' %}bg-white text-slate-900 shadow-sm font-bold{% else %}hover:text-slate-900 hover:bg-slate-100/50{% endif %}">
+                📊 Month (30/31 Days)
+            </a>
+            <a href="?view=year" class="px-3.5 py-1.5 rounded-lg transition-all {% if view_mode == 'year' %}bg-white text-slate-900 shadow-sm font-bold{% else %}hover:text-slate-900 hover:bg-slate-100/50{% endif %}">
+                🗓️ Year (Annual)
+            </a>
+            <a href="?view=custom" class="px-3.5 py-1.5 rounded-lg transition-all {% if view_mode == 'custom' %}bg-white text-slate-900 shadow-sm font-bold{% else %}hover:text-slate-900 hover:bg-slate-100/50{% endif %}">
+                ⚡ Custom Timeline
+            </a>
         </div>
 
-        <div class="flex items-center space-x-3">
-            <span class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
-                Today: {{ completed_today }} of {{ total_habits }} Done ({{ completion_rate }}%)
-            </span>
-            <a href="{% url 'habit_create' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-colors">
-                <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+        <!-- Action Buttons -->
+        <div class="flex items-center space-x-2.5">
+            <!-- Period Pagination Arrows (Month / Week / Day / Year) -->
+            {% if prev_url and next_url %}
+            <div class="flex items-center bg-white border border-slate-200 rounded-lg shadow-sm">
+                <a href="{{ prev_url }}" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-l-lg border-r border-slate-200 transition-colors" title="Previous Period">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </a>
+                <span class="px-3 py-1.5 text-xs font-semibold text-slate-700 select-none">
+                    {{ period_title }}
+                </span>
+                <a href="{{ next_url }}" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-r-lg transition-colors" title="Next Period">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Download CSV Export -->
+            <a href="{% url 'habit_export_csv' %}" class="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-white hover:bg-slate-900 shadow-sm transition-colors" title="Download Report">
+                <i data-lucide="download" class="w-3.5 h-3.5 mr-1.5"></i>
+                Download
+            </a>
+
+            <!-- New Habit -->
+            <a href="{% url 'habit_create' %}" class="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-colors">
+                <i data-lucide="plus" class="w-3.5 h-3.5 mr-1.5"></i>
                 New Habit
             </a>
         </div>
     </div>
 
-    <!-- Habit Weekly Matrix Card -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="border-b border-slate-100 bg-slate-50/50">
-                        <th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-400 w-1/3">Habit Name</th>
-                        <th class="py-4 px-4 text-xs font-semibold uppercase tracking-wider text-slate-400 text-center w-24">Streak</th>
-                        {% for day in week_days %}
-                        <th class="py-4 px-3 text-center {% if day.is_today %}bg-emerald-50/60 font-bold text-emerald-700{% else %}text-slate-500 font-medium{% endif %}">
-                            <span class="block text-xs uppercase">{{ day.name }}</span>
-                            <span class="block text-sm {% if day.is_today %}text-emerald-700 font-bold{% else %}text-slate-800{% endif %}">{{ day.day_num }}</span>
-                        </th>
-                        {% endfor %}
-                        <th class="py-4 px-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    {% if habit_rows %}
-                        {% for row in habit_rows %}
-                        <tr class="hover:bg-slate-50/50 transition-colors group">
-                            <!-- Habit Details -->
-                            <td class="py-4 px-6">
-                                <h4 class="text-sm font-semibold text-slate-900">{{ row.habit.title }}</h4>
-                                <div class="flex items-center space-x-2 text-xs text-slate-400 mt-0.5">
-                                    <span class="capitalize">{{ row.habit.get_frequency_display }}</span>
-                                    {% if row.habit.target_time %}
-                                    <span>• {{ row.habit.target_time|time:"H:i" }}</span>
-                                    {% endif %}
-                                </div>
-                            </td>
-
-                            <!-- Streak Badge -->
-                            <td class="py-4 px-4 text-center">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold {% if row.streak > 0 %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-slate-100 text-slate-500{% endif %}">
-                                    <i data-lucide="flame" class="w-3.5 h-3.5 mr-1 text-emerald-600"></i>
-                                    {{ row.streak }}d
-                                </span>
-                            </td>
-
-                            <!-- 7-Day Checkboxes -->
-                            {% for day in row.days %}
-                            <td class="py-4 px-3 text-center {% if day.is_today %}bg-emerald-50/30{% endif %}">
-                                <form method="POST" action="{% url 'habit_toggle_log' row.habit.id %}" class="inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="date" value="{{ day.date_str }}">
-                                    <button type="submit" class="w-7 h-7 rounded-lg border flex items-center justify-center mx-auto transition-all {% if day.is_completed %}bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-200{% else %}border-slate-200 hover:border-emerald-400 bg-white text-transparent hover:text-slate-300{% endif %}" title="Log {{ day.date_str }}">
-                                        <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
-                                    </button>
-                                </form>
-                            </td>
-                            {% endfor %}
-
-                            <!-- Actions -->
-                            <td class="py-4 px-4 text-right">
-                                <div class="inline-flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <a href="{% url 'habit_edit' row.habit.id %}" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100">
-                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
-                                    </a>
-                                    <form method="POST" action="{% url 'habit_delete' row.habit.id %}" class="inline" onsubmit="return confirm('Delete this habit?');">
-                                        {% csrf_token %}
-                                        <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="10" class="py-12 text-center">
-                                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
-                                    <i data-lucide="flame" class="w-6 h-6"></i>
-                                </div>
-                                <h4 class="text-sm font-semibold text-slate-900">No habits tracked yet</h4>
-                                <p class="text-xs text-slate-500 mt-1">Start building consistency by adding your first daily habit.</p>
-                            </td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+    <!-- Custom Timeline Date Range Picker (shown when view_mode == 'custom') -->
+    {% if view_mode == 'custom' %}
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-2 text-xs font-medium text-slate-600">
+            <i data-lucide="calendar-range" class="w-4 h-4 text-emerald-600"></i>
+            <span>Select Custom Timeline Date Range (up to 60 days):</span>
         </div>
+        <form method="GET" class="flex items-center flex-wrap gap-2 text-xs">
+            <input type="hidden" name="view" value="custom">
+            <label class="font-semibold text-slate-500">From:</label>
+            <input type="date" name="start_date" value="{{ start_date_input }}" class="px-2.5 py-1.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono">
+            <label class="font-semibold text-slate-500 ml-2">To:</label>
+            <input type="date" name="end_date" value="{{ end_date_input }}" class="px-2.5 py-1.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono">
+            <button type="submit" class="ml-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm transition-colors">
+                Apply Timeline
+            </button>
+        </form>
     </div>
-</div>
-{% endblock %}
+    {% endif %}
 
+    <!-- ================================================================= -->
+    <!-- EXECUTIVE DASHBOARD HEADER (Matching Screenshot Dark Header) -->
+    <!-- ================================================================= -->
+    <div class="bg-[#111827] text-white rounded-3xl p-6 shadow-xl border border-slate-800 relative overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <!-- Left Metadata Column -->
+            <div class="lg:col-span-3 space-y-2 text-xs">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span class="text-slate-400 uppercase tracking-wider font-semibold">Year:</span>
+                    <span class="font-mono font-bold text-slate-200 text-sm">{{ year_val }}</span>
+                </div>
+                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span class="text-slate-400 uppercase tracking-wider font-semibold">Month:</span>
+                    <span class="font-bold text-slate-200 text-sm">{{ month_val }}</span>
+                </div>
+                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span class="text-slate-400 uppercase tracking-wider font-semibold">Start Date:</span>
+                    <span class="font-mono text-slate-300">{{ start_date_str }}</span>
+                </div>
+                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span class="text-slate-400 uppercase tracking-wider font-semibold">End Date:</span>
+                    <span class="font-mono text-slate-300">{{ end_date_str }}</span>
+                </div>
+                <div class="flex items-center justify-between pt-0.5">
+                    <span class="text-slate-400 uppercase tracking-wider font-semibold">Total Days:</span>
+                    <span class="font-mono font-bold text-cyan-400 text-sm">{{ total_days }}</span>
+                </div>
+            </div>
+
+            <!-- Center Daily Output Trend Chart (Glowing Cyan Line) -->
+            <div class="lg:col-span-6 flex flex-col items-center">
+                <div class="w-full flex items-center justify-between mb-1 px-2">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center">
+                        <i data-lucide="trending-up" class="w-3.5 h-3.5 mr-1"></i>
+                        Daily Completion Trendline
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-mono">Completed Habits per Day</span>
+                </div>
+                <div class="w-full h-32 relative">
+                    <canvas id="dailyTrendChart"></canvas>
