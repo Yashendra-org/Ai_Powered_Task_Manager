@@ -28,3 +28,11 @@ class AnalyticsAndCalendarTests(TestCase):
 
     def test_analytics_dashboard_view(self):
         response = self.client.get(reverse('analytics_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Productivity Analytics')
+        self.assertContains(response, 'velocityChart')
+
+    def test_calendar_view(self):
+        response = self.client.get(reverse('calendar'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Task 1')
