@@ -73,3 +73,22 @@ def calendar_view(request):
         weeks.append(days)
 
     month_name = calendar.month_name[month]
+
+    # Prev / Next month links
+    prev_month = month - 1 if month > 1 else 12
+    prev_year = year if month > 1 else year - 1
+    next_month = month + 1 if month < 12 else 1
+    next_year = year if month < 12 else year + 1
+
+    context = {
+        'weeks': weeks,
+        'year': year,
+        'month': month,
+        'month_name': month_name,
+        'prev_year': prev_year,
+        'prev_month': prev_month,
+        'next_year': next_year,
+        'next_month': next_month,
+    }
+    return render(request, 'calendar/index.html', context)
+
