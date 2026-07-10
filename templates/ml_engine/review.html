@@ -17,3 +17,23 @@
         </div>
         <a href="{% url 'dashboard' %}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
             <i data-lucide="arrow-left" class="w-3.5 h-3.5 mr-1.5"></i>
+            Dashboard
+        </a>
+    </div>
+
+    <!-- Daily Performance Recap Tile -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl p-8 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-200 bg-blue-500/30 px-2.5 py-1 rounded-full">Daily Velocity</span>
+                <h2 class="text-3xl font-extrabold mt-3">{{ summary.completion_percentage }}% Completed</h2>
+                <p class="text-sm text-blue-100 mt-1">
+                    {{ summary.completed_tasks }} of {{ summary.total_tasks }} planned tasks finished today
+                </p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div class="bg-white/10 backdrop-blur-sm p-3.5 rounded-xl border border-white/10">
+                    <p class="text-2xl font-bold">{{ summary.completed_tasks }}</p>
+                    <p class="text-[11px] text-blue-200 uppercase mt-0.5">Done</p>
+                </div>
