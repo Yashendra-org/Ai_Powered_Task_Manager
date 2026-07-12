@@ -1,4 +1,3 @@
-# Stage 4/5: Progressive implementation
 #!/usr/bin/env bash
 # exit on error
 set -o errexit
@@ -21,3 +20,7 @@ fi
 
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
     echo "===> Creating superuser from environment variables..."
+    python manage.py createsuperuser --noinput || true
+fi
+
+echo "===> Build completed successfully!"
