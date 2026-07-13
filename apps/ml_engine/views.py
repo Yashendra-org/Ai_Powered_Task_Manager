@@ -58,3 +58,33 @@ def apply_rollover_view(request):
     
     # Process each task action
     task_ids = request.POST.getlist('task_ids')
+    action = request.POST.get('action') # 'rollover_tomorrow' or 'cancel_tasks'
+
+    if action == 'rollover_tomorrow':
+        for tid in task_ids:
+            task = Task.objects.active().filter(id=tid, user=user).first()
+            if task:
+                task.due_at = tomorrow
+                task.save(update_fields=['due_at', 'updated_at'])
+                TaskHistory.objects.create(
+                    task=task,
+                    previous_status=task.status,
+                    new_status='pending',
+                    action='rolled_over_to_tomorrow'
+                )
+        messages.success(request, f"{len(task_ids)} task(s) successfully rescheduled to tomorrow!")
+
+    elif action == 'cancel_tasks':
+        for tid in task_ids:
+            task = Task.objects.active().filter(id=tid, user=user).first()
+            if task:
+                task.status = 'cancelled'
+                task.save(update_fields=['status', 'updated_at'])
+                TaskHistory.objects.create(
+                    task=task,
+                    previous_status='pending',
+                    new_status='cancelled',
+                    action='cancelled_during_review'
+                )
+        messages.info(request, f"{len(task_ids)} task(s) marked as cancelled.")
+
