@@ -1,4 +1,4 @@
-# Stage 3/5: Progressive implementation
+# Stage 4/5: Progressive implementation
 services:
   - type: web
     name: ai-powered-task-manager
@@ -23,3 +23,10 @@ services:
         fromDatabase:
           name: task-manager-db
           property: connectionString
+      - key: WEB_CONCURRENCY
+        value: "2"
+      - key: TIME_ZONE
+        value: Asia/Kolkata
+      - key: SEED_DEV_DATA
+        value: "true"
+
