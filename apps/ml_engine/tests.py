@@ -48,3 +48,20 @@ class MLEngineModuleTests(TestCase):
         self.task.refresh_from_db()
         self.assertGreater(self.task.due_at, timezone.now())
         self.assertTrue(TaskHistory.objects.filter(task=self.task, action='rolled_over_to_tomorrow').exists())
+
+    def test_recommendation_feedback_accept(self):
+        rec = MLRecommendation.objects.create(
+            user=self.user,
+            recommendation_type='routine_task',
+            title="Scheduled Routine: 'DSA Practice'",
+            explanation='You do this often',
+            status='pending'
+        )
+        response = self.client.post(
+            reverse('recommendation_feedback', args=[rec.id, 'accept']),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        rec.refresh_from_db()
+        self.assertEqual(rec.status, 'accepted')
+        # Routine task should have been created
