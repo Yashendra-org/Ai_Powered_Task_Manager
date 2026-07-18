@@ -88,3 +88,33 @@ def apply_rollover_view(request):
                 )
         messages.info(request, f"{len(task_ids)} task(s) marked as cancelled.")
 
+    return redirect('dashboard')
+
+
+@login_required
+def smart_assistant_view(request):
+    """
+    AI / ML Smart Assistant (Module 10).
+    Displays routine detections, completion likelihood, and smart time tips.
+    """
+    user = request.user
+    recommendations = RecommendationEngine.generate_recommendations(user)
+    all_recommendations = MLRecommendation.objects.filter(user=user).order_by('-created_at')
+
+    context = {
+        'recommendations': all_recommendations.filter(status='pending'),
+        'history': all_recommendations.exclude(status='pending')[:10],
+    }
+    return render(request, 'ml_engine/assistant.html', context)
+
+
+@login_required
+@require_POST
+def recommendation_feedback_view(request, rec_id, action):
+    user = request.user
+    rec = get_object_or_404(MLRecommendation, id=rec_id, user=user)
+
+    if action == 'accept':
+        rec.status = 'accepted'
+        rec.save(update_fields=['status'])
+
