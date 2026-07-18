@@ -1,4 +1,4 @@
-<!-- Stage 3/5: Progressive implementation -->
+<!-- Stage 4/5: Progressive implementation -->
 <div align="center">
 
 # ⚡ My Habit Tracker
@@ -335,3 +335,107 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### 🔹 4. Configure environment variables
+
+Create a `.env` file in the root directory (or copy `.env.example`):
+
+```bash
+cp .env.example .env
+```
+
+Your `.env` file can be configured as follows:
+```env
+SECRET_KEY=your-secure-random-secret-key
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+DATABASE_URL=sqlite:///db.sqlite3
+CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+DEFAULT_TIMEZONE=Asia/Kolkata
+```
+
+### 🔹 5. Run database migrations & seed development data
+
+```bash
+# Apply database migrations across all 8 applications
+python manage.py migrate
+
+# Seed sample academic courses, assignments, habits, and tasks
+python manage.py seed_dev_data
+```
+> **Default Test Account:**
+> - **Username:** `student`
+> - **Password:** `password123`
+
+### 🔹 6. Start the local development server
+
+```bash
+python manage.py runserver
+```
+
+Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser.
+
+---
+
+## 🚀 Deployment Guide (Render)
+
+This repository is pre-configured and production-ready for instant deployment on [Render](https://render.com).
+
+### 🔹 Option A: 1-Click Blueprint Deployment (Recommended)
+1. Fork or push this repository to your GitHub account: `https://github.com/Yashendra-org/Ai_Powered_Task_Manager.git`.
+2. Log in to [Render Dashboard](https://dashboard.render.com).
+3. Click **New +** → **Blueprint**.
+4. Select your `Ai_Powered_Task_Manager` repository.
+5. Render reads [render.yaml](render.yaml) and automatically creates:
+   - **PostgreSQL Database** (`task-manager-db`)
+   - **Django Web Service** (`ai-powered-task-manager`)
+   - Auto-wires the `DATABASE_URL` environment variable.
+6. Click **Apply**. Render will automatically run `./build.sh` (installs requirements, collects static files via WhiteNoise, applies migrations, and seeds demo data), then start Gunicorn.
+
+---
+
+### 🔹 Option B: Manual Web Service Deployment
+If you prefer setting up services manually on Render:
+
+1. **Create PostgreSQL Database on Render:**
+   - Go to **New +** → **PostgreSQL**.
+   - Name: `task-manager-db` (Free tier).
+   - Once provisioned, copy the **Internal Database URL**.
+
+2. **Create Web Service on Render:**
+   - Go to **New +** → **Web Service**.
+   - Connect your GitHub repository `Ai_Powered_Task_Manager`.
+   - Configure the following settings:
+     - **Name:** `ai-powered-task-manager`
+     - **Region:** Same region as your database (e.g., Oregon or Frankfurt).
+     - **Branch:** `main`
+     - **Runtime:** `Python`
+     - **Build Command:** `./build.sh`
+     - **Start Command:** `gunicorn config.wsgi:application --workers 2 --bind 0.0.0.0:$PORT`
+     - **Instance Type:** `Free`
+
+3. **Configure Environment Variables in Render:**
+   In your Web Service settings under **Environment**, add:
+   | Key | Value | Notes |
+   |---|---|---|
+   | `PYTHON_VERSION` | `3.12.0` | Recommended Python runtime |
+   | `DJANGO_SETTINGS_MODULE` | `config.settings` | Django settings path |
+   | `SECRET_KEY` | *(Click "Generate")* | Cryptographic signing key |
+   | `DEBUG` | `false` | Production mode |
+   | `ALLOWED_HOSTS` | `.onrender.com,localhost,127.0.0.1` | Host routing |
+   | `DATABASE_URL` | *(Paste Internal DB URL)* | Render PostgreSQL connection string |
+   | `WEB_CONCURRENCY` | `2` | Gunicorn worker threads |
+   | `TIME_ZONE` | `Asia/Kolkata` | Local timezone |
+   | `SEED_DEV_DATA` | `true` | Seeds initial student account & sample habits |
+
+4. **Click Deploy:**
+   Render will build the project, run migrations, collect static assets, and launch your live application at `https://<your-subdomain>.onrender.com`.
+
+> **Initial Login on Render:**
+> - **Username:** `student`
+> - **Password:** `password123`
+
+---
+
+## 📡 API & View Routes
+
+Base URL: `/`
