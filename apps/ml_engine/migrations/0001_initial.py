@@ -19,3 +19,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('recommendation_type', models.CharField(choices=[('routine_task', 'Routine Task Suggestion'), ('optimal_time', 'Optimal Time Recommendation'), ('reschedule', 'Smart Rescheduling'), ('completion_risk', 'Completion Risk Warning')], max_length=20)),
+                ('title', models.CharField(max_length=255)),
+                ('explanation', models.TextField()),
+                ('suggested_date', models.DateField(blank=True, null=True)),
+                ('suggested_time', models.TimeField(blank=True, null=True)),
+                ('confidence_score', models.FloatField(blank=True, help_text='Calibrated confidence [0.0 - 1.0]', null=True)),
+                ('status', models.CharField(choices=[('pending', 'Pending Review'), ('accepted', 'Accepted'), ('rejected', 'Rejected'), ('expired', 'Expired')], default='pending', max_length=15)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
