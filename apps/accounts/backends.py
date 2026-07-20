@@ -1,4 +1,4 @@
-# Stage 3/5: Authentication & deployment refinement
+# Stage 4/5: Authentication & deployment refinement
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
 from django.db.models import Q
@@ -17,3 +17,9 @@ class EmailOrUsernameModelBackend(ModelBackend):
         if not username or not password:
             return None
 
+        username = username.strip()
+        try:
+            user = User.objects.get(Q(username__iexact=username) | Q(email__iexact=username))
+        except User.DoesNotExist:
+            return None
+        except User.MultipleObjectsReturned:
