@@ -57,3 +57,23 @@
         </div>
 
         {% if unfinished_tasks %}
+        <form method="POST" action="{% url 'apply_rollover' %}" class="space-y-4">
+            {% csrf_token %}
+            <div class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+                {% for t in unfinished_tasks %}
+                <label class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors">
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" name="task_ids" value="{{ t.id }}" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-900">{{ t.title }}</p>
+                            <p class="text-xs text-slate-400 mt-0.5">{{ t.estimated_duration }}m • {{ t.get_priority_display }} Priority</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full {% if t.priority == 'high' %}bg-red-50 text-red-700{% else %}bg-slate-100 text-slate-600{% endif %}">
+                        {{ t.get_priority_display }}
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
