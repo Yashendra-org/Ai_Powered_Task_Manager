@@ -1,4 +1,4 @@
-# Stage 1/5: Authentication & deployment refinement
+# Stage 2/5: Authentication & deployment refinement
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -35,3 +35,31 @@ class Command(BaseCommand):
         user.is_superuser = True
         user.save()
         self.stdout.write(self.style.SUCCESS("User 'student' (student@college.edu) active with password: password123"))
+
+        # 2. Categories
+        cat_college, _ = Category.objects.get_or_create(user=user, name="College", defaults={"color": "#2563EB"})
+        cat_coding, _ = Category.objects.get_or_create(user=user, name="Coding", defaults={"color": "#16A34A"})
+        cat_personal, _ = Category.objects.get_or_create(user=user, name="Personal", defaults={"color": "#F59E0B"})
+
+        # 3. Tasks for today
+        now = timezone.now()
+        today = timezone.localdate()
+
+        t1, _ = Task.objects.get_or_create(
+            user=user,
+            title="Complete DSA practice — Graphs & Trees",
+            defaults={
+                "category": cat_coding,
+                "priority": "high",
+                "status": "completed",
+                "due_at": now.replace(hour=18, minute=0),
+                "estimated_duration": 60,
+                "completed_at": now,
+            }
+        )
+
+        t2, _ = Task.objects.get_or_create(
+            user=user,
+            title="Study Machine Learning — Supervised Algorithms",
+            defaults={
+                "category": cat_college,
