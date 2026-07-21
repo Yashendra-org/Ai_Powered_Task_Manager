@@ -19,3 +19,10 @@ class MLRecommendation(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='recommendations')
     recommendation_type = models.CharField(max_length=20, choices=RECOMMENDATION_TYPE_CHOICES)
+    title = models.CharField(max_length=255)
+    explanation = models.TextField()
+    suggested_date = models.DateField(null=True, blank=True)
+    suggested_time = models.TimeField(null=True, blank=True)
+    confidence_score = models.FloatField(null=True, blank=True, help_text="Calibrated confidence [0.0 - 1.0]")
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
