@@ -1,4 +1,3 @@
-# Stage 4/5: Authentication & deployment refinement
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -121,3 +120,25 @@ class Command(BaseCommand):
 
         for title, goal, color in habits_catalog:
             habit, _ = Habit.objects.get_or_create(
+                user=user,
+                title=title,
+                defaults={
+                    "frequency": "daily",
+                    "monthly_goal": goal,
+                    "color": color,
+                    "is_active": True,
+                }
+            )
+
+            # Seed logs for active days
+            cur = start_of_month
+            while cur <= today:
+                if rng.random() > 0.40:  # ~60% completion rate for rich charts
+                    HabitLog.objects.get_or_create(
+                        habit=habit,
+                        date=cur,
+                        defaults={"status": "completed"}
+                    )
+                cur += timedelta(days=1)
+
+        self.stdout.write(self.style.SUCCESS("Sample data and executive habit tracker seeded successfully!"))
