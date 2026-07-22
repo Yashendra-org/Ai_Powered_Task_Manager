@@ -65,3 +65,20 @@ class MLEngineModuleTests(TestCase):
         rec.refresh_from_db()
         self.assertEqual(rec.status, 'accepted')
         # Routine task should have been created
+        self.assertTrue(Task.objects.filter(user=self.user, title='DSA Practice').exists())
+
+    def test_recommendation_feedback_reject(self):
+        rec = MLRecommendation.objects.create(
+            user=self.user,
+            recommendation_type='optimal_time',
+            title='Study Earlier',
+            explanation='Morning focus is higher',
+            status='pending'
+        )
+        response = self.client.post(
+            reverse('recommendation_feedback', args=[rec.id, 'reject']),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        rec.refresh_from_db()
+        self.assertEqual(rec.status, 'rejected')
