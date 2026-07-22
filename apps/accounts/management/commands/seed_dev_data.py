@@ -1,4 +1,4 @@
-# Stage 2/5: Authentication & deployment refinement
+# Stage 3/5: Authentication & deployment refinement
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -63,3 +63,32 @@ class Command(BaseCommand):
             title="Study Machine Learning — Supervised Algorithms",
             defaults={
                 "category": cat_college,
+                "priority": "high",
+                "status": "pending",
+                "due_at": now.replace(hour=20, minute=0),
+                "estimated_duration": 45,
+            }
+        )
+
+        t3, _ = Task.objects.get_or_create(
+            user=user,
+            title="Revise DBMS Normalization notes",
+            defaults={
+                "category": cat_college,
+                "priority": "medium",
+                "status": "pending",
+                "due_at": now.replace(hour=21, minute=0),
+                "estimated_duration": 30,
+            }
+        )
+
+        # 4. Subjects & Assignments
+        subject_dbms, _ = Subject.objects.get_or_create(user=user, name="Database Management Systems", defaults={"code": "CS302"})
+        teacher_sharma, _ = Teacher.objects.get_or_create(user=user, name="Dr. R. Sharma", defaults={"email": "sharma@college.edu"})
+
+        Assignment.objects.get_or_create(
+            user=user,
+            title="DBMS Assignment 3: B+ Trees & Indexing",
+            subject=subject_dbms,
+            defaults={
+                "teacher": teacher_sharma,
