@@ -26,3 +26,11 @@ class Migration(migrations.Migration):
                 ('confidence_score', models.FloatField(blank=True, help_text='Calibrated confidence [0.0 - 1.0]', null=True)),
                 ('status', models.CharField(choices=[('pending', 'Pending Review'), ('accepted', 'Accepted'), ('rejected', 'Rejected'), ('expired', 'Expired')], default='pending', max_length=15)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recommendations', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'db_table': 'ml_engine_recommendation',
+                'ordering': ['-created_at'],
+            },
+        ),
+    ]
