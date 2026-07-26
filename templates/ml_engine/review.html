@@ -77,3 +77,23 @@
             </div>
 
             <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+                <button type="submit" name="action" value="cancel_tasks" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                    Cancel Selected
+                </button>
+                <button type="submit" name="action" value="rollover_tomorrow" class="px-4 py-2 text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors">
+                    <i data-lucide="arrow-right" class="w-3.5 h-3.5 inline mr-1"></i>
+                    Move Selected to Tomorrow
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <i data-lucide="check-circle" class="w-8 h-8 text-green-600 mx-auto mb-2"></i>
+            <h4 class="text-sm font-semibold text-slate-900">All planned tasks completed!</h4>
+            <p class="text-xs text-slate-500 mt-1">Zero pending tasks for today. You crushed your day!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
