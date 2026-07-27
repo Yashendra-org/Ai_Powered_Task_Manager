@@ -95,3 +95,28 @@ class RecommendationEngine:
         return recommendations
 
     @staticmethod
+    def calculate_daily_summary(user, target_date=None):
+        """Generates or updates the DailySummary record for a given date."""
+        if target_date is None:
+            target_date = timezone.localdate()
+
+        day_tasks = Task.objects.active().filter(user=user, due_at__date=target_date)
+        total = day_tasks.count()
+        completed = day_tasks.filter(status='completed').count()
+        pending = day_tasks.filter(status='pending').count()
+        overdue = day_tasks.filter(due_at__lt=timezone.now(), status__in=['pending', 'in_progress']).count()
+        pct = round((completed / total * 100), 1) if total > 0 else 0.0
+
+        summary, _ = DailySummary.objects.update_or_create(
+            user=user,
+            date=target_date,
+            defaults={
+                'total_tasks': total,
+                'completed_tasks': completed,
+                'pending_tasks': pending,
+                'overdue_tasks': overdue,
+                'completion_percentage': pct,
+            }
+        )
+        return summary
+
