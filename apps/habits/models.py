@@ -1,4 +1,4 @@
-# Stage 3/5: Progressive implementation
+# Stage 4/5: Progressive implementation
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -42,3 +42,16 @@ class Habit(models.Model):
             current -= timezone.timedelta(days=1)
         while current in logs:
             streak += 1
+            current -= timezone.timedelta(days=1)
+        return streak
+
+
+class HabitLog(models.Model):
+    STATUS_CHOICES = [
+        ('completed', 'Completed'),
+        ('missed', 'Missed'),
+        ('skipped', 'Skipped'),
+    ]
+
+    habit = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name='logs')
+    date = models.DateField(default=timezone.localdate)
