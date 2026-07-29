@@ -1,4 +1,3 @@
-# Stage 4/5: Progressive implementation
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -55,3 +54,14 @@ class HabitLog(models.Model):
 
     habit = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name='logs')
     date = models.DateField(default=timezone.localdate)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='completed')
+    completed_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        db_table = 'habits_habit_log'
+        unique_together = ('habit', 'date')
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.habit.title} on {self.date} ({self.status})"
