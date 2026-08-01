@@ -1,4 +1,4 @@
-<!-- Stage 2/5: Authentication & deployment refinement -->
+<!-- Stage 3/5: Authentication & deployment refinement -->
 <div align="center">
 
 # ⚡ My Habit Tracker
@@ -232,3 +232,106 @@ AI_powered_Task_Manager/
 │       ├── views.py                 # End-of-Day Review (/review/), Smart Assistant
 │       └── urls.py, admin.py, tests.py
 │
+├── static/                          # Static assets
+│   ├── css/main.css                 # Custom scrollbars, animations, design tokens
+│   └── js/app.js                    # Seamless zero-reload engine & PJAX router
+│
+├── templates/                       # Semantic HTML5 UI templates
+│   ├── base.html                    # Master layout with responsive sidebar & toast mount
+│   ├── dashboard/index.html         # Executive overview dashboard
+│   ├── accounts/                    # login.html, register.html, settings.html
+│   ├── tasks/                       # my_day.html, all_tasks.html, trash.html, forms
+│   ├── assignments/                 # list.html, subject_list.html, teacher_list.html
+│   ├── habits/                      # list.html (7-day matrix), form.html
+│   ├── notes/                       # list.html, form.html
+│   ├── calendar/index.html          # Unified chronological calendar
+│   ├── analytics/dashboard.html     # Chart.js velocity & breakdown graphs
+│   ├── reminders/list.html          # In-app notification center
+│   └── ml_engine/                   # review.html (End-of-Day Review), assistant.html
+│
+├── media/                           # User-uploaded coursework attachments
+├── manage.py                        # Django CLI entrypoint
+├── requirements.txt                 # Pinned dependencies
+├── .env.example                     # Environment blueprint
+├── .gitignore                       # Git ignore definitions
+└── README.md                        # Master project documentation
+```
+
+---
+
+## 🛠️ Technology Stack
+
+<table>
+<tr><td valign="top" width="25%"><b>Frontend & UI</b></td><td>
+
+- **Tailwind CSS 3.4**: Clean, modern design system with curated slate/blue color palette
+- **Vanilla JavaScript Engine (`app.js`)**: Zero-reload PJAX router, optimistic task toggles, and dynamic DOM injection
+- **Lucide Icons**: Crisp, lightweight vector iconography
+- **Chart.js**: Dynamic productivity velocity bar charts and category distribution doughnuts
+
+</td></tr>
+<tr><td valign="top"><b>Backend & Framework</b></td><td>
+
+- **Python 3.11+ / 3.12**
+- **Django 5.0 / 6.0**: Modular monolith architecture with strict service layers (`services.py`)
+- **Django REST Framework**: Structured serialization and JSON response support
+
+</td></tr>
+<tr><td valign="top"><b>Machine Learning & Recommendations</b></td><td>
+
+- **Scikit-Learn**: Historical task completion classifier and feature engineering pipeline
+- **Pattern Analyzer**: Frequency and temporal pattern analysis for routine detection
+- **Feedback Loop Engine**: User accept/reject tracking to iteratively refine confidence scores
+
+</td></tr>
+<tr><td valign="top"><b>Asynchronous Queue & Scheduling</b></td><td>
+
+- **Celery 5.4**: Distributed task queue handling scheduled notifications and daily review triggers
+- **Redis 7**: High-performance in-memory message broker and caching layer
+
+</td></tr>
+<tr><td valign="top"><b>Database & Persistence</b></td><td>
+
+- **SQLite 3**: Zero-configuration default for local development
+- **PostgreSQL 16**: Production-ready relational storage configured via environment variables
+- **Audit Logging**: `TaskHistory` and `HabitLog` tracking all temporal state transitions
+
+</td></tr>
+<tr><td valign="top"><b>Security & Tenant Isolation</b></td><td>
+
+- **Tenant Isolation**: Mandatory `user=request.user` query filtering across all 8 modules
+- **CSRF & XSS Defense**: Django CSRF token verification on all asynchronous requests
+- **Cryptographic Hashing**: Secure Argon2 / PBKDF2 password protection
+
+</td></tr>
+</table>
+
+---
+
+## ⚙️ Installation & Setup
+
+### 🔹 1. Clone the repository
+
+```bash
+git clone https://github.com/Yashendra-org/Ai_Powered_Task_Manager.git
+cd Ai_Powered_Task_Manager
+```
+
+### 🔹 2. Create and activate a virtual environment
+
+```bash
+# Windows (PowerShell)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# macOS / Linux
+python -m venv .venv
+source .venv/bin/activate
+```
+
+### 🔹 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
