@@ -1,4 +1,3 @@
-# Stage 4/5: Progressive implementation
 from django import forms
 from .models import Habit
 
@@ -49,3 +48,12 @@ class HabitForm(forms.ModelForm):
             'color': forms.TextInput(attrs={
                 'type': 'color',
                 'class': 'h-10 w-24 p-1 bg-white border border-slate-300 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500'
+            }),
+        }
+
+    def clean_scheduled_days(self):
+        days = self.cleaned_data.get('scheduled_days')
+        if days:
+            return [int(d) for d in days]
+        return []
+
