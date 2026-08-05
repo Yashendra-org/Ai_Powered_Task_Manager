@@ -1,4 +1,4 @@
-# Stage 1/5: Progressive implementation
+# Stage 2/5: Progressive implementation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -105,3 +105,88 @@ def habit_list_view(request):
     elif view_mode == 'day':
         day_str = request.GET.get('date')
         if day_str:
+            try:
+                target_day = datetime.strptime(day_str, '%Y-%m-%d').date()
+            except ValueError:
+                target_day = today
+        else:
+            target_day = today
+
+        start_date = target_day
+        end_date = target_day
+        period_title = target_day.strftime('%A, %d %B %Y')
+
+        prev_url = f"?view=day&date={(target_day - timedelta(days=1)).strftime('%Y-%m-%d')}"
+        next_url = f"?view=day&date={(target_day + timedelta(days=1)).strftime('%Y-%m-%d')}"
+
+    elif view_mode == 'year':
+        try:
+            year = int(request.GET.get('year', today.year))
+        except (ValueError, TypeError):
+            year = today.year
+
+        start_date = date(year, 1, 1)
+        end_date = date(year, 12, 31)
+        period_title = f"Year {year}"
+
+        prev_url = f"?view=year&year={year - 1}"
+        next_url = f"?view=year&year={year + 1}"
+
+    else:  # custom
+        start_str = request.GET.get('start_date')
+        end_str = request.GET.get('end_date')
+        try:
+            start_date = datetime.strptime(start_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_str, '%Y-%m-%d').date()
+            if start_date > end_date:
+                start_date, end_date = end_date, start_date
+        except (ValueError, TypeError):
+            start_date = today - timedelta(days=14)
+            end_date = today
+
+        if (end_date - start_date).days > 60:
+            end_date = start_date + timedelta(days=60)
+
+        period_title = f"Custom: {start_date.strftime('%d %b')} – {end_date.strftime('%d %b %Y')}"
+        prev_url = None
+        next_url = None
+
+    # Generate day columns list
+    total_days = (end_date - start_date).days + 1
+    days_list = []
+    cur_day = start_date
+    while cur_day <= end_date:
+        days_list.append({
+            'date': cur_day,
+            'day_num': cur_day.day,
+            'weekday_char': cur_day.strftime('%a')[0],  # S, M, T, W, T, F, S
+            'weekday_short': cur_day.strftime('%a'),
+            'month_short': cur_day.strftime('%b'),
+            'date_str': cur_day.strftime('%Y-%m-%d'),
+            'is_today': cur_day == today,
+            'is_future': cur_day > today,
+        })
+        cur_day += timedelta(days=1)
+
+    # Bulk query all habit logs in date range
+    logs_qs = HabitLog.objects.filter(
+        habit__in=habits,
+        date__range=[start_date, end_date],
+        status='completed'
+    ).values('habit_id', 'date')
+
+    logs_by_habit = defaultdict(set)
+    daily_completed_counter = defaultdict(int)
+    for item in logs_qs:
+        h_id = item['habit_id']
+        d = item['date']
+        logs_by_habit[h_id].add(d)
+        daily_completed_counter[d] += 1
+
+    # Build per-habit row metrics
+    habit_rows = []
+    total_goals_sum = 0
+    total_completed_sum = 0
+
+    for h in habits:
+        completed_dates = logs_by_habit[h.id]
