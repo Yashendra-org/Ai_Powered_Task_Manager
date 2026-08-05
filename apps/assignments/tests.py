@@ -1,4 +1,4 @@
-# Stage 3/5: Test assertion refinement
+# Stage 4/5: Test assertion refinement
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
