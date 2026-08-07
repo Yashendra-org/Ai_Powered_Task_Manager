@@ -1,4 +1,4 @@
-# Stage 2/5: Implementation refinement
+# Stage 3/5: Implementation refinement
 import time
 from collections import defaultdict
 from django.http import HttpResponse
@@ -41,3 +41,22 @@ class SecurityAndRateLimitMiddleware:
                 response = HttpResponse(
                     "Too many login attempts. Please wait a minute and try again.",
                     status=429,
+                    content_type="text/plain"
+                )
+                response['Retry-After'] = str(max(1, retry_after))
+                response['X-RateLimit-Limit'] = str(RATE_LIMIT_MAX_ATTEMPTS)
+                response['X-RateLimit-Remaining'] = '0'
+                response['X-RateLimit-Reset'] = str(max(1, retry_after))
+                return response
+
+            LOGIN_ATTEMPTS[rate_key].append(now)
+
+        # Process the request
+        response = self.get_response(request)
+
+        # 2. Add Rate Limit Headers on Login Responses
+        if path.rstrip('/') == '/login':
+            now = time.time()
+            attempts = len([t for t in LOGIN_ATTEMPTS[rate_key] if now - t < RATE_LIMIT_WINDOW])
+            remaining = max(0, RATE_LIMIT_MAX_ATTEMPTS - attempts)
+            response['X-RateLimit-Limit'] = str(RATE_LIMIT_MAX_ATTEMPTS)
