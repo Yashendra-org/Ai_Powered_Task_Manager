@@ -1,4 +1,4 @@
-# Stage 3/5: Progressive implementation
+# Stage 4/5: Progressive implementation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -275,3 +275,89 @@ def habit_list_view(request):
 
     context = {
         'habits': habits,
+        'habit_rows': habit_rows,
+        'days_list': days_list,
+        'daily_totals': daily_totals,
+        'view_mode': view_mode,
+        'period_title': period_title,
+        'year_val': start_date.year,
+        'month_val': start_date.strftime('%B'),
+        'start_date_str': start_date.strftime('%B %d, %Y'),
+        'end_date_str': end_date.strftime('%B %d, %Y'),
+        'start_date_input': start_date.strftime('%Y-%m-%d'),
+        'end_date_input': end_date.strftime('%Y-%m-%d'),
+        'total_days': total_days,
+        'prev_url': prev_url,
+        'next_url': next_url,
+        'total_goals_sum': total_goals_sum,
+        'total_completed_sum': total_completed_sum,
+        'overall_success_rate': overall_success_rate,
+        'badge_label': badge_label,
+        'period_progress_pct': period_progress_pct,
+        'normalized_progress_pct': normalized_progress_pct,
+        'momentum_pct': momentum_pct,
+        'elapsed_days': elapsed_days,
+        'chart_labels_json': json.dumps(chart_labels),
+        'chart_data_json': json.dumps(chart_data),
+        'today_str': today.strftime('%Y-%m-%d'),
+    }
+    return render(request, 'habits/list.html', context)
+
+
+@login_required
+def habit_export_csv_view(request):
+    """
+    Export current habit completion report as CSV (matching the Download button in screenshot).
+    """
+    user = request.user
+    habits = Habit.objects.filter(user=user, is_active=True)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="my_habit_tracker_export.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Habit Title', 'Frequency', 'Monthly Goal', 'Current Streak (Days)', 'Status'])
+
+    for h in habits:
+        writer.writerow([
+            h.title,
+            h.get_frequency_display(),
+            h.monthly_goal,
+            h.current_streak(),
+            'Active' if h.is_active else 'Inactive',
+        ])
+
+    return response
+
+
+@login_required
+def habit_create_view(request):
+    user = request.user
+    if request.method == 'POST':
+        form = HabitForm(request.POST)
+        if form.is_valid():
+            habit = form.save(commit=False)
+            habit.user = user
+            habit.scheduled_days = form.cleaned_data['scheduled_days']
+            habit.save()
+            messages.success(request, f"Habit '{habit.title}' added to your tracker!")
+            return redirect('habit_list')
+    else:
+        form = HabitForm()
+
+    return render(request, 'habits/form.html', {'form': form, 'title': 'Create New Habit'})
+
+
+@login_required
+def habit_edit_view(request, habit_id):
+    user = request.user
+    habit = get_object_or_404(Habit, id=habit_id, user=user)
+    if request.method == 'POST':
+        form = HabitForm(request.POST, instance=habit)
+        if form.is_valid():
+            habit = form.save(commit=False)
+            habit.scheduled_days = form.cleaned_data['scheduled_days']
+            habit.save()
+            messages.success(request, "Habit updated successfully!")
+            return redirect('habit_list')
+    else:
