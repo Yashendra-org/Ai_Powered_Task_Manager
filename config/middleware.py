@@ -1,4 +1,3 @@
-# Stage 4/5: Implementation refinement
 import time
 from collections import defaultdict
 from django.http import HttpResponse
@@ -79,3 +78,18 @@ class SecurityAndRateLimitMiddleware:
         response['Content-Security-Policy'] = csp_policy
 
         # 4. Strict-Transport-Security (HSTS) Header
+        response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+
+        # 5. Core Defensive Headers
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['X-Frame-Options'] = 'DENY'
+        response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+
+        return response
+
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR', '127.0.0.1')
