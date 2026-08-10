@@ -1,4 +1,4 @@
-<!-- Stage 3/5: Progressive implementation -->
+<!-- Stage 4/5: Progressive implementation -->
 {% extends 'base.html' %}
 
 {% block title %}Habit Tracker — {{ period_title }}{% endblock %}
@@ -306,3 +306,98 @@
                         <p class="text-[10px] text-slate-400 mt-0.5">Normalized to today</p>
                     </div>
                 </div>
+
+                <!-- Gauge 3: Momentum Progress (Amber / Yellow) -->
+                <div class="flex items-center space-x-3.5">
+                    <div class="relative w-20 h-20 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-slate-800" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="text-amber-400 transition-all duration-700" stroke-dasharray="{{ momentum_pct }}, 100" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <span class="absolute font-mono font-bold text-xs text-white">{{ momentum_pct }}%</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-amber-400">Recent Momentum</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Last 3 days velocity</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Right Title Banner -->
+            <div class="text-right">
+                <span class="text-xs font-extrabold uppercase tracking-widest text-slate-400 block">
+                    {% if view_mode == 'month' %}MONTHLY{% elif view_mode == 'week' %}WEEKLY{% elif view_mode == 'year' %}ANNUAL{% elif view_mode == 'day' %}DAILY{% else %}CUSTOM{% endif %}
+                </span>
+                <span class="text-xl font-black tracking-tight text-white block">
+                    HABIT TRACKER
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- CHART.JS INTEGRATION SCRIPT FOR TREND LINE                        -->
+<!-- ================================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        initHabitTrendChart();
+    });
+
+    // Also re-init if PJAX loads page
+    if (window.initHabitTrendChart) initHabitTrendChart();
+
+    function initHabitTrendChart() {
+        const ctx = document.getElementById('dailyTrendChart');
+        if (!ctx) return;
+
+        // Destroy old chart instance if existing
+        if (window.myHabitChartInstance) {
+            window.myHabitChartInstance.destroy();
+        }
+
+        const labels = {{ chart_labels_json|safe }};
+        const dataValues = {{ chart_data_json|safe }};
+
+        window.myHabitChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Completions',
+                    data: dataValues,
+                    borderColor: '#22d3ee', // Bright Cyan line
+                    backgroundColor: 'rgba(34, 211, 238, 0.1)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.35, // Smooth curve
+                    pointBackgroundColor: '#06b6d4',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleColor: '#38bdf8',
+                        bodyColor: '#ffffff',
+                        padding: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + ' Habits Completed';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(51, 65, 85, 0.4)', drawBorder: false },
+                        ticks: { color: '#64748b', font: { size: 10, family: 'Inter' } }
