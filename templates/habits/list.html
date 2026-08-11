@@ -1,4 +1,3 @@
-<!-- Stage 4/5: Progressive implementation -->
 {% extends 'base.html' %}
 
 {% block title %}Habit Tracker — {{ period_title }}{% endblock %}
@@ -401,3 +400,74 @@
                     x: {
                         grid: { color: 'rgba(51, 65, 85, 0.4)', drawBorder: false },
                         ticks: { color: '#64748b', font: { size: 10, family: 'Inter' } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 6,
+                        grid: { color: 'rgba(51, 65, 85, 0.4)', drawBorder: false },
+                        ticks: { color: '#64748b', stepSize: 2, font: { size: 10, family: 'Inter' } }
+                    }
+                }
+            }
+        });
+    }
+
+    // Enhanced interactive cell click delegation for instant matrix updates
+    document.addEventListener('submit', function (e) {
+        const form = e.target.closest('.habit-cell-form');
+        if (!form) return;
+
+        e.preventDefault();
+        const btn = form.querySelector('button[type="submit"]');
+        const habitId = form.getAttribute('data-habit-id');
+        const color = form.getAttribute('data-color') || '#10b981';
+
+        const isCurrentlyCompleted = btn.classList.contains('text-white');
+        const nextState = !isCurrentlyCompleted;
+
+        // Optimistic UI update
+        if (nextState) {
+            btn.className = "w-6 h-6 rounded-md border flex items-center justify-center mx-auto transition-all font-bold text-xs text-white shadow-sm font-mono";
+            btn.style.backgroundColor = color;
+            btn.style.borderColor = color;
+            btn.textContent = "X";
+        } else {
+            btn.className = "w-6 h-6 rounded-md border flex items-center justify-center mx-auto transition-all font-bold text-xs border-dashed border-slate-300 hover:border-slate-400 bg-white text-transparent hover:text-slate-300";
+            btn.style.backgroundColor = "transparent";
+            btn.style.borderColor = "#cbd5e1";
+            btn.textContent = "X";
+        }
+
+        const formData = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                'Accept': 'application/json',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Update row's progress bar & text
+                const row = document.getElementById(`habit-row-${habitId}`);
+                if (row && data.habit_progress_rate !== undefined) {
+                    const bar = row.querySelector('.habit-progress-bar');
+                    const text = row.querySelector('.habit-progress-text');
+                    if (bar) bar.style.width = `${data.habit_progress_rate}%`;
+                    if (text) text.textContent = `${data.habit_progress_rate}%`;
+                }
+
+                if (window.showToast) {
+                    showToast(data.message, 'success');
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Habit matrix error:', err);
+        });
+    });
+</script>
+{% endblock %}
