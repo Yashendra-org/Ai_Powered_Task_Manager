@@ -1,4 +1,4 @@
-# Stage 3/5: Progressive implementation
+# Stage 4/5: Progressive implementation
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -91,3 +91,31 @@ class Command(BaseCommand):
             defaults={
                 "teacher": teacher_sharma,
                 "description": "Solve exercise problems 1 to 10 on B+ Trees indexing.",
+                "assigned_date": today,
+                "due_at": now + timezone.timedelta(days=2),
+                "priority": "high",
+                "status": "in_progress",
+            }
+        )
+
+        # 5. Habits (11 Habits matching Executive Dashboard)
+        habits_catalog = [
+            ("Stretch or do yoga", 5, "#10B981"),
+            ("Walk 10,000 steps", 7, "#0EA5E9"),
+            ("Read a book chapter", 15, "#6366F1"),
+            ("Declutter a space", 4, "#F59E0B"),
+            ("Floss teeth & skincare", 20, "#EF4444"),
+            ("Play a guitar", 10, "#10B981"),
+            ("Call family", 10, "#06B6D4"),
+            ("Volunteer", 3, "#8B5CF6"),
+            ("Put $10 to savings", 10, "#F59E0B"),
+            ("Daily DSA Practice", 25, "#10B981"),
+            ("Read Technical Paper", 20, "#3B82F6"),
+        ]
+
+        # Seed sample completion logs for current month up to today
+        rng = random.Random(42)
+        start_of_month = today.replace(day=1)
+
+        for title, goal, color in habits_catalog:
+            habit, _ = Habit.objects.get_or_create(
