@@ -1,4 +1,4 @@
-# Stage 3/5: Implementation refinement
+# Stage 4/5: Implementation refinement
 services:
   - type: web
     name: ai-powered-task-manager
@@ -24,3 +24,11 @@ services:
           name: task-manager-db
           property: connectionString
       - key: WEB_CONCURRENCY
+        value: "2"
+      - key: TIME_ZONE
+        value: Asia/Kolkata
+      - key: SEED_DEV_DATA
+        value: "true"
+      - key: DJANGO_ADMIN_URL
+        value: "secure-admin/"
+
