@@ -1,4 +1,4 @@
-# Stage 2/5: Implementation refinement
+# Stage 3/5: Implementation refinement
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView, LogoutView
@@ -30,3 +30,16 @@ class CustomLoginView(LoginView):
     redirect_authenticated_user = True
 
     def form_valid(self, form):
+        messages.success(self.request, f"Welcome back, {form.get_user().username}!")
+        return super().form_valid(form)
+
+
+def custom_logout_view(request):
+    logout(request)
+    messages.info(request, "You have been logged out successfully.")
+    return redirect('login')
+
+
+@login_required
+def profile_view(request):
+    user = request.user
