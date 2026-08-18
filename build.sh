@@ -1,4 +1,4 @@
-# Stage 3/5: Progressive implementation
+# Stage 4/5: Progressive implementation
 #!/usr/bin/env bash
 # exit on error
 set -o errexit
@@ -15,3 +15,9 @@ python manage.py migrate
 
 # Optionally seed development data if enabled (default on first deploy)
 if [ "$SEED_DEV_DATA" = "true" ]; then
+    echo "===> Seeding demo development data and executive habits..."
+    python manage.py seed_dev_data
+fi
+
+if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
+    echo "===> Creating superuser from environment variables..."
