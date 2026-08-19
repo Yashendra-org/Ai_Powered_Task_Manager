@@ -1,0 +1,10 @@
+# Stage 1/5: Progressive implementation
+services:
+  - type: web
+    name: ai-powered-task-manager
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application --workers 2 --bind 0.0.0.0:$PORT"
