@@ -1,4 +1,4 @@
-<!-- Stage 3/5: Implementation refinement -->
+<!-- Stage 4/5: Implementation refinement -->
 {% extends 'base.html' %}
 
 {% block title %}Sign In — My Habbit Tracker{% endblock %}
@@ -39,3 +39,16 @@
                 {% if form.password.errors %}
                 <p class="mt-1 text-xs text-red-600">{{ form.password.errors.0 }}</p>
                 {% endif %}
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
+                    <label for="remember-me" class="ml-2 block text-xs text-slate-600">Remember me</label>
+                </div>
+                <a href="{% url 'password_reset' %}" class="text-xs font-medium text-blue-600 hover:text-blue-500">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 px-4 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors shadow-sm shadow-blue-200 text-sm">
+                Sign In
+            </button>
