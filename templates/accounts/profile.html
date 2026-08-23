@@ -1,4 +1,4 @@
-<!-- Stage 3/5: Implementation refinement -->
+<!-- Stage 4/5: Implementation refinement -->
 {% extends 'base.html' %}
 
 {% block title %}User Profile — {{ user.username }}{% endblock %}
@@ -69,3 +69,24 @@
             <span class="text-xs font-semibold text-slate-500 mt-0.5">Active Habits</span>
         </div>
 
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2">
+                <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+            </div>
+            <span class="text-2xl font-black text-slate-900 font-mono">{{ stats.assignments_submitted }}</span>
+            <span class="text-xs font-semibold text-slate-500 mt-0.5">Assignments Handed In</span>
+        </div>
+    </div>
+
+    <!-- Security & Account Info -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <h2 class="text-base font-bold text-slate-900 flex items-center">
+            <i data-lucide="shield-check" class="w-5 h-5 mr-2 text-emerald-600"></i>
+            Account Security & Authentication
+        </h2>
+        <div class="divide-y divide-slate-100 text-xs">
+            <div class="py-3 flex items-center justify-between">
+                <div>
+                    <p class="font-semibold text-slate-700">Account Password</p>
+                    <p class="text-slate-400 mt-0.5">Keep your account secure with a strong password.</p>
+                </div>
