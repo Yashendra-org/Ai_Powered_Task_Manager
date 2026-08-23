@@ -1,4 +1,4 @@
-<!-- Stage 1/5: Implementation refinement -->
+<!-- Stage 2/5: Implementation refinement -->
 {% extends 'base.html' %}
 
 {% block title %}User Profile — {{ user.username }}{% endblock %}
@@ -26,3 +26,24 @@
                 </p>
                 <p class="text-xs text-slate-400 mt-1 flex items-center justify-center sm:justify-start">
                     <i data-lucide="globe" class="w-3.5 h-3.5 mr-1.5 text-slate-400"></i>
+                    Timezone: {{ user.timezone|default:"Asia/Kolkata" }}
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'settings' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
+                <i data-lucide="settings" class="w-4 h-4 mr-1.5 text-slate-500"></i>
+                Edit Profile
+            </a>
+            <a href="{% url 'logout' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">
+                <i data-lucide="log-out" class="w-4 h-4 mr-1.5 text-rose-500"></i>
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Productivity Metrics Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2">
