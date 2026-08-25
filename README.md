@@ -1,4 +1,4 @@
-<!-- Stage 1/5: Progressive implementation -->
+<!-- Stage 2/5: Progressive implementation -->
 <div align="center">
 
 # ⚡ My Habit Tracker
@@ -128,3 +128,107 @@ flowchart TD
         Redis[(Redis Message Broker)] <--> Celery
     end
 
+    subgraph Storage["Data Persistence"]
+        Tasks --> DB[(PostgreSQL 16 / SQLite 3)]
+        Assign --> DB
+        Habits --> DB
+        Notes --> DB
+        ML --> DB
+    end
+
+    Views -->|JSON / HTML Response| Engine
+```
+
+---
+
+## 🔄 Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Student / User
+    participant Browser as Browser Shell (app.js)
+    participant Django as Django Backend
+    participant DB as Database (Audit & Tasks)
+    participant ML as ML Engine / Celery
+
+    User->>Browser: Opens /tasks/today/ (My Day)
+    Browser->>Django: GET /tasks/today/
+    Django-->>Browser: Render today's focus tasks
+
+    User->>Browser: Types quick task "DSA Practice" & hits Enter
+    Browser->>Django: POST /tasks/today/ (AJAX with CSRF)
+    Django->>DB: TaskService.create_task() + TaskHistory audit log
+    Django-->>Browser: JSON {success: true, task: {...}, rate: 75%}
+    Browser-->>User: Card slides into list immediately (Zero Reload) + Toast
+
+    User->>Browser: Checks off task (1-click)
+    Browser-->>User: Optimistic strike-through & checkmark
+    Browser->>Django: POST /tasks/<id>/toggle/ (AJAX)
+    Django->>DB: TaskService.toggle_completion()
+    Django-->>Browser: JSON {is_completed: true, today_rate: 100%}
+
+    Note over Django,ML: At 21:30 Evening Review Trigger
+    ML->>DB: Scan unfinished tasks & tomorrow's deadlines
+    ML->>Django: Prompt user for guided rollover at /review/
+```
+
+---
+
+## 📂 Project Structure
+
+```
+AI_powered_Task_Manager/
+├── config/                          # Core project settings & configuration
+│   ├── settings.py                  # Environment config, WhiteNoise, DB switch, Celery
+│   ├── urls.py                      # Root URL routing table
+│   ├── celery.py                    # Celery application & beat schedule definitions
+│   ├── wsgi.py                      # Production WSGI application
+│   ├── asgi.py                      # ASGI application
+│   └── __init__.py
+│
+├── apps/                            # Modular domain applications
+│   ├── accounts/                    # Custom User (UUID, Timezone, Review Time)
+│   │   ├── models.py, views.py, urls.py, forms.py, admin.py, tests.py
+│   │   └── management/commands/seed_dev_data.py
+│   │
+│   ├── tasks/                       # Core daily tasks & categories
+│   │   ├── models.py                # Task, Category, TaskHistory (Audit)
+│   │   ├── services.py              # TaskService business logic & state transitions
+│   │   ├── views.py                 # My Day, All Tasks, Soft-Delete & Trash
+│   │   ├── calendar_views.py        # Monthly unified calendar renderer
+│   │   ├── forms.py, urls.py, admin.py, tests.py
+│   │   └── migrations/
+│   │
+│   ├── assignments/                 # Academic assignment tracker
+│   │   ├── models.py                # Subject, Teacher, Assignment, File Attachments
+│   │   ├── views.py                 # Assignment hub, subject/teacher directory
+│   │   ├── forms.py, urls.py, admin.py, tests.py
+│   │   └── migrations/
+│   │
+│   ├── habits/                      # Recurring habit consistency & streaks
+│   │   ├── models.py                # Habit, HabitLog
+│   │   ├── views.py                 # 7-day weekly matrix, 1-click check-off
+│   │   ├── forms.py, urls.py, admin.py, tests.py
+│   │   └── migrations/
+│   │
+│   ├── notes/                       # Quick scratchpad notes
+│   │   ├── models.py                # Note (pinned, markdown content)
+│   │   ├── views.py                 # Searchable card grid, pin-to-top
+│   │   └── forms.py, urls.py, admin.py, tests.py
+│   │
+│   ├── reminders/                   # In-app notifications & Celery alerts
+│   │   ├── models.py                # Reminder, Notification
+│   │   ├── views.py                 # Notification center, mark-as-read
+│   │   └── urls.py, admin.py, tests.py
+│   │
+│   ├── analytics/                   # Productivity intelligence & Chart.js
+│   │   ├── views.py                 # 7-day velocity chart, category breakdown
+│   │   └── urls.py, admin.py, tests.py
+│   │
+│   └── ml_engine/                   # Hybrid recommendations & daily review
+│       ├── models.py                # MLRecommendation, DailySummary
+│       ├── services.py              # RecommendationEngine (Pattern Analysis)
+│       ├── views.py                 # End-of-Day Review (/review/), Smart Assistant
+│       └── urls.py, admin.py, tests.py
+│
