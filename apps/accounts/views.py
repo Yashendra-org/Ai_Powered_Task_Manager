@@ -1,4 +1,4 @@
-# Stage 2/5: Authentication & deployment refinement
+# Stage 3/5: Authentication & deployment refinement
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView, LogoutView
@@ -22,3 +22,14 @@ def register_view(request):
         form = UserRegisterForm()
     
     return render(request, 'accounts/register.html', {'form': form})
+
+
+class CustomLoginView(LoginView):
+    form_class = UserLoginForm
+    template_name = 'accounts/login.html'
+    redirect_authenticated_user = True
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Welcome back, {form.get_user().username}!")
+        return super().form_valid(form)
+
