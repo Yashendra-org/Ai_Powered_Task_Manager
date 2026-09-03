@@ -1,4 +1,4 @@
-# Stage 3/5: Authentication & deployment refinement
+# Stage 4/5: Authentication & deployment refinement
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView, LogoutView
@@ -33,3 +33,14 @@ class CustomLoginView(LoginView):
         messages.success(self.request, f"Welcome back, {form.get_user().username}!")
         return super().form_valid(form)
 
+
+def custom_logout_view(request):
+    logout(request)
+    messages.info(request, "You have been logged out successfully.")
+    return redirect('login')
+
+
+@login_required
+def settings_view(request):
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
