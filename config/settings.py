@@ -1,4 +1,4 @@
-# Stage 3/5: Authentication & deployment refinement
+# Stage 4/5: Authentication & deployment refinement
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -134,3 +134,45 @@ elif 'postgresql' in os.getenv('DB_ENGINE', '') and os.getenv('DB_NAME'):
         }
     }
 else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+# Password validation
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+# Internationalization & Timezone
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = os.getenv('TIME_ZONE', 'Asia/Kolkata')
+USE_I18N = True
+USE_TZ = True
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
