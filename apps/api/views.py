@@ -1,4 +1,4 @@
-# Stage 2/5: Implementation refinement
+# Stage 3/5: Implementation refinement
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -91,3 +91,44 @@ class TaskListCreateApiView(APIView):
             category=category,
             priority=request.data.get('priority', 'medium'),
             estimated_duration=request.data.get('estimated_duration', 30),
+            due_at=request.data.get('due_at') or (timezone.now() + timezone.timedelta(hours=4)),
+        )
+
+        return Response({
+            "success": True,
+            "data": {
+                "id": str(task.id),
+                "title": task.title,
+                "status": task.status
+            },
+            "message": "Task created successfully."
+        }, status=status.HTTP_201_CREATED)
+
+
+class TaskToggleApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        task = get_object_or_404(Task, id=pk, user=request.user)
+        if task.status == 'completed':
+            task.status = 'pending'
+            task.completed_at = None
+        else:
+            task.status = 'completed'
+            task.completed_at = timezone.now()
+        task.save()
+
+        return Response({
+            "success": True,
+            "data": {
+                "task_id": str(task.id),
+                "status": task.status,
+                "is_completed": task.status == 'completed'
+            },
+            "message": f"Task marked as {task.status}."
+        })
+
+
+class HabitListApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
