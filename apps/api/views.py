@@ -1,4 +1,4 @@
-# Stage 3/5: Implementation refinement
+# Stage 4/5: Implementation refinement
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -132,3 +132,45 @@ class TaskToggleApiView(APIView):
 class HabitListApiView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        today = timezone.localdate()
+        habits = Habit.objects.filter(user=request.user, is_active=True).order_by('id')
+        completed_today_ids = set(HabitLog.objects.filter(
+            habit__in=habits,
+            date=today,
+            status='completed'
+        ).values_list('habit_id', flat=True))
+
+        data = []
+        for h in habits:
+            data.append({
+                "id": h.id,
+                "title": h.title,
+                "frequency": h.frequency,
+                "monthly_goal": h.monthly_goal,
+                "color": h.color,
+                "current_streak": h.current_streak(),
+                "is_completed_today": h.id in completed_today_ids
+            })
+
+        return Response({
+            "success": True,
+            "data": data
+        })
+
+
+class AssignmentListApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        assignments = Assignment.objects.filter(user=request.user).select_related('subject')
+        data = []
+        for a in assignments:
+            data.append({
+                "id": str(a.id),
+                "title": a.title,
+                "subject": a.subject.name if a.subject else None,
+                "subject_code": a.subject.code if a.subject else None,
+                "due_at": a.due_at.isoformat() if a.due_at else None,
+                "priority": a.priority,
+                "status": a.status,
