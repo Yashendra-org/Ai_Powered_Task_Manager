@@ -1,4 +1,3 @@
-# Stage 4/5: Implementation refinement
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -174,3 +173,34 @@ class AssignmentListApiView(APIView):
                 "due_at": a.due_at.isoformat() if a.due_at else None,
                 "priority": a.priority,
                 "status": a.status,
+                "deadline_category": a.deadline_category
+            })
+
+        return Response({
+            "success": True,
+            "data": data
+        })
+
+
+class AnalyticsSummaryApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        tasks_total = Task.objects.filter(user=user).count()
+        tasks_completed = Task.objects.filter(user=user, status='completed').count()
+        habits_active = Habit.objects.filter(user=user, is_active=True).count()
+        assignments_pending = Assignment.objects.filter(user=user).exclude(status='submitted').count()
+
+        completion_rate = round((tasks_completed / tasks_total) * 100) if tasks_total > 0 else 0
+
+        return Response({
+            "success": True,
+            "data": {
+                "tasks_total": tasks_total,
+                "tasks_completed": tasks_completed,
+                "task_completion_rate": completion_rate,
+                "habits_active": habits_active,
+                "assignments_pending": assignments_pending,
+            }
+        })
