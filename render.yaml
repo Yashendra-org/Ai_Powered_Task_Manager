@@ -1,4 +1,3 @@
-# Stage 4/5: Authentication & deployment refinement
 services:
   - type: web
     name: ai-powered-task-manager
@@ -30,3 +29,9 @@ services:
       - key: SEED_DEV_DATA
         value: "true"
 
+databases:
+  - name: task-manager-db
+    region: oregon
+    plan: free
+    databaseName: task_manager_db
+    user: task_manager_user
