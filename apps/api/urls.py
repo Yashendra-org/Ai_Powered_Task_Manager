@@ -1,4 +1,3 @@
-# Stage 4/5: Implementation refinement
 from django.urls import path
 from . import views
 
@@ -16,3 +15,7 @@ urlpatterns = [
 
     # Assignments API
     path('v1/assignments/', views.AssignmentListApiView.as_view(), name='api_assignments_list'),
+
+    # Analytics API
+    path('v1/analytics/', views.AnalyticsSummaryApiView.as_view(), name='api_analytics_summary'),
+]
