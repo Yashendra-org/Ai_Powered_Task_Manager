@@ -1,3 +1,4 @@
+# Stage 1/5: Timezone localization refinement
 import uuid
 from django.db import models
 from django.conf import settings
@@ -71,7 +72,7 @@ class Assignment(models.Model):
         now = timezone.now()
         if self.due_at < now and self.status != 'submitted':
             return 'overdue'
-        days_until_due = (self.due_at.date() - timezone.localdate()).days
+        days_until_due = (timezone.localtime(self.due_at).date() - timezone.localdate()).days
         if days_until_due == 0:
             return 'due_today'
         elif days_until_due == 1:
