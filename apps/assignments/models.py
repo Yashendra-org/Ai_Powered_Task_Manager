@@ -1,4 +1,4 @@
-# Stage 1/5: Timezone localization refinement
+# Stage 2/5: Timezone localization refinement
 import uuid
 from django.db import models
 from django.conf import settings
