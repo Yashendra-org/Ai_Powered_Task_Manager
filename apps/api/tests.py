@@ -1,4 +1,3 @@
-# Stage 4/5: Implementation refinement
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -35,3 +34,10 @@ class RestApiModuleTests(TestCase):
             content_type='application/json'
         )
         self.assertEqual(create_response.status_code, 201)
+        self.assertEqual(create_response.json()['data']['title'], 'New via API')
+
+    def test_task_toggle_api(self):
+        url = reverse('api_tasks_toggle', kwargs={'pk': self.task.id})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['data']['status'], 'completed')
