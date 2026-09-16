@@ -1,3 +1,4 @@
+# Stage 1/5: Test assertion refinement
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -46,7 +47,8 @@ class AssignmentModuleTests(TestCase):
 
     def test_deadline_categorization(self):
         now = timezone.now()
-        # Due in 2 days -> due_soon
+        # Due in 3 days -> due_soon
+        self.assignment.due_at = now + timezone.timedelta(days=3)
         self.assertEqual(self.assignment.deadline_category, 'due_soon')
 
         # Due later today (in 4 hours) -> due_today
