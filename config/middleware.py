@@ -1,4 +1,4 @@
-# Stage 1/5: Implementation refinement
+# Stage 2/5: Implementation refinement
 import time
 from collections import defaultdict
 from django.http import HttpResponse
@@ -22,3 +22,22 @@ class SecurityAndRateLimitMiddleware:
     """
     def __init__(self, get_response):
         self.get_response = get_response
+
+    def __call__(self, request):
+        path = request.path
+
+        # 1. Rate Limiting on Login Endpoint (POST /login/)
+        is_login_post = path.rstrip('/') == '/login' and request.method == 'POST'
+        client_ip = self.get_client_ip(request)
+        username = request.POST.get('username', '').strip().lower()
+        rate_key = f"{client_ip}:{username}"
+
+        if is_login_post:
+            now = time.time()
+            LOGIN_ATTEMPTS[rate_key] = [t for t in LOGIN_ATTEMPTS[rate_key] if now - t < RATE_LIMIT_WINDOW]
+
+            if len(LOGIN_ATTEMPTS[rate_key]) >= RATE_LIMIT_MAX_ATTEMPTS:
+                retry_after = int(RATE_LIMIT_WINDOW - (now - LOGIN_ATTEMPTS[rate_key][0]))
+                response = HttpResponse(
+                    "Too many login attempts. Please wait a minute and try again.",
+                    status=429,
