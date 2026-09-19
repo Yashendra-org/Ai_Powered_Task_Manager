@@ -1,4 +1,3 @@
-<!-- Stage 4/5: Command documentation refinement -->
 <div align="center">
 
 # ⚡ My Habit Tracker
@@ -445,3 +444,82 @@ If you prefer setting up services manually on Render:
 
 ## 📡 API & View Routes
 
+Base URL: `/`
+
+| Method | URL Path | View Controller | Access | Description |
+|---|---|---|---|---|
+| `GET` | `/` | `apps.tasks.views.dashboard_view` | Auth | Executive dashboard with metrics & focus tasks |
+| `GET`, `POST` | `/tasks/today/` | `apps.tasks.views.my_day_view` | Auth | My Day focus cockpit with zero-reload quick-add |
+| `GET` | `/tasks/` | `apps.tasks.views.all_tasks_view` | Auth | Searchable task list with category & priority filters |
+| `POST` | `/tasks/<id>/toggle/` | `apps.tasks.views.task_toggle_complete_view` | Auth | Instant check/uncheck status toggle (AJAX) |
+| `POST` | `/tasks/<id>/delete/` | `apps.tasks.views.task_delete_view` | Auth | Soft-delete task to Recently Deleted (AJAX) |
+| `GET` | `/tasks/trash/` | `apps.tasks.views.trash_view` | Auth | Recently Deleted task manager with restore |
+| `GET` | `/assignments/` | `apps.assignments.views.assignment_list_view` | Auth | College Assignment Hub with urgency filters |
+| `POST` | `/assignments/<id>/submit-toggle/` | `apps.assignments.views.assignment_toggle_submission_view` | Auth | 1-Click assignment submission toggle (AJAX) |
+| `GET` | `/habits/` | `apps.habits.views.habit_list_view` | Auth | 7-Day Consistency Matrix with streak counters |
+| `POST` | `/habits/<id>/log/` | `apps.habits.views.habit_toggle_log_view` | Auth | 1-Click daily habit check-off (AJAX) |
+| `GET` | `/calendar/` | `apps.tasks.calendar_views.calendar_view` | Auth | Unified chronological calendar |
+| `GET` | `/analytics/` | `apps.analytics.views.analytics_dashboard_view` | Auth | Chart.js 7-day velocity and category analytics |
+| `GET` | `/review/` | `apps.ml_engine.views.end_of_day_review_view` | Auth | End-of-Day Review workflow with guided rollover |
+| `GET` | `/assistant/` | `apps.ml_engine.views.smart_assistant_view` | Auth | ML suggestions with accept/reject feedback loop |
+| `POST` | `/assistant/feedback/<id>/<action>/` | `apps.ml_engine.views.recommendation_feedback_view` | Auth | Record feedback & auto-create approved tasks |
+| `GET` | `/notes/` | `apps.notes.views.note_list_view` | Auth | Searchable scratchpad notes repository |
+| `GET`, `POST` | `/login/`, `/register/` | `apps.accounts.views` | Public | Authentication & account registration |
+
+---
+
+## 🧪 Testing & Verification
+
+The platform maintains an automated test suite verifying CRUD operations, multi-tenant isolation, AJAX envelopes, and business services across all 8 modules.
+
+```bash
+# Execute the full automated test suite
+python manage.py test
+```
+
+### Test Suite Results:
+```text
+Creating test database for alias 'default'...
+...................................
+----------------------------------------------------------------------
+Ran 35 tests in 45.422s
+
+OK
+Destroying test database for alias 'default'...
+Found 35 test(s).
+System check identified no issues (0 silenced).
+```
+
+---
+
+## 👥 Contributors
+
+<table>
+<tr><th>Contributor</th><th>Role</th><th>Key Responsibilities</th></tr>
+<tr>
+<td><b>Yashendra Kumar</b></td>
+<td>Lead Architect & Full-Stack Engineer</td>
+<td>System architecture, Django modular backend, database schema, zero-reload PJAX/AJAX client engine, ML recommendation layer, and test suite.</td>
+</tr>
+</table>
+
+---
+
+## 🧭 Roadmap
+
+- [ ] **Voice-to-Task Transcription** — Rapid voice input converted to categorized tasks using Web Speech API.
+- [ ] **WhatsApp & Telegram Reminders** — Two-way bot integration for receiving morning agendas and checking off habits via chat.
+- [ ] **Pomodoro Focus Timer** — Built-in 25-minute timer integrated with task time tracking and productivity reports.
+- [ ] **Offline ML Retraining Pipeline** — Standalone scheduled job retraining Random Forest classifiers on accumulated `TaskHistory` data.
+
+---
+
+## 📜 License
+
+This project is open-source software licensed under the **[MIT License](LICENSE)**.
+
+---
+
+<div align="center">
+<h3>⚡ "Plan with Clarity, Execute with Focus, Build Unbreakable Consistency."</h3>
+</div>
