@@ -1,3 +1,4 @@
+# Stage 1/5: Admin account provisioning
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -34,6 +35,24 @@ class Command(BaseCommand):
         user.is_superuser = True
         user.save()
         self.stdout.write(self.style.SUCCESS("User 'student' (student@college.edu) active with password: password123"))
+
+        # 1b. Create or update administrator superuser
+        admin_user, _ = User.objects.get_or_create(
+            username="admin",
+            defaults={
+                "email": "admin@myhabittracker.com",
+                "timezone": "Asia/Kolkata",
+                "is_staff": True,
+                "is_superuser": True,
+                "is_active": True,
+            }
+        )
+        admin_user.set_password("admin123")
+        admin_user.is_active = True
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save()
+        self.stdout.write(self.style.SUCCESS("Admin user 'admin' active with password: admin123 (Superuser)"))
 
         # 2. Categories
         cat_college, _ = Category.objects.get_or_create(user=user, name="College", defaults={"color": "#2563EB"})
