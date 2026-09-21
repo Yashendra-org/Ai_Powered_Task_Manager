@@ -1,4 +1,4 @@
-# Stage 3/5: Implementation refinement
+# Stage 4/5: Implementation refinement
 import time
 from collections import defaultdict
 from django.http import HttpResponse
@@ -60,3 +60,22 @@ class SecurityAndRateLimitMiddleware:
             attempts = len([t for t in LOGIN_ATTEMPTS[rate_key] if now - t < RATE_LIMIT_WINDOW])
             remaining = max(0, RATE_LIMIT_MAX_ATTEMPTS - attempts)
             response['X-RateLimit-Limit'] = str(RATE_LIMIT_MAX_ATTEMPTS)
+            response['X-RateLimit-Remaining'] = str(remaining)
+            response['X-RateLimit-Reset'] = str(RATE_LIMIT_WINDOW)
+
+        # 3. Content-Security-Policy (CSP) Header
+        # Whitelists self, inline scripts for Chart.js/Alpine, and required CDNs
+        csp_policy = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+            "font-src 'self' https://fonts.gstatic.com data:; "
+            "img-src 'self' data: https: blob:; "
+            "connect-src 'self' https:; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self';"
+        )
+        response['Content-Security-Policy'] = csp_policy
+
+        # 4. Strict-Transport-Security (HSTS) Header
