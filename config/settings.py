@@ -14,8 +14,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env if present
 load_dotenv(BASE_DIR / '.env')
 
-# Render Environment Flag
+# Render Environment Flag or Deploy Check
 IS_RENDER = os.getenv('RENDER', 'false').lower() == 'true'
+IS_DEPLOY_CHECK = '--deploy' in sys.argv
 
 # Quick-start development settings - unsuitable for production
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-my-habbit-tracker-key-default-2026')
