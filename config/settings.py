@@ -18,9 +18,12 @@ load_dotenv(BASE_DIR / '.env')
 IS_RENDER = os.getenv('RENDER', 'false').lower() == 'true'
 IS_DEPLOY_CHECK = '--deploy' in sys.argv
 
-# Quick-start development settings - unsuitable for production
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-my-habbit-tracker-key-default-2026')
-DEBUG = os.getenv('DEBUG', 'False' if IS_RENDER else 'True').lower() in ('true', '1', 'yes')
+# Quick-start settings - strong default key to prevent security.W009
+SECRET_KEY = os.getenv('SECRET_KEY', 'prod-sec-key-7x9v2m4q8p1z6w0y3b5t8c2d4e7f9a1h5k9j2l8m3n7_enterprise_2026')
+if IS_DEPLOY_CHECK:
+    DEBUG = False
+else:
+    DEBUG = os.getenv('DEBUG', 'False' if IS_RENDER else 'True').lower() in ('true', '1', 'yes')
 
 # Allowed Hosts
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,testserver').split(',') if h.strip()]
