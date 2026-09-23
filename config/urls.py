@@ -1,4 +1,4 @@
-# Stage 2/5: Implementation refinement
+# Stage 3/5: Implementation refinement
 import os
 from django.contrib import admin
 from django.urls import path, include
@@ -18,3 +18,11 @@ def admin_decoy_view(request):
 urlpatterns = [
     # Protected Admin Portal (custom path)
     path(f'{ADMIN_URL}/', admin.site.urls),
+]
+
+# If admin URL is customized, map decoy to /admin/
+if ADMIN_URL != 'admin':
+    urlpatterns.append(path('admin/', admin_decoy_view, name='admin_decoy'))
+
+urlpatterns += [
+    path('', root_redirect, name='root'),
