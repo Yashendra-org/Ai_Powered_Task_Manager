@@ -46,8 +46,8 @@ if RENDER_EXTERNAL_HOSTNAME:
 if IS_RENDER:
     CSRF_TRUSTED_ORIGINS.append('https://*.onrender.com')
 
-# Reverse Proxy SSL Header for Render
-if IS_RENDER or not DEBUG:
+# Reverse Proxy SSL Header & SSL Hardening for Production / Render
+if IS_RENDER or not DEBUG or IS_DEPLOY_CHECK:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True').lower() in ('true', '1', 'yes')
     SESSION_COOKIE_SECURE = True
