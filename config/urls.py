@@ -1,4 +1,4 @@
-# Stage 3/5: Implementation refinement
+# Stage 4/5: Implementation refinement
 import os
 from django.contrib import admin
 from django.urls import path, include
@@ -26,3 +26,12 @@ if ADMIN_URL != 'admin':
 
 urlpatterns += [
     path('', root_redirect, name='root'),
+    path('dashboard/', dashboard_view, name='dashboard'),
+    path('api/', include('apps.api.urls')),
+    path('tasks/', include('apps.tasks.urls')),
+    path('assignments/', include('apps.assignments.urls')),
+    path('habits/', include('apps.habits.urls')),
+    path('notes/', include('apps.notes.urls')),
+    path('notifications/', include('apps.reminders.urls')),
+    path('analytics/', include('apps.analytics.urls')),
+    path('calendar/', calendar_view, name='calendar'),
