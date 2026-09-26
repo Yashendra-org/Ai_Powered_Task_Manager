@@ -1,3 +1,4 @@
+/* Mobile Responsive Refinement Stage 1/5 */
 /* Custom styles and scrollbar overrides */
 ::-webkit-scrollbar {
     width: 6px;
@@ -16,4 +17,43 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
+
+/* Mobile Safe Area & Touch Enhancements */
+:root {
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-pb {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.75rem);
+}
+
+/* Touch Friendly Interactions */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide scrollbars for horizontal filter chips */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Mobile smooth scrolling */
+#main-content {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure mobile touch devices always reveal action buttons */
+@media (hover: none) {
+    .touch-show,
+    .group:hover .opacity-0,
+    .group .opacity-0 {
+        opacity: 1 !important;
+    }
+}
+
 
