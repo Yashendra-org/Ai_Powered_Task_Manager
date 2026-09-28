@@ -1,3 +1,4 @@
+// Mobile Responsive Refinement Stage 1/5
 /**
  * My Habit Tracker — Seamless Dynamic Engine (app.js)
  * Provides instantaneous, zero-reload user experience:
@@ -628,36 +629,139 @@ async function loadPage(url, pushState = true) {
 
 function updateSidebarActiveLinks(currentUrl) {
     const sidebar = document.getElementById('sidebar');
-    if (!sidebar) return;
-
     const currentPath = new URL(currentUrl, window.location.origin).pathname;
-    const links = sidebar.querySelectorAll('nav a');
 
-    links.forEach(link => {
-        const linkPath = new URL(link.href, window.location.origin).pathname;
-        const icon = link.querySelector('[data-lucide], i, svg');
-        
-        let isActive = false;
-        if (linkPath === '/' && currentPath === '/') {
-            isActive = true;
-        } else if (linkPath !== '/' && currentPath.startsWith(linkPath)) {
-            isActive = true;
+    if (sidebar) {
+        const links = sidebar.querySelectorAll('nav a');
+        links.forEach(link => {
+            const linkPath = new URL(link.href, window.location.origin).pathname;
+            const icon = link.querySelector('[data-lucide], i, svg');
+            
+            let isActive = false;
+            if (linkPath === '/' && currentPath === '/') {
+                isActive = true;
+            } else if (linkPath !== '/' && currentPath.startsWith(linkPath)) {
+                isActive = true;
+            }
+
+            if (isActive) {
+                link.className = "flex items-center px-3 py-2.5 text-sm font-semibold rounded-lg bg-blue-50 text-blue-700 transition-colors";
+                if (icon) {
+                    icon.classList.remove('text-slate-400');
+                    icon.classList.add('text-blue-600');
+                }
+            } else {
+                link.className = "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors";
+                if (icon) {
+                    icon.classList.remove('text-blue-600');
+                    icon.classList.add('text-slate-400');
+                }
+            }
+        });
+    }
+
+    // Update Mobile Bottom Nav Active Link
+    const mobileNav = document.getElementById('mobileBottomNav');
+    if (mobileNav) {
+        const mobileLinks = mobileNav.querySelectorAll('a.mobile-nav-item');
+        mobileLinks.forEach(link => {
+            const linkPath = new URL(link.href, window.location.origin).pathname;
+            let isActive = false;
+            if (linkPath === '/' && currentPath === '/') {
+                isActive = true;
+            } else if (linkPath !== '/' && currentPath.startsWith(linkPath)) {
+                isActive = true;
+            }
+
+            if (isActive) {
+                link.className = "mobile-nav-item flex flex-col items-center justify-center flex-1 py-1 text-xs font-semibold text-blue-600 transition-colors";
+            } else {
+                link.className = "mobile-nav-item flex flex-col items-center justify-center flex-1 py-1 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors";
+            }
+        });
+    }
+}
+
+// ==========================================================================
+// 10. Mobile Drawer & Off-Canvas Controller
+// ==========================================================================
+function initMobileNavigation() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const closeBtn = document.getElementById('sidebarClose');
+    const menuTrigger = document.getElementById('mobileMenuTrigger');
+
+    function openSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.remove('-translate-x-full');
+        sidebar.classList.add('translate-x-0');
+        if (backdrop) {
+            backdrop.classList.remove('hidden');
         }
+    }
 
-        if (isActive) {
-            link.className = "flex items-center px-3 py-2.5 text-sm font-semibold rounded-lg bg-blue-50 text-blue-700 transition-colors";
-            if (icon) {
-                icon.classList.remove('text-slate-400');
-                icon.classList.add('text-blue-600');
+    function closeSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.remove('translate-x-0');
+        sidebar.classList.add('-translate-x-full');
+        if (backdrop) {
+            backdrop.classList.add('hidden');
+        }
+    }
+
+    if (toggleBtn) {
+        toggleBtn.onclick = function (e) {
+            e.stopPropagation();
+            if (sidebar && sidebar.classList.contains('translate-x-0')) {
+                closeSidebar();
+            } else {
+                openSidebar();
             }
-        } else {
-            link.className = "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors";
-            if (icon) {
-                icon.classList.remove('text-blue-600');
-                icon.classList.add('text-slate-400');
+        };
+    }
+
+    if (menuTrigger) {
+        menuTrigger.onclick = function (e) {
+            e.stopPropagation();
+            if (sidebar && sidebar.classList.contains('translate-x-0')) {
+                closeSidebar();
+            } else {
+                openSidebar();
             }
+        };
+    }
+
+    if (closeBtn) {
+        closeBtn.onclick = function (e) {
+            e.stopPropagation();
+            closeSidebar();
+        };
+    }
+
+    if (backdrop) {
+        backdrop.onclick = function () {
+            closeSidebar();
+        };
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sidebar && sidebar.classList.contains('translate-x-0')) {
+            closeSidebar();
         }
     });
+
+    // Close mobile drawer on link navigation
+    if (sidebar) {
+        sidebar.querySelectorAll('a').forEach(a => {
+            a.addEventListener('click', function () {
+                if (window.innerWidth < 768) {
+                    closeSidebar();
+                }
+            });
+        });
+    }
 }
 
 // Intercept internal link navigation
@@ -690,5 +794,6 @@ window.addEventListener('popstate', function (e) {
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', function () {
     if (window.lucide) lucide.createIcons();
+    initMobileNavigation();
 });
 
