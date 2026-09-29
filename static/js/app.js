@@ -1,4 +1,3 @@
-// Mobile Responsive Refinement Stage 4/5
 /**
  * My Habit Tracker — Seamless Dynamic Engine (app.js)
  * Provides instantaneous, zero-reload user experience:
