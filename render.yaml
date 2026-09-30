@@ -1,4 +1,3 @@
-# Stage 4/5: Implementation refinement
 services:
   - type: web
     name: ai-powered-task-manager
@@ -32,3 +31,9 @@ services:
       - key: DJANGO_ADMIN_URL
         value: "secure-admin/"
 
+databases:
+  - name: task-manager-db
+    region: oregon
+    plan: free
+    databaseName: task_manager_db
+    user: task_manager_user
