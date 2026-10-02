@@ -1,3 +1,4 @@
+<!-- Mobile Responsive Refinement Stage 1/5 -->
 {% extends 'base.html' %}
 
 {% block title %}Dashboard — My Habbit Tracker{% endblock %}
@@ -5,22 +6,22 @@
 {% block content %}
 <div class="space-y-8 max-w-7xl mx-auto">
     <!-- Header with Greeting & Date -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{{ greeting }}, {{ user.username }}!</h1>
-            <p class="text-sm text-slate-500 mt-1 flex items-center">
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{{ greeting }}, {{ user.username }}!</h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1 flex items-center">
                 <i data-lucide="calendar" class="w-4 h-4 mr-1.5 text-slate-400"></i>
                 {{ current_date }}
             </p>
         </div>
 
-        <div class="flex items-center space-x-3">
-            <a href="{% url 'habit_list' %}" class="inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 shadow-sm transition-colors">
-                <i data-lucide="plus" class="w-4 h-4 mr-2 text-slate-500"></i>
+        <div class="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto">
+            <a href="{% url 'habit_list' %}" class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-slate-200 text-xs sm:text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 shadow-sm transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-1.5 text-slate-500"></i>
                 Log Habit
             </a>
-            <a href="{% url 'task_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors">
-                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+            <a href="{% url 'task_create' %}" class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
                 Add Task
             </a>
         </div>
@@ -46,52 +47,52 @@
     {% endif %}
 
     <!-- Metric Stat Cards Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <!-- Total Tasks -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Tasks</p>
-                <h3 class="text-2xl font-bold text-slate-900 mt-1">{{ total_tasks_count }}</h3>
-                <p class="text-xs text-slate-500 mt-1">Scheduled for today</p>
+                <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">Total Tasks</p>
+                <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5 sm:mt-1">{{ total_tasks_count }}</h3>
+                <p class="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1">Scheduled today</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <i data-lucide="layers" class="w-6 h-6"></i>
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="layers" class="w-4 h-4 sm:w-6 sm:h-6"></i>
             </div>
         </div>
 
         <!-- Completed Tasks -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Completed</p>
-                <h3 data-metric="completed-tasks" class="text-2xl font-bold text-green-600 mt-1">{{ completed_tasks_count }}</h3>
-                <p class="text-xs text-slate-500 mt-1">Done and logged</p>
+                <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">Completed</p>
+                <h3 data-metric="completed-tasks" class="text-xl sm:text-2xl font-bold text-green-600 mt-0.5 sm:mt-1">{{ completed_tasks_count }}</h3>
+                <p class="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1">Done & logged</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-                <i data-lucide="check-circle" class="w-6 h-6"></i>
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="check-circle" class="w-4 h-4 sm:w-6 sm:h-6"></i>
             </div>
         </div>
 
         <!-- Pending Tasks -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pending</p>
-                <h3 class="text-2xl font-bold text-amber-600 mt-1">{{ pending_tasks_count }}</h3>
-                <p class="text-xs text-slate-500 mt-1">Awaiting execution</p>
+                <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">Pending</p>
+                <h3 class="text-xl sm:text-2xl font-bold text-amber-600 mt-0.5 sm:mt-1">{{ pending_tasks_count }}</h3>
+                <p class="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1">Awaiting exec</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <i data-lucide="clock" class="w-6 h-6"></i>
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="clock" class="w-4 h-4 sm:w-6 sm:h-6"></i>
             </div>
         </div>
 
         <!-- Overdue Tasks -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Overdue</p>
-                <h3 class="text-2xl font-bold text-red-600 mt-1">{{ overdue_tasks_count }}</h3>
-                <p class="text-xs text-slate-500 mt-1">Past target deadline</p>
+                <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">Overdue</p>
+                <h3 class="text-xl sm:text-2xl font-bold text-red-600 mt-0.5 sm:mt-1">{{ overdue_tasks_count }}</h3>
+                <p class="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1">Past deadline</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
-                <i data-lucide="alert-circle" class="w-6 h-6"></i>
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="alert-circle" class="w-4 h-4 sm:w-6 sm:h-6"></i>
             </div>
         </div>
     </div>
