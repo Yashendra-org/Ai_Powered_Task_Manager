@@ -1,4 +1,4 @@
-# Stage 3/5: Implementation refinement
+# Stage 4/5: Implementation refinement
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView, LogoutView
@@ -43,3 +43,17 @@ def custom_logout_view(request):
 @login_required
 def profile_view(request):
     user = request.user
+    from apps.tasks.models import Task
+    from apps.habits.models import Habit
+    from apps.assignments.models import Assignment
+
+    stats = {
+        'tasks_completed': Task.objects.filter(user=user, status='completed').count(),
+        'tasks_pending': Task.objects.filter(user=user, status='pending').count(),
+        'habits_active': Habit.objects.filter(user=user, is_active=True).count(),
+        'assignments_submitted': Assignment.objects.filter(user=user, status='submitted').count(),
+    }
+    return render(request, 'accounts/profile.html', {'user': user, 'stats': stats})
+
+
+@login_required
