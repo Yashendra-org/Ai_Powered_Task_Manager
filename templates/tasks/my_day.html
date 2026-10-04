@@ -1,3 +1,4 @@
+<!-- Mobile Responsive Refinement Stage 1/5 -->
 {% extends 'base.html' %}
 
 {% block title %}My Day — My Habbit Tracker{% endblock %}
@@ -16,13 +17,13 @@
             <p class="text-sm text-slate-500 mt-1">{{ today_date }} • Focus on what matters right now</p>
         </div>
 
-        <div class="flex items-center space-x-3">
-            <span id="my-day-completion-rate" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-100">
-                {{ completed_count }} of {{ total_count }} Done ({{ completion_rate }}%)
+        <div class="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto justify-between sm:justify-end">
+            <span id="my-day-completion-rate" class="text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-100">
+                {{ completed_count }}/{{ total_count }} Done ({{ completion_rate }}%)
             </span>
-            <a href="{% url 'task_create' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors">
-                <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
-                Detailed Task
+            <a href="{% url 'task_create' %}" class="inline-flex items-center px-3.5 sm:px-4 py-2 text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-1 sm:mr-1.5"></i>
+                <span>New Task</span>
             </a>
         </div>
     </div>
@@ -85,13 +86,13 @@
                         {{ task.get_priority_display }}
                     </span>
 
-                    <a href="{% url 'task_edit' task.id %}" class="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-all" title="Edit Task">
+                    <a href="{% url 'task_edit' task.id %}" class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-all" title="Edit Task">
                         <i data-lucide="edit-3" class="w-4 h-4"></i>
                     </a>
 
                     <form method="POST" action="{% url 'task_delete' task.id %}" class="inline" onsubmit="return confirm('Move this task to Recently Deleted?');">
                         {% csrf_token %}
-                        <button type="submit" class="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all" title="Delete Task">
+                        <button type="submit" class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all" title="Delete Task">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </form>
