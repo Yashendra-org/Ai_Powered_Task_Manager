@@ -1,4 +1,3 @@
-# Stage 4/5: Implementation refinement
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView, LogoutView
@@ -57,3 +56,14 @@ def profile_view(request):
 
 
 @login_required
+def settings_view(request):
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your preferences have been updated.")
+            return redirect('settings')
+    else:
+        form = UserProfileForm(instance=request.user)
+    
+    return render(request, 'accounts/settings.html', {'form': form})
