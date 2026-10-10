@@ -1,3 +1,4 @@
+<!-- Mobile Responsive Refinement Stage 1/5 -->
 {% extends 'base.html' %}
 
 {% block title %}College Assignments — My Habbit Tracker{% endblock %}
@@ -16,7 +17,7 @@
             <p class="text-sm text-slate-500 mt-1">Never miss homework deadlines or academic submissions</p>
         </div>
 
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto flex-wrap gap-y-2">
             <a href="{% url 'subject_list' %}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
                 <i data-lucide="book-open" class="w-3.5 h-3.5 mr-1.5 text-slate-400"></i>
                 Subjects
@@ -25,7 +26,7 @@
                 <i data-lucide="users" class="w-3.5 h-3.5 mr-1.5 text-slate-400"></i>
                 Instructors
             </a>
-            <a href="{% url 'assignment_create' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors">
+            <a href="{% url 'assignment_create' %}" class="inline-flex items-center px-3.5 sm:px-4 py-2 text-xs font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors ml-auto sm:ml-0">
                 <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
                 Add Assignment
             </a>
@@ -36,7 +37,7 @@
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <!-- Filter Tabs -->
-            <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+            <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl overflow-x-auto no-scrollbar max-w-full flex-nowrap">
                 <a href="?filter=all{% if current_subject %}&subject={{ current_subject }}{% endif %}" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors {% if current_filter == 'all' %}bg-white text-slate-900 font-semibold shadow-sm{% else %}text-slate-600 hover:text-slate-900{% endif %}">
                     All ({{ total_count }})
                 </a>
