@@ -1,4 +1,3 @@
-# Stage 4/5: Implementation refinement
 from django.urls import path, reverse_lazy
 from django.contrib.auth import views as auth_views
 from .views import register_view, CustomLoginView, custom_logout_view, settings_view, profile_view
@@ -27,3 +26,8 @@ urlpatterns = [
         template_name='accounts/password_reset_confirm.html',
         success_url=reverse_lazy('password_reset_complete')
     ), name='password_reset_confirm'),
+
+    path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(
+        template_name='accounts/password_reset_complete.html'
+    ), name='password_reset_complete'),
+]
