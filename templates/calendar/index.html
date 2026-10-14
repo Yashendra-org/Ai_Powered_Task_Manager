@@ -1,3 +1,4 @@
+<!-- Mobile Responsive Refinement Stage 1/5 -->
 {% extends 'base.html' %}
 
 {% block title %}Calendar Planner — My Habbit Tracker{% endblock %}
@@ -47,7 +48,7 @@
         <div class="grid grid-cols-7 divide-x divide-y divide-slate-100">
             {% for week in weeks %}
                 {% for day in week %}
-                <div class="min-h-[110px] p-2 flex flex-col justify-between transition-colors {% if not day.is_current_month %}bg-slate-50/50 text-slate-400{% else %}bg-white{% endif %} {% if day.is_today %}ring-2 ring-blue-500 ring-inset{% endif %}">
+                <div class="min-h-[70px] sm:min-h-[110px] p-1 sm:p-2 flex flex-col justify-between transition-colors {% if not day.is_current_month %}bg-slate-50/50 text-slate-400{% else %}bg-white{% endif %} {% if day.is_today %}ring-2 ring-blue-500 ring-inset{% endif %}">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold {% if day.is_today %}w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center{% elif day.is_current_month %}text-slate-800{% else %}text-slate-400{% endif %}">
                             {{ day.day_num }}
