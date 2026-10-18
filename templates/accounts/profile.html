@@ -1,4 +1,3 @@
-<!-- Stage 4/5: Implementation refinement -->
 {% extends 'base.html' %}
 
 {% block title %}User Profile — {{ user.username }}{% endblock %}
@@ -90,3 +89,20 @@
                     <p class="font-semibold text-slate-700">Account Password</p>
                     <p class="text-slate-400 mt-0.5">Keep your account secure with a strong password.</p>
                 </div>
+                <a href="{% url 'password_reset' %}" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold transition-colors">
+                    Reset Password
+                </a>
+            </div>
+            <div class="py-3 flex items-center justify-between">
+                <div>
+                    <p class="font-semibold text-slate-700">REST API Access</p>
+                    <p class="text-slate-400 mt-0.5">Authenticate via Session or Bearer token at /api/v1/.</p>
+                </div>
+                <a href="{% url 'api_root' %}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold hover:bg-emerald-100 transition-colors">
+                    Explore API
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
