@@ -1,3 +1,4 @@
+// Mobile Widget & Animation Stage 1/5
 /**
  * My Habit Tracker — Seamless Dynamic Engine (app.js)
  * Provides instantaneous, zero-reload user experience:
@@ -137,8 +138,10 @@ async function handleTaskToggle(form, e) {
     const newChecked = !isCurrentlyChecked;
 
     if (btn) {
+        btn.classList.add('animate-check-pop');
+        setTimeout(() => btn.classList.remove('animate-check-pop'), 300);
         if (newChecked) {
-            btn.className = "w-5 h-5 rounded-md border flex items-center justify-center transition-colors bg-green-600 border-green-600 text-white";
+            btn.className = "w-5 h-5 rounded-md border flex items-center justify-center transition-colors bg-green-600 border-green-600 text-white animate-check-pop";
             btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             if (titleSpan) {
                 titleSpan.classList.add('line-through', 'text-slate-400');
@@ -351,8 +354,10 @@ async function handleHabitToggle(form, e) {
 
     // Optimistic toggle
     if (btn) {
+        btn.classList.add('animate-check-pop');
+        setTimeout(() => btn.classList.remove('animate-check-pop'), 300);
         if (newStatus) {
-            btn.className = "w-7 h-7 rounded-lg border flex items-center justify-center mx-auto transition-all bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-200";
+            btn.className = "w-7 h-7 rounded-lg border flex items-center justify-center mx-auto transition-all bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-200 animate-check-pop";
         } else {
             btn.className = "w-7 h-7 rounded-lg border flex items-center justify-center mx-auto transition-all border-slate-200 hover:border-emerald-400 bg-white text-transparent hover:text-slate-300";
         }
@@ -610,6 +615,8 @@ async function loadPage(url, pushState = true) {
 
             // Update active state in sidebar navigation
             updateSidebarActiveLinks(url);
+            initMobileNavigation();
+            initMobileFab();
 
             mainEl.style.opacity = '1';
             TopLoader.done();
@@ -790,9 +797,71 @@ window.addEventListener('popstate', function (e) {
     loadPage(window.location.href, false);
 });
 
+// ==========================================================================
+// 11. Mobile Floating Action Button (FAB) Controller
+// ==========================================================================
+function initMobileFab() {
+    const fabBtn = document.getElementById('mobileFabBtn');
+    const fabMenu = document.getElementById('mobileFabMenu');
+    const fabBackdrop = document.getElementById('mobileFabBackdrop');
+    const fabIcon = document.getElementById('mobileFabIcon');
+
+    if (!fabBtn || !fabMenu) return;
+
+    let isOpen = false;
+
+    function openFab() {
+        isOpen = true;
+        fabMenu.classList.remove('hidden');
+        if (fabBackdrop) fabBackdrop.classList.remove('hidden');
+        if (fabIcon) fabIcon.classList.add('rotate-45');
+    }
+
+    function closeFab() {
+        isOpen = false;
+        fabMenu.classList.add('hidden');
+        if (fabBackdrop) fabBackdrop.classList.add('hidden');
+        if (fabIcon) fabIcon.classList.remove('rotate-45');
+    }
+
+    fabBtn.onclick = function (e) {
+        e.stopPropagation();
+        if (isOpen) {
+            closeFab();
+        } else {
+            openFab();
+        }
+    };
+
+    if (fabBackdrop) {
+        fabBackdrop.onclick = function () {
+            closeFab();
+        };
+    }
+
+    document.addEventListener('click', function (e) {
+        if (isOpen && !e.target.closest('#mobileFabContainer')) {
+            closeFab();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && isOpen) {
+            closeFab();
+        }
+    });
+
+    fabMenu.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', function () {
+            closeFab();
+        });
+    });
+}
+
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', function () {
     if (window.lucide) lucide.createIcons();
     initMobileNavigation();
+    initMobileFab();
 });
 
