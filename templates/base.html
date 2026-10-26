@@ -1,3 +1,4 @@
+<!-- Mobile Widget & Animation Stage 1/5 -->
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-slate-50">
 <head>
@@ -201,6 +202,44 @@
     </div>
 
     {% if user.is_authenticated %}
+    <!-- Mobile Floating Action Button (FAB) & Radial Quick Menu -->
+    <div id="mobileFabContainer" class="fixed bottom-20 right-4 z-40 md:hidden flex flex-col items-end">
+        <!-- Floating Backdrop -->
+        <div id="mobileFabBackdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 hidden transition-opacity duration-200"></div>
+
+        <!-- Quick Action Sub-buttons (revealed when FAB is open) -->
+        <div id="mobileFabMenu" class="relative z-40 flex flex-col items-end space-y-2.5 mb-3 hidden transition-all duration-300 ease-out origin-bottom animate-fab-in">
+            <!-- Action 1: Add Task -->
+            <a href="{% url 'task_create' %}" class="flex items-center space-x-2.5 bg-white text-slate-800 pl-3.5 pr-4 py-2 rounded-full shadow-lg border border-slate-200 text-xs font-bold active:scale-95 transition-all">
+                <span class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                    <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
+                </span>
+                <span>New Task</span>
+            </a>
+
+            <!-- Action 2: Log Habit -->
+            <a href="{% url 'habit_create' %}" class="flex items-center space-x-2.5 bg-white text-slate-800 pl-3.5 pr-4 py-2 rounded-full shadow-lg border border-slate-200 text-xs font-bold active:scale-95 transition-all">
+                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+                    <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+                </span>
+                <span>New Habit</span>
+            </a>
+
+            <!-- Action 3: Quick Note -->
+            <a href="{% url 'note_create' %}" class="flex items-center space-x-2.5 bg-white text-slate-800 pl-3.5 pr-4 py-2 rounded-full shadow-lg border border-slate-200 text-xs font-bold active:scale-95 transition-all">
+                <span class="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                    <i data-lucide="sticky-note" class="w-3.5 h-3.5"></i>
+                </span>
+                <span>New Note</span>
+            </a>
+        </div>
+
+        <!-- Main FAB Toggle Trigger Button -->
+        <button id="mobileFabBtn" type="button" class="relative z-40 w-13 h-13 sm:w-14 sm:h-14 bg-gradient-to-tr from-blue-700 to-blue-500 text-white rounded-full shadow-xl shadow-blue-500/35 flex items-center justify-center active:scale-90 transition-transform duration-200 focus:outline-none p-3.5" aria-label="Quick Actions">
+            <i id="mobileFabIcon" data-lucide="plus" class="w-6 h-6 transition-transform duration-300"></i>
+        </button>
+    </div>
+
     <!-- Mobile Native Bottom Navigation Bar -->
     <nav id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 md:hidden flex items-center justify-around h-16 px-1 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.04)]">
         <a href="{% url 'dashboard' %}" class="mobile-nav-item flex flex-col items-center justify-center flex-1 py-1 text-xs font-medium {% if request.resolver_match.url_name == 'dashboard' %}text-blue-600 font-semibold{% else %}text-slate-500 hover:text-slate-900{% endif %} transition-colors">
