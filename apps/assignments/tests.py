@@ -46,7 +46,9 @@ class AssignmentModuleTests(TestCase):
         self.assertContains(response, 'Homework 1: SQL Joins')
         self.assertContains(response, 'CS302')
 
-    def test_deadline_categorization(self):
+    @patch('apps.assignments.models.timezone.localdate')
+    @patch('apps.assignments.models.timezone.now')
+    def test_deadline_categorization(self, mock_now, mock_localdate):
         now = timezone.now()
         # Due in 3 days -> due_soon
         self.assignment.due_at = now + timezone.timedelta(days=3)
