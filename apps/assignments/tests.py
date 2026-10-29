@@ -49,7 +49,10 @@ class AssignmentModuleTests(TestCase):
     @patch('apps.assignments.models.timezone.localdate')
     @patch('apps.assignments.models.timezone.now')
     def test_deadline_categorization(self, mock_now, mock_localdate):
-        now = timezone.now()
+        fixed_dt = timezone.make_aware(datetime.datetime(2026, 5, 10, 10, 0, 0))
+        mock_now.return_value = fixed_dt
+        mock_localdate.return_value = fixed_dt.date()
+        now = fixed_dt
         # Due in 3 days -> due_soon
         self.assignment.due_at = now + timezone.timedelta(days=3)
         self.assertEqual(self.assignment.deadline_category, 'due_soon')
