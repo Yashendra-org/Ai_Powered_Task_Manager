@@ -54,15 +54,15 @@ class AssignmentModuleTests(TestCase):
         mock_localdate.return_value = fixed_dt.date()
         now = fixed_dt
         # Due in 3 days -> due_soon
-        self.assignment.due_at = now + timezone.timedelta(days=3)
+        self.assignment.due_at = fixed_dt + timezone.timedelta(days=3)
         self.assertEqual(self.assignment.deadline_category, 'due_soon')
 
         # Due later today (in 4 hours) -> due_today
-        self.assignment.due_at = now + timezone.timedelta(hours=4)
+        self.assignment.due_at = fixed_dt + timezone.timedelta(hours=4)
         self.assertEqual(self.assignment.deadline_category, 'due_today')
 
         # Overdue (2 days ago)
-        self.assignment.due_at = now - timezone.timedelta(days=2)
+        self.assignment.due_at = fixed_dt - timezone.timedelta(days=2)
         self.assertEqual(self.assignment.deadline_category, 'overdue')
 
     def test_submit_toggle(self):
