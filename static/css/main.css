@@ -152,5 +152,14 @@
     content: '';
 }
 
+/* 26. Hover / Focus / Pressed - Tactile Feedback */
+.touch-press {
+    transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.touch-press:active {
+    transform: scale(0.96);
+}
+
 
 
