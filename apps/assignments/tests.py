@@ -52,7 +52,7 @@ class AssignmentModuleTests(TestCase):
         fixed_dt = timezone.make_aware(datetime.datetime(2026, 5, 10, 10, 0, 0))
         mock_now.return_value = fixed_dt
         mock_localdate.return_value = fixed_dt.date()
-        now = fixed_dt
+        # Fixed daytime baseline ensures tests are immune to midnight rollover when run late at night
         # Due in 3 days -> due_soon
         self.assignment.due_at = fixed_dt + timezone.timedelta(days=3)
         self.assertEqual(self.assignment.deadline_category, 'due_soon')
