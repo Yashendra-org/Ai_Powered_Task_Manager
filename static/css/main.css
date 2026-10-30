@@ -118,5 +118,39 @@
     animation: fab-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* ==========================================================================
+   UI & UX States (Visual Guide Implementation)
+   ========================================================================== */
+
+/* 02. Loading State - Skeleton Shimmer Animation */
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: #f1f5f9;
+}
+
+.skeleton-shimmer::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0,
+        rgba(255, 255, 255, 0.55) 30%,
+        rgba(255, 255, 255, 0.55) 60%,
+        rgba(255, 255, 255, 0)
+    );
+    animation: shimmer 1.6s infinite ease-in-out;
+    content: '';
+}
+
 
 
