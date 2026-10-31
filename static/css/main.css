@@ -161,5 +161,16 @@
     transform: scale(0.96);
 }
 
+/* 34. Accessibility State - High-contrast Focus Rings */
+.accessible-focus:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #2563eb;
+}
+
+.accessible-focus-danger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #dc2626;
+}
+
 
 
