@@ -172,5 +172,16 @@
     box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #dc2626;
 }
 
+/* 16. Disabled State - Explanatory visual cues & cursor */
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled,
+.btn-disabled {
+    cursor: not-allowed !important;
+    opacity: 0.55 !important;
+    pointer-events: none;
+}
+
 
 
