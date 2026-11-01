@@ -268,6 +268,19 @@
     <div id="top-progress-bar" class="fixed top-0 left-0 h-[2.5px] bg-blue-600 transition-all duration-200 z-50 w-0 opacity-0 pointer-events-none shadow-sm shadow-blue-400"></div>
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
+    <!-- 11 & 12. Offline & Reconnecting State Banner -->
+    <div id="networkStatusBanner" class="fixed top-0 left-0 right-0 z-50 transform -translate-y-full transition-transform duration-300 pointer-events-auto">
+        <div id="networkStatusContent" class="flex items-center justify-between px-4 py-2.5 text-xs font-semibold shadow-md bg-amber-500 text-white">
+            <div class="flex items-center space-x-2">
+                <i id="networkStatusIcon" data-lucide="wifi-off" class="w-4 h-4 flex-shrink-0"></i>
+                <span id="networkStatusText">You are offline. Showing saved copy.</span>
+            </div>
+            <button id="networkRetryBtn" type="button" class="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white rounded-md text-[11px] font-bold active:scale-95 transition-all">
+                Check connection
+            </button>
+        </div>
+    </div>
+
     <!-- Initialize Lucide Icons -->
     <script>
         lucide.createIcons();
