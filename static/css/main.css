@@ -183,5 +183,20 @@ select:disabled,
     pointer-events: none;
 }
 
+/* 09. Validation State - High-contrast error outlines & corrective text */
+.input-invalid {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 1px #ef4444 !important;
+}
+
+.input-invalid-msg {
+    color: #ef4444;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    margin-top: 0.35rem;
+    display: flex;
+    items-center: center;
+}
+
 
 
