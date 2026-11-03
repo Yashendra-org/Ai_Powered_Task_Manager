@@ -862,5 +862,85 @@ document.addEventListener('DOMContentLoaded', function () {
     if (window.lucide) lucide.createIcons();
     initMobileNavigation();
     initMobileFab();
+    initNetworkStatusListener();
 });
+
+// ==========================================================================
+// 12. Network Offline & Reconnecting State Controller (States 11 & 12)
+// ==========================================================================
+function initNetworkStatusListener() {
+    const banner = document.getElementById('networkStatusBanner');
+    const content = document.getElementById('networkStatusContent');
+    const statusText = document.getElementById('networkStatusText');
+    const retryBtn = document.getElementById('networkRetryBtn');
+
+    if (!banner || !statusText) return;
+
+    let reconnectAttempts = 0;
+
+    function showOffline() {
+        banner.classList.remove('-translate-y-full');
+        banner.classList.add('translate-y-0');
+        if (content) {
+            content.className = 'flex items-center justify-between px-4 py-2.5 text-xs font-semibold shadow-md bg-amber-500 text-white';
+        }
+        statusText.textContent = 'You are offline. Showing saved copy.';
+        if (retryBtn) {
+            retryBtn.textContent = 'Check connection';
+            retryBtn.disabled = false;
+        }
+    }
+
+    function showReconnecting() {
+        reconnectAttempts++;
+        if (content) {
+            content.className = 'flex items-center justify-between px-4 py-2.5 text-xs font-semibold shadow-md bg-blue-600 text-white';
+        }
+        statusText.textContent = `Reconnecting to server... (Attempt ${reconnectAttempts} of 5)`;
+        if (retryBtn) {
+            retryBtn.textContent = 'Retrying...';
+            retryBtn.disabled = true;
+        }
+
+        setTimeout(async () => {
+            try {
+                const res = await fetch('/api/', { method: 'HEAD', cache: 'no-store' });
+                if (res.ok || res.status < 500) {
+                    showOnline();
+                } else {
+                    showOffline();
+                }
+            } catch {
+                showOffline();
+            }
+        }, 1200);
+    }
+
+    function showOnline() {
+        reconnectAttempts = 0;
+        if (content) {
+            content.className = 'flex items-center justify-between px-4 py-2.5 text-xs font-semibold shadow-md bg-emerald-600 text-white';
+        }
+        statusText.textContent = 'Connection restored! You are back online.';
+        if (retryBtn) retryBtn.textContent = 'Connected';
+
+        setTimeout(() => {
+            banner.classList.remove('translate-y-0');
+            banner.classList.add('-translate-y-full');
+        }, 2200);
+    }
+
+    window.addEventListener('offline', showOffline);
+    window.addEventListener('online', showOnline);
+
+    if (retryBtn) {
+        retryBtn.addEventListener('click', function () {
+            showReconnecting();
+        });
+    }
+
+    if (!navigator.onLine) {
+        showOffline();
+    }
+}
 
