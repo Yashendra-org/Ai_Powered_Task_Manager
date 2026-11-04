@@ -897,7 +897,97 @@ document.addEventListener('DOMContentLoaded', function () {
     initMobileFab();
     initNetworkStatusListener();
     initSavingStateInterceptor();
+    initConfirmModalController();
 });
+
+// ==========================================================================
+// 15. Accessible Confirmation & Warning Modal Controller (States 10 & 17)
+// ==========================================================================
+const ConfirmModal = {
+    modal: null,
+    onConfirmCallback: null,
+
+    init() {
+        this.modal = document.getElementById('confirmationModal');
+        if (!this.modal) return;
+
+        const cancelBtn = document.getElementById('confirmModalCancel');
+        const actionBtn = document.getElementById('confirmModalAction');
+
+        if (cancelBtn) {
+            cancelBtn.onclick = () => this.close();
+        }
+
+        if (actionBtn) {
+            actionBtn.onclick = () => {
+                if (typeof this.onConfirmCallback === 'function') {
+                    this.onConfirmCallback();
+                }
+                this.close();
+            };
+        }
+
+        this.modal.onclick = (e) => {
+            if (e.target === this.modal) this.close();
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !this.modal.classList.contains('hidden')) {
+                this.close();
+            }
+        });
+    },
+
+    open({ title, message, actionText = 'Delete', actionClass = 'bg-red-600 hover:bg-red-700', onConfirm }) {
+        if (!this.modal) this.init();
+        if (!this.modal) return;
+
+        const titleEl = document.getElementById('confirmModalTitle');
+        const msgEl = document.getElementById('confirmModalMessage');
+        const actionBtn = document.getElementById('confirmModalAction');
+
+        if (titleEl && title) titleEl.textContent = title;
+        if (msgEl && message) msgEl.textContent = message;
+        if (actionBtn) {
+            actionBtn.textContent = actionText;
+            actionBtn.className = `flex-1 px-4 py-2.5 rounded-xl text-white text-xs font-semibold shadow-sm active:scale-95 transition-all ${actionClass}`;
+        }
+
+        this.onConfirmCallback = onConfirm;
+
+        this.modal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            this.modal.classList.remove('opacity-0');
+            this.modal.classList.add('opacity-100');
+            const box = this.modal.querySelector('div');
+            if (box) {
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }
+        });
+    },
+
+    close() {
+        if (!this.modal) return;
+        this.modal.classList.remove('opacity-100');
+        this.modal.classList.add('opacity-0');
+        const box = this.modal.querySelector('div');
+        if (box) {
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+        }
+        setTimeout(() => {
+            this.modal.classList.add('hidden');
+            this.onConfirmCallback = null;
+        }, 200);
+    }
+};
+
+window.ConfirmModal = ConfirmModal;
+
+function initConfirmModalController() {
+    ConfirmModal.init();
+}
 
 // ==========================================================================
 // 14. Saving State & Double-Tap Prevention Interceptor (State 03)
