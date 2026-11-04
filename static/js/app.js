@@ -896,7 +896,53 @@ document.addEventListener('DOMContentLoaded', function () {
     initMobileNavigation();
     initMobileFab();
     initNetworkStatusListener();
+    initSavingStateInterceptor();
 });
+
+// ==========================================================================
+// 14. Saving State & Double-Tap Prevention Interceptor (State 03)
+// ==========================================================================
+function initSavingStateInterceptor() {
+    document.addEventListener('submit', function (e) {
+        const form = e.target;
+        if (!form || form.classList.contains('no-spin')) return;
+
+        // Skip micro-toggle forms like task check-offs which have optimistic handling
+        if (form.classList.contains('task-toggle-form') || form.action.includes('toggle')) return;
+
+        const submitBtn = form.querySelector('button[type="submit"]:not([disabled])');
+        if (!submitBtn) return;
+
+        if (submitBtn.dataset.saving === 'true') {
+            e.preventDefault();
+            return false;
+        }
+
+        submitBtn.dataset.saving = 'true';
+        submitBtn.dataset.origHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+
+        const customMsg = submitBtn.getAttribute('data-saving-text') || 'Saving changes...';
+        submitBtn.innerHTML = `
+            <svg class="animate-spin w-4 h-4 mr-2 inline flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>${customMsg}</span>
+        `;
+
+        // Safety fallback: restore button if no response within 6 seconds
+        setTimeout(() => {
+            if (submitBtn && submitBtn.dataset.saving === 'true') {
+                submitBtn.disabled = false;
+                submitBtn.dataset.saving = 'false';
+                if (submitBtn.dataset.origHtml) {
+                    submitBtn.innerHTML = submitBtn.dataset.origHtml;
+                }
+            }
+        }, 6000);
+    }, true);
+}
 
 // ==========================================================================
 // 12. Instant Update & Timed Undo Manager (States 27 & 28)
