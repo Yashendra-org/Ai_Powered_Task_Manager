@@ -158,6 +158,28 @@ async function handleTaskToggle(form, e) {
         }
     }
 
+    // Rollback helper for optimistic toggle failure
+    function rollbackToggle() {
+        if (!btn) return;
+        if (isCurrentlyChecked) {
+            btn.className = "w-5 h-5 rounded-md border flex items-center justify-center transition-colors bg-green-600 border-green-600 text-white";
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            if (titleSpan) {
+                titleSpan.classList.add('line-through', 'text-slate-400');
+                titleSpan.classList.remove('text-slate-900');
+            }
+            if (container) container.classList.add('opacity-75');
+        } else {
+            btn.className = "w-5 h-5 rounded-md border flex items-center justify-center transition-colors border-slate-300 hover:border-blue-500 bg-white";
+            btn.innerHTML = "";
+            if (titleSpan) {
+                titleSpan.classList.remove('line-through', 'text-slate-400');
+                titleSpan.classList.add('text-slate-900');
+            }
+            if (container) container.classList.remove('opacity-75');
+        }
+    }
+
     try {
         const response = await fetch(form.action, {
             method: 'POST',
@@ -182,11 +204,22 @@ async function handleTaskToggle(form, e) {
                 completedMetric.textContent = data.today_completed;
             }
 
-            showToast(data.message || (newChecked ? "Task marked completed!" : "Task marked pending!"), 'success');
+            // Guide #27 & #28: Show Timed Undo Prompt
+            if (newChecked && window.UndoManager) {
+                UndoManager.show("Task completed", () => {
+                    handleTaskToggle(form);
+                });
+            } else {
+                showToast(data.message || (newChecked ? "Task marked completed!" : "Task marked pending!"), 'success');
+            }
+        } else {
+            rollbackToggle();
+            showToast("Server rejected update. Reverted.", "error");
         }
     } catch (err) {
         console.error("Task toggle failed:", err);
-        showToast("Error updating task. Please try again.", "error");
+        rollbackToggle();
+        showToast("Network error. State reverted.", "error");
     }
 }
 
@@ -866,7 +899,80 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ==========================================================================
-// 12. Network Offline & Reconnecting State Controller (States 11 & 12)
+// 12. Instant Update & Timed Undo Manager (States 27 & 28)
+// ==========================================================================
+const UndoManager = {
+    timerId: null,
+    intervalId: null,
+    remainingSeconds: 6,
+    onUndoCallback: null,
+
+    show(message, undoCallback, durationSeconds = 6) {
+        const container = document.getElementById('undoSnackbarContainer');
+        const textEl = document.getElementById('undoSnackbarText');
+        const timerEl = document.getElementById('undoSnackbarTimer');
+        const undoBtn = document.getElementById('undoSnackbarBtn');
+
+        if (!container || !textEl) return;
+
+        this.clear();
+        this.remainingSeconds = durationSeconds;
+        this.onUndoCallback = undoCallback;
+
+        textEl.textContent = message;
+        if (timerEl) timerEl.textContent = `(${this.remainingSeconds}s)`;
+
+        container.classList.remove('translate-y-8', 'opacity-0');
+        container.classList.add('translate-y-0', 'opacity-100');
+
+        if (undoBtn) {
+            undoBtn.onclick = () => {
+                this.executeUndo();
+            };
+        }
+
+        this.intervalId = setInterval(() => {
+            this.remainingSeconds--;
+            if (timerEl) timerEl.textContent = `(${this.remainingSeconds}s)`;
+            if (this.remainingSeconds <= 0) {
+                this.hide();
+            }
+        }, 1000);
+
+        this.timerId = setTimeout(() => {
+            this.hide();
+        }, durationSeconds * 1000);
+    },
+
+    executeUndo() {
+        if (typeof this.onUndoCallback === 'function') {
+            this.onUndoCallback();
+            showToast("Action undone!", "info");
+        }
+        this.hide();
+    },
+
+    hide() {
+        this.clear();
+        const container = document.getElementById('undoSnackbarContainer');
+        if (container) {
+            container.classList.remove('translate-y-0', 'opacity-100');
+            container.classList.add('translate-y-8', 'opacity-0');
+        }
+    },
+
+    clear() {
+        if (this.timerId) clearTimeout(this.timerId);
+        if (this.intervalId) clearInterval(this.intervalId);
+        this.timerId = null;
+        this.intervalId = null;
+    }
+};
+
+window.UndoManager = UndoManager;
+
+// ==========================================================================
+// 13. Network Offline & Reconnecting State Controller (States 11 & 12)
 // ==========================================================================
 function initNetworkStatusListener() {
     const banner = document.getElementById('networkStatusBanner');
