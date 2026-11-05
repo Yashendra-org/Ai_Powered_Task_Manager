@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.http import JsonResponse, HttpResponse
+from django.db import connection
 from apps.tasks.models import Task
 from apps.assignments.models import Assignment
 from apps.habits.models import Habit, HabitLog
@@ -93,3 +95,25 @@ def root_redirect(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     return redirect('login')
+
+
+def health_check_view(request):
+    """
+    103 Things Guide (#38): Lightweight health check endpoint.
+    Verifies application and database connectivity for container orchestrators and uptime monitors.
+    """
+    db_ok = False
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            db_ok = cursor.fetchone() == (1,)
+    except Exception:
+        db_ok = False
+
+    status_code = 200 if db_ok else 503
+    return JsonResponse({
+        "status": "healthy" if db_ok else "unhealthy",
+        "database": "connected" if db_ok else "disconnected",
+        "timestamp": timezone.now().isoformat(),
+        "service": "ai-task-manager"
+    }, status=status_code)
