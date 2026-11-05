@@ -898,7 +898,33 @@ document.addEventListener('DOMContentLoaded', function () {
     initNetworkStatusListener();
     initSavingStateInterceptor();
     initConfirmModalController();
+    initUnsavedChangesTracker();
 });
+
+// ==========================================================================
+// 16. Unsaved Changes Protection for Dirty Forms (State 14)
+// ==========================================================================
+function initUnsavedChangesTracker() {
+    let isFormDirty = false;
+
+    document.addEventListener('input', function (e) {
+        if (e.target.closest('form:not(.task-toggle-form):not(.no-dirty)')) {
+            isFormDirty = true;
+        }
+    });
+
+    document.addEventListener('submit', function () {
+        isFormDirty = false;
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+        if (isFormDirty) {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+            return e.returnValue;
+        }
+    });
+}
 
 // ==========================================================================
 // 15. Accessible Confirmation & Warning Modal Controller (States 10 & 17)
