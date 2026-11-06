@@ -117,3 +117,27 @@ def health_check_view(request):
         "timestamp": timezone.now().isoformat(),
         "service": "ai-task-manager"
     }, status=status_code)
+
+
+def robots_txt_view(request):
+    """
+    103 Things Guide (#90) & Security Guide: Protect private user routes from crawler indexing.
+    """
+    domain = request.get_host()
+    scheme = "https" if request.is_secure() else "http"
+    content = (
+        "User-agent: *\n"
+        "Allow: /$\n"
+        "Allow: /login/\n"
+        "Allow: /register/\n"
+        "Disallow: /dashboard/\n"
+        "Disallow: /tasks/\n"
+        "Disallow: /habits/\n"
+        "Disallow: /assignments/\n"
+        "Disallow: /notes/\n"
+        "Disallow: /api/\n"
+        "Disallow: /secure-admin/\n"
+        "Disallow: /admin/\n\n"
+        f"Sitemap: {scheme}://{domain}/sitemap.xml\n"
+    )
+    return HttpResponse(content, content_type="text/plain; charset=utf-8")
