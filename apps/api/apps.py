@@ -1,2 +1,3 @@
-# Stage 1/5: Implementation refinement
+# Stage 2/5: Implementation refinement
 from django.apps import AppConfig
+
