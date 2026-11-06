@@ -173,3 +173,10 @@ def sitemap_xml_view(request):
     </url>
 </urlset>"""
     return HttpResponse(content.strip(), content_type="application/xml; charset=utf-8")
+
+
+def custom_page_not_found_view(request, exception=None):
+    """
+    UI/UX State 05 & 103 Things Guide (#40): Friendly custom 404 Error State.
+    """
+    return render(request, '404.html', status=404)
