@@ -141,3 +141,35 @@ def robots_txt_view(request):
         f"Sitemap: {scheme}://{domain}/sitemap.xml\n"
     )
     return HttpResponse(content, content_type="text/plain; charset=utf-8")
+
+
+def sitemap_xml_view(request):
+    """
+    103 Things Guide (#90) & Publishing Guide: Standard sitemap.xml for public page discovery.
+    """
+    domain = request.get_host()
+    scheme = "https" if request.is_secure() else "http"
+    base_url = f"{scheme}://{domain}"
+    today = timezone.localdate().isoformat()
+    content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>{base_url}/</loc>
+        <lastmod>{today}</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>{base_url}/login/</loc>
+        <lastmod>{today}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>{base_url}/register/</loc>
+        <lastmod>{today}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+</urlset>"""
+    return HttpResponse(content.strip(), content_type="application/xml; charset=utf-8")
