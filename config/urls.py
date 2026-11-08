@@ -4,7 +4,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponseNotFound
-from .views import dashboard_view, root_redirect, health_check_view, robots_txt_view, sitemap_xml_view
+from .views import (
+    dashboard_view, root_redirect, health_check_view,
+    robots_txt_view, sitemap_xml_view, custom_page_not_found_view,
+    custom_server_error_view
+)
 from apps.tasks.calendar_views import calendar_view
 
 # Protected admin URL path (defaults to secure-admin/ to protect against brute-force scans)
@@ -44,3 +48,6 @@ urlpatterns += [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Custom Error State Handlers (UI/UX Guide State 05 & 103 Things Guide #40)
+handler404 = 'config.views.custom_page_not_found_view'
