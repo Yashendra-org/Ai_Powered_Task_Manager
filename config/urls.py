@@ -4,7 +4,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponseNotFound
-from .views import dashboard_view, root_redirect, health_check_view
+from .views import dashboard_view, root_redirect, health_check_view, robots_txt_view
 from apps.tasks.calendar_views import calendar_view
 
 # Protected admin URL path (defaults to secure-admin/ to protect against brute-force scans)
@@ -25,6 +25,7 @@ if ADMIN_URL != 'admin':
 
 urlpatterns += [
     path('health/', health_check_view, name='health_check'),
+    path('robots.txt', robots_txt_view, name='robots_txt'),
     path('', root_redirect, name='root'),
     path('dashboard/', dashboard_view, name='dashboard'),
     path('api/', include('apps.api.urls')),
