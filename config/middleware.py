@@ -8,6 +8,11 @@ LOGIN_ATTEMPTS = defaultdict(list)
 RATE_LIMIT_WINDOW = 60  # seconds
 RATE_LIMIT_MAX_ATTEMPTS = 5  # max attempts per window per IP/user
 
+# Suspicious Scanner Probe Patterns (Security Guide: 7,778 Suspicious Requests Case Study)
+SUSPICIOUS_PROBE_PATTERNS = [
+    '.env', '.aws/', '.ssh/', 'id_rsa',
+]
+
 
 class SecurityAndRateLimitMiddleware:
     """
