@@ -1,4 +1,4 @@
-# Stage 1/5: Implementation refinement
+# Stage 2/5: Implementation refinement
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -50,3 +50,44 @@ class TaskListCreateApiView(APIView):
         for t in tasks:
             data.append({
                 "id": str(t.id),
+                "title": t.title,
+                "description": t.description,
+                "category": t.category.name if t.category else None,
+                "priority": t.priority,
+                "status": t.status,
+                "estimated_duration": t.estimated_duration,
+                "due_at": t.due_at.isoformat() if t.due_at else None,
+                "completed_at": t.completed_at.isoformat() if t.completed_at else None,
+            })
+
+        return Response({
+            "success": True,
+            "data": {
+                "count": len(data),
+                "results": data
+            }
+        })
+
+    def post(self, request):
+        title = request.data.get('title')
+        if not title or not str(title).strip():
+            return Response({
+                "success": False,
+                "error": {
+                    "code": "VALIDATION_FAILED",
+                    "message": "The 'title' field is required."
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        category = None
+        category_id = request.data.get('category_id')
+        if category_id:
+            category = Category.objects.filter(id=category_id, user=request.user).first()
+
+        task = Task.objects.create(
+            user=request.user,
+            title=str(title).strip(),
+            description=request.data.get('description', ''),
+            category=category,
+            priority=request.data.get('priority', 'medium'),
+            estimated_duration=request.data.get('estimated_duration', 30),
