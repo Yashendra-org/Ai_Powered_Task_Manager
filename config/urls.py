@@ -51,3 +51,4 @@ if settings.DEBUG:
 
 # Custom Error State Handlers (UI/UX Guide State 05 & 103 Things Guide #40)
 handler404 = 'config.views.custom_page_not_found_view'
+handler500 = 'config.views.custom_server_error_view'
