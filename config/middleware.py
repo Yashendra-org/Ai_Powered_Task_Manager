@@ -13,6 +13,7 @@ SUSPICIOUS_PROBE_PATTERNS = [
     '.env', '.aws/', '.ssh/', 'id_rsa',
     'wp-admin', 'wp-login', 'xmlrpc.php', 'install.php',
     'phpinfo', 'actuator', 'server-status',
+    '.git/', '.git-credentials', 'backup.zip', 'dump.sql',
 ]
 
 
