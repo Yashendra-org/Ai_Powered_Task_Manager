@@ -1,6 +1,6 @@
 import time
 from collections import defaultdict
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 from django.conf import settings
 
 # In-memory sliding window rate limiter for login
@@ -32,6 +32,12 @@ class SecurityAndRateLimitMiddleware:
 
     def __call__(self, request):
         path = request.path
+
+        # 0. Scanner Probe Defense (Security Guide: 7,778 Suspicious Requests Case Study)
+        # Immediately reject scanner probes with clean 404 without database lookups
+        lower_path = path.lower()
+        if any(probe in lower_path for probe in SUSPICIOUS_PROBE_PATTERNS):
+            return HttpResponseNotFound("Page not found")
 
         # 1. Rate Limiting on Login Endpoint (POST /login/)
         is_login_post = path.rstrip('/') == '/login' and request.method == 'POST'
