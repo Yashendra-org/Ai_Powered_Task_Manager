@@ -1,7 +1,10 @@
 import time
+import logging
 from collections import defaultdict
 from django.http import HttpResponse, HttpResponseNotFound
 from django.conf import settings
+
+logger = logging.getLogger('security')
 
 # In-memory sliding window rate limiter for login
 LOGIN_ATTEMPTS = defaultdict(list)
@@ -37,6 +40,7 @@ class SecurityAndRateLimitMiddleware:
         # Immediately reject scanner probes with clean 404 without database lookups
         lower_path = path.lower()
         if any(probe in lower_path for probe in SUSPICIOUS_PROBE_PATTERNS):
+            logger.warning(f"Scanner probe blocked: path='{path}' ip='{self.get_client_ip(request)}'")
             return HttpResponseNotFound("Page not found")
 
         # 1. Rate Limiting on Login Endpoint (POST /login/)
