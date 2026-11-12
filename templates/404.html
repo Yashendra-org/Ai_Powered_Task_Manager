@@ -14,6 +14,18 @@
         <p class="text-sm text-slate-500 mb-8 leading-relaxed max-w-sm mx-auto">
             We couldn't find the page you were looking for. It may have been moved, renamed, or no longer exists.
         </p>
+
+        <!-- Action CTAs -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href="{% url 'dashboard' %}" class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm shadow-blue-500/20 active:scale-95 transition-all">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 mr-2"></i>
+                Back to Dashboard
+            </a>
+            <a href="{% url 'my_day' %}" class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-semibold active:scale-95 transition-all">
+                <i data-lucide="sun" class="w-4 h-4 mr-2"></i>
+                Go to My Day
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}
