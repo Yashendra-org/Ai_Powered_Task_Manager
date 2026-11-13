@@ -1,4 +1,4 @@
-# Stage 3/5: Implementation refinement
+# Stage 4/5: Implementation refinement
 from django.urls import path
 from . import views
 
@@ -12,3 +12,7 @@ urlpatterns = [
     path('v1/tasks/<uuid:pk>/toggle/', views.TaskToggleApiView.as_view(), name='api_tasks_toggle'),
 
     # Habits API
+    path('v1/habits/', views.HabitListApiView.as_view(), name='api_habits_list'),
+
+    # Assignments API
+    path('v1/assignments/', views.AssignmentListApiView.as_view(), name='api_assignments_list'),
