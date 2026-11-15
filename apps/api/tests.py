@@ -1,4 +1,4 @@
-# Stage 3/5: Implementation refinement
+# Stage 4/5: Implementation refinement
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -26,3 +26,12 @@ class RestApiModuleTests(TestCase):
 
     def test_tasks_api_listing_and_creation(self):
         response = self.client.get(reverse('api_tasks_list_create'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['data']['count'], 1)
+
+        create_response = self.client.post(
+            reverse('api_tasks_list_create'),
+            {'title': 'New via API', 'priority': 'medium'},
+            content_type='application/json'
+        )
+        self.assertEqual(create_response.status_code, 201)
