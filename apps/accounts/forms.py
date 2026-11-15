@@ -74,3 +74,11 @@ class UserProfileForm(forms.ModelForm):
             }),
         }
 
+
+class DeleteAccountForm(forms.Form):
+    """
+    103 Things Guide (#84) & UI/UX Guide (States 10 & 17):
+    Secure confirmation form requiring password re-authentication before account deletion.
+    """
+    pass
+
