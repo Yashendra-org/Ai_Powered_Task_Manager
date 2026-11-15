@@ -1,4 +1,4 @@
-# Stage 2/5: Implementation refinement
+# Stage 3/5: Implementation refinement
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -18,3 +18,11 @@ class RestApiModuleTests(TestCase):
             status='pending'
         )
 
+    def test_api_root_endpoint(self):
+        response = self.client.get(reverse('api_root'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json().get('success'))
+        self.assertEqual(response.json().get('name'), 'My Habit Tracker REST API')
+
+    def test_tasks_api_listing_and_creation(self):
+        response = self.client.get(reverse('api_tasks_list_create'))
