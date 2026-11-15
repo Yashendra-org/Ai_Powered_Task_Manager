@@ -3,14 +3,14 @@
 {% block title %}Something Went Wrong — HabitTracker{% endblock %}
 
 {% block content %}
-<div class="min-h-[70vh] flex items-center justify-center">
+<div class="min-h-[70vh] flex items-center justify-center px-4 py-8" role="main" aria-labelledby="error-title">
     <div class="max-w-md w-full text-center">
         <!-- Visual Warning Badge -->
         <div class="w-20 h-20 bg-red-50 text-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-100">
             <i data-lucide="alert-octagon" class="w-10 h-10 animate-pulse"></i>
         </div>
         <span class="text-xs font-bold uppercase tracking-wider text-red-600 bg-red-50 px-3 py-1 rounded-full border border-red-200/60">Server Error</span>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-4 mb-2">Something Went Wrong</h1>
+        <h1 id="error-title" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-4 mb-2">Something Went Wrong</h1>
         <p class="text-sm text-slate-500 mb-8 leading-relaxed max-w-sm mx-auto">
             We encountered an unexpected issue while processing your request. Your data is safe, and we are working to resolve it.
         </p>
@@ -21,6 +21,10 @@
                 <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
                 Try Again
             </button>
+            <a href="{% url 'dashboard' %}" class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-semibold active:scale-95 transition-all">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 mr-2"></i>
+                Back to Dashboard
+            </a>
         </div>
     </div>
 </div>
