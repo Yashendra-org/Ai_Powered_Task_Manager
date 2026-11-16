@@ -82,6 +82,10 @@ class DeleteAccountForm(forms.Form):
     """
     password = forms.CharField(
         label="Current Password",
-        required=True
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-slate-800 placeholder-slate-400',
+            'placeholder': 'Enter your password to confirm'
+        })
     )
 
