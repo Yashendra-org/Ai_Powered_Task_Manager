@@ -89,3 +89,7 @@ class DeleteAccountForm(forms.Form):
         })
     )
 
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
