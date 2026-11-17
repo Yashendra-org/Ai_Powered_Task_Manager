@@ -3,7 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import UserRegisterForm, UserLoginForm, UserProfileForm
+from .forms import UserRegisterForm, UserLoginForm, UserProfileForm, DeleteAccountForm
 
 
 def register_view(request):
