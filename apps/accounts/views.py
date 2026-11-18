@@ -84,3 +84,7 @@ def delete_account_view(request):
         for error in form.errors.get('password', []):
             messages.error(request, error)
         return redirect('settings')
+
+    user = request.user
+    logout(request)
+    user.delete()
