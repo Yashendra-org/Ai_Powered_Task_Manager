@@ -57,6 +57,7 @@ def profile_view(request):
 
 @login_required
 def settings_view(request):
+    delete_form = DeleteAccountForm(user=request.user)
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=request.user)
         if form.is_valid():
@@ -66,7 +67,7 @@ def settings_view(request):
     else:
         form = UserProfileForm(instance=request.user)
     
-    return render(request, 'accounts/settings.html', {'form': form})
+    return render(request, 'accounts/settings.html', {'form': form, 'delete_form': delete_form})
 
 
 @login_required
@@ -76,4 +77,10 @@ def delete_account_view(request):
     Permanently deletes user account, cascade-deletes related records, and invalidates session.
     """
     if request.method != 'POST':
+        return redirect('settings')
+
+    form = DeleteAccountForm(request.user, request.POST)
+    if not form.is_valid():
+        for error in form.errors.get('password', []):
+            messages.error(request, error)
         return redirect('settings')
