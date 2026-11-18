@@ -67,3 +67,13 @@ def settings_view(request):
         form = UserProfileForm(instance=request.user)
     
     return render(request, 'accounts/settings.html', {'form': form})
+
+
+@login_required
+def delete_account_view(request):
+    """
+    103 Things Guide (#84) & UI/UX Guide (States 10 & 17):
+    Permanently deletes user account, cascade-deletes related records, and invalidates session.
+    """
+    if request.method != 'POST':
+        return redirect('settings')
