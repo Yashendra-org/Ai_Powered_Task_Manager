@@ -1,6 +1,9 @@
 from django.urls import path, reverse_lazy
 from django.contrib.auth import views as auth_views
-from .views import register_view, CustomLoginView, custom_logout_view, settings_view, profile_view
+from .views import (
+    register_view, CustomLoginView, custom_logout_view,
+    settings_view, profile_view, delete_account_view
+)
 
 urlpatterns = [
     # Authentication & Profile
