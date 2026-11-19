@@ -88,3 +88,5 @@ def delete_account_view(request):
     user = request.user
     logout(request)
     user.delete()
+    messages.success(request, "Your account and all associated data have been permanently deleted.")
+    return redirect('login')
