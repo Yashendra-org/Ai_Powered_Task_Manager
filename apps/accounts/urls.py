@@ -12,6 +12,7 @@ urlpatterns = [
     path('logout/', custom_logout_view, name='logout'),
     path('profile/', profile_view, name='profile'),
     path('settings/', settings_view, name='settings'),
+    path('delete-account/', delete_account_view),
 
     # Complete Password Reset Flow
     path('password-reset/', auth_views.PasswordResetView.as_view(
