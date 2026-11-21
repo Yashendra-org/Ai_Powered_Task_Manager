@@ -11,6 +11,7 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', custom_logout_view, name='logout'),
     path('profile/', profile_view, name='profile'),
+    # Account Settings & Deletion (103 Things Guide #84)
     path('settings/', settings_view, name='settings'),
     path('delete-account/', delete_account_view, name='delete_account'),
 
