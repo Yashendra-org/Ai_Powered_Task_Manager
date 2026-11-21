@@ -6,7 +6,7 @@ from .views import (
 )
 
 urlpatterns = [
-    # Authentication & Profile
+    # Authentication & User Profile
     path('register/', register_view, name='register'),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', custom_logout_view, name='logout'),
