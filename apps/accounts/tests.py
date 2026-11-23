@@ -12,6 +12,7 @@ class AuthenticationAndDashboardTests(TestCase):
         self.login_url = reverse('login')
         self.dashboard_url = reverse('dashboard')
         self.settings_url = reverse('settings')
+        self.delete_account_url = reverse('delete_account')
 
     def test_registration_view_renders(self):
         response = self.client.get(self.register_url)
