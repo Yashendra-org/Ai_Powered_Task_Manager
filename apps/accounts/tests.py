@@ -70,3 +70,8 @@ class AuthenticationAndDashboardTests(TestCase):
         self.assertEqual(user.email, 'updated@example.com')
         self.assertEqual(user.timezone, 'UTC')
         self.assertEqual(str(user.daily_review_time), '22:00:00')
+
+    def test_account_deletion_requires_authentication(self):
+        response = self.client.post(self.delete_account_url, {'password': 'any'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.url.startswith('/login/'))
