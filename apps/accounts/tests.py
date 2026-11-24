@@ -75,3 +75,15 @@ class AuthenticationAndDashboardTests(TestCase):
         response = self.client.post(self.delete_account_url, {'password': 'any'})
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith('/login/'))
+
+    def test_account_deletion_rejects_incorrect_password(self):
+        user = User.objects.create_user(
+            username='deluser_fail',
+            email='delfail@example.com',
+            password='CorrectPassword123!'
+        )
+        self.client.login(username='deluser_fail', password='CorrectPassword123!')
+        
+        response = self.client.post(self.delete_account_url, {'password': 'WrongPassword999!'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(User.objects.filter(username='deluser_fail').exists())
