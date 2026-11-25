@@ -41,3 +41,30 @@ class RestApiModuleTests(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['data']['status'], 'completed')
+
+    def test_negative_duration_rejected_by_api(self):
+        """Vibe Coding Audit (Item 05 Negative Quantity Exploit)"""
+        url = reverse('api_tasks_list_create')
+        res = self.client.post(
+            url,
+            {'title': 'Exploit Task', 'estimated_duration': -50},
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()['error']['code'], 'VALIDATION_FAILED')
+
+    def test_unauthenticated_access_blocked(self):
+        """Vibe Coding Audit (Item 01 Broken Access Control)"""
+        self.client.logout()
+        res = self.client.get(reverse('api_tasks_list_create'))
+        self.assertIn(res.status_code, (401, 403))
+
+    def test_task_toggle_cross_user_idor_blocked(self):
+        """Vibe Coding Audit (Item 02 IDOR / BOLA Prevention)"""
+        User.objects.create_user(username='attacker', email='attacker@example.com', password='password123')
+        self.client.login(username='attacker', password='password123')
+        url = reverse('api_tasks_toggle', kwargs={'pk': self.task.id})
+        res = self.client.post(url)
+        self.assertEqual(res.status_code, 404)
+
+

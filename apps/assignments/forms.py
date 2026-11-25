@@ -89,3 +89,41 @@ class AssignmentForm(forms.ModelForm):
             self.fields['teacher'].queryset = Teacher.objects.filter(user=user)
         self.fields['teacher'].empty_label = "No Instructor Assigned"
 
+    def clean_attachment(self):
+        """
+        Vibe Coding Security Audit (Item 12: Malicious File Upload):
+        - Enforces strict extension whitelist
+        - Blocks executable/script extensions
+        - Enforces max 10MB file size limit
+        """
+        attachment = self.cleaned_data.get('attachment')
+        if not attachment:
+            return attachment
+
+        import os
+        filename = attachment.name
+        ext = os.path.splitext(filename)[1].lower()
+
+        allowed_extensions = {
+            '.pdf', '.doc', '.docx', '.txt', '.png', '.jpg', '.jpeg',
+            '.zip', '.odt', '.pptx', '.csv', '.xlsx'
+        }
+        dangerous_extensions = {
+            '.exe', '.bat', '.cmd', '.sh', '.php', '.py', '.js', '.html',
+            '.htm', '.vbs', '.scr', '.jar', '.msi', '.dll', '.bin', '.phtml', '.cgi'
+        }
+
+        if ext in dangerous_extensions:
+            raise forms.ValidationError(f"File type '{ext}' is dangerous and strictly prohibited for security reasons.")
+
+        if ext not in allowed_extensions:
+            raise forms.ValidationError(f"Invalid file type '{ext}'. Allowed formats: PDF, Word, Text, Images, and ZIP.")
+
+        # Max file size: 10MB
+        max_size = 10 * 1024 * 1024
+        if attachment.size > max_size:
+            raise forms.ValidationError("File size exceeds maximum permitted limit of 10 MB.")
+
+        return attachment
+
+

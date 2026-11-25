@@ -167,3 +167,34 @@ class TaskModuleTests(TestCase):
 
         delete_res = self.client.post(reverse('task_delete', args=[self.task.id]))
         self.assertEqual(delete_res.status_code, 404)
+
+    def test_task_duration_bounds_validation(self):
+        """Vibe Coding Audit (Item 05 Negative Quantity Exploit & Input Validation)"""
+        from apps.tasks.forms import TaskForm, QuickTaskForm
+
+        # Negative duration
+        form_neg = TaskForm({
+            'title': 'Test Neg',
+            'priority': 'medium',
+            'estimated_duration': -10
+        }, user=self.user)
+        self.assertFalse(form_neg.is_valid())
+        self.assertIn('estimated_duration', form_neg.errors)
+
+        # Excess duration (> 24 hours)
+        form_huge = TaskForm({
+            'title': 'Test Huge',
+            'priority': 'medium',
+            'estimated_duration': 5000
+        }, user=self.user)
+        self.assertFalse(form_huge.is_valid())
+        self.assertIn('estimated_duration', form_huge.errors)
+
+        # Valid duration
+        form_valid = TaskForm({
+            'title': 'Test Valid',
+            'priority': 'medium',
+            'estimated_duration': 45
+        }, user=self.user)
+        self.assertTrue(form_valid.is_valid())
+

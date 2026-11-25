@@ -78,6 +78,29 @@ class TaskListCreateApiView(APIView):
                 }
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        clean_title = str(title).strip()[:255]
+        clean_desc = str(request.data.get('description', ''))[:5000]
+        
+        # Priority validation (Vibe Coding Audit: Item 05 Strict Input Validation)
+        priority = request.data.get('priority', 'medium')
+        if priority not in ('low', 'medium', 'high'):
+            priority = 'medium'
+
+        # Estimated duration validation (Item 05 Negative Quantity Exploit defense)
+        raw_duration = request.data.get('estimated_duration', 30)
+        try:
+            duration = int(raw_duration)
+            if duration < 1 or duration > 1440:
+                return Response({
+                    "success": False,
+                    "error": {
+                        "code": "VALIDATION_FAILED",
+                        "message": "The 'estimated_duration' must be between 1 and 1,440 minutes."
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, TypeError):
+            duration = 30
+
         category = None
         category_id = request.data.get('category_id')
         if category_id:
@@ -85,13 +108,14 @@ class TaskListCreateApiView(APIView):
 
         task = Task.objects.create(
             user=request.user,
-            title=str(title).strip(),
-            description=request.data.get('description', ''),
+            title=clean_title,
+            description=clean_desc,
             category=category,
-            priority=request.data.get('priority', 'medium'),
-            estimated_duration=request.data.get('estimated_duration', 30),
+            priority=priority,
+            estimated_duration=duration,
             due_at=request.data.get('due_at') or (timezone.now() + timezone.timedelta(hours=4)),
         )
+
 
         return Response({
             "success": True,

@@ -58,6 +58,12 @@ class TaskForm(forms.ModelForm):
             self.fields['category'].queryset = Category.objects.filter(user=user)
         self.fields['category'].empty_label = "No Category (General)"
 
+    def clean_estimated_duration(self):
+        val = self.cleaned_data.get('estimated_duration')
+        if val is not None and (val < 1 or val > 1440):
+            raise forms.ValidationError("Estimated duration must be between 1 and 1,440 minutes (24 hours).")
+        return val
+
 
 class QuickTaskForm(forms.Form):
     title = forms.CharField(
@@ -77,6 +83,12 @@ class QuickTaskForm(forms.Form):
         required=False,
     )
 
+    def clean_estimated_duration(self):
+        val = self.cleaned_data.get('estimated_duration')
+        if val is not None and (val < 1 or val > 1440):
+            raise forms.ValidationError("Estimated duration must be between 1 and 1,440 minutes (24 hours).")
+        return val
+
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -92,4 +104,12 @@ class CategoryForm(forms.ModelForm):
                 'class': 'h-10 w-20 p-1 bg-white border border-slate-300 rounded-lg cursor-pointer'
             }),
         }
+
+    def clean_color(self):
+        import re
+        color = self.cleaned_data.get('color', '').strip()
+        if not re.match(r'^#[0-9a-fA-F]{6}$', color):
+            return '#2563EB'
+        return color
+
 

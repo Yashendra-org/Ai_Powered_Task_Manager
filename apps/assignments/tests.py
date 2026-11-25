@@ -90,3 +90,43 @@ class AssignmentModuleTests(TestCase):
 
         del_res = self.client.post(reverse('assignment_delete', args=[self.assignment.id]))
         self.assertEqual(del_res.status_code, 404)
+
+    def test_malicious_file_upload_rejected(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from apps.assignments.forms import AssignmentForm
+
+        # Executable file
+        bad_file = SimpleUploadedFile("exploit.exe", b"MZ\x90\x00executable_code", content_type="application/x-msdownload")
+        data = {
+            'title': 'Dangerous Assignment',
+            'subject': self.subject.id,
+            'due_at': timezone.now() + timezone.timedelta(days=1),
+            'priority': 'medium',
+            'status': 'not_started'
+        }
+        form = AssignmentForm(data, {'attachment': bad_file}, user=self.user)
+        self.assertFalse(form.is_valid())
+        self.assertIn('attachment', form.errors)
+        self.assertIn('strictly prohibited', str(form.errors['attachment']))
+
+        # Shell script
+        sh_file = SimpleUploadedFile("backup.sh", b"#!/bin/bash\nrm -rf /", content_type="text/x-shellscript")
+        form_sh = AssignmentForm(data, {'attachment': sh_file}, user=self.user)
+        self.assertFalse(form_sh.is_valid())
+        self.assertIn('attachment', form_sh.errors)
+
+    def test_safe_file_upload_accepted(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from apps.assignments.forms import AssignmentForm
+
+        safe_file = SimpleUploadedFile("homework.pdf", b"%PDF-1.4 sample content", content_type="application/pdf")
+        data = {
+            'title': 'Safe PDF Assignment',
+            'subject': self.subject.id,
+            'due_at': timezone.now() + timezone.timedelta(days=1),
+            'priority': 'medium',
+            'status': 'not_started'
+        }
+        form = AssignmentForm(data, {'attachment': safe_file}, user=self.user)
+        self.assertTrue(form.is_valid())
+

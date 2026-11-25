@@ -57,3 +57,17 @@ class HabitForm(forms.ModelForm):
             return [int(d) for d in days]
         return []
 
+    def clean_monthly_goal(self):
+        val = self.cleaned_data.get('monthly_goal')
+        if val is not None and (val < 1 or val > 365):
+            raise forms.ValidationError("Monthly goal must be between 1 and 365 days.")
+        return val
+
+    def clean_color(self):
+        import re
+        color = self.cleaned_data.get('color', '').strip()
+        if not re.match(r'^#[0-9a-fA-F]{6}$', color):
+            return '#10B981'
+        return color
+
+
