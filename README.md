@@ -8,19 +8,20 @@
 [![Python Version](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS%203.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Celery & Redis](https://img.shields.io/badge/Celery-Distributed%20Tasks-37814A?logo=celery&logoColor=white)](https://docs.celeryq.dev/)
-[![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Machine%20Learning-F7931E?logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
+[![Security Hardened](https://img.shields.io/badge/Security-HSTS%20%7C%20CSP%20%7C%20Rate%20Limit-green?logo=shield)](https://github.com/Yashendra-org/Ai_Powered_Task_Manager)
+[![Tests Passing](https://img.shields.io/badge/Tests-62%2F62%20Passing-brightgreen?logo=checkmarx)](https://github.com/Yashendra-org/Ai_Powered_Task_Manager)
 [![Zero-Reload Experience](https://img.shields.io/badge/SPA-Zero%20Reload%20PJAX-blue)](https://github.com/Yashendra-org/Ai_Powered_Task_Manager)
 
 <p align="center">
   <a href="#-overview">Overview</a> •
   <a href="#-key-features">Key Features</a> •
+  <a href="#-modernized-professional-url-architecture">URL Architecture</a> •
   <a href="#-system-architecture">Architecture</a> •
   <a href="#-workflow">Workflow</a> •
   <a href="#-project-structure">Project Structure</a> •
+  <a href="#-security--enterprise-hardening">Security</a> •
   <a href="#-technology-stack">Tech Stack</a> •
   <a href="#-installation--setup">Setup</a> •
-  <a href="#-api--view-routes">Routes</a> •
   <a href="#-testing--verification">Testing</a> •
   <a href="#-contributors">Contributors</a>
 </p>
@@ -442,51 +443,112 @@ If you prefer setting up services manually on Render:
 
 ---
 
-## 📡 API & View Routes
+## 🌐 Modernized Professional URL Architecture
 
-Base URL: `/`
+The application implements an enterprise-grade RESTful URL schema featuring semantic namespaces, standardized resource hierarchies, and **100% backward-compatible aliases** for all legacy routes, bookmarks, and templates.
 
-| Method | URL Path | View Controller | Access | Description |
-|---|---|---|---|---|
-| `GET` | `/` | `apps.tasks.views.dashboard_view` | Auth | Executive dashboard with metrics & focus tasks |
-| `GET`, `POST` | `/tasks/today/` | `apps.tasks.views.my_day_view` | Auth | My Day focus cockpit with zero-reload quick-add |
-| `GET` | `/tasks/` | `apps.tasks.views.all_tasks_view` | Auth | Searchable task list with category & priority filters |
-| `POST` | `/tasks/<id>/toggle/` | `apps.tasks.views.task_toggle_complete_view` | Auth | Instant check/uncheck status toggle (AJAX) |
-| `POST` | `/tasks/<id>/delete/` | `apps.tasks.views.task_delete_view` | Auth | Soft-delete task to Recently Deleted (AJAX) |
-| `GET` | `/tasks/trash/` | `apps.tasks.views.trash_view` | Auth | Recently Deleted task manager with restore |
-| `GET` | `/assignments/` | `apps.assignments.views.assignment_list_view` | Auth | College Assignment Hub with urgency filters |
-| `POST` | `/assignments/<id>/submit-toggle/` | `apps.assignments.views.assignment_toggle_submission_view` | Auth | 1-Click assignment submission toggle (AJAX) |
-| `GET` | `/habits/` | `apps.habits.views.habit_list_view` | Auth | 7-Day Consistency Matrix with streak counters |
-| `POST` | `/habits/<id>/log/` | `apps.habits.views.habit_toggle_log_view` | Auth | 1-Click daily habit check-off (AJAX) |
-| `GET` | `/calendar/` | `apps.tasks.calendar_views.calendar_view` | Auth | Unified chronological calendar |
-| `GET` | `/analytics/` | `apps.analytics.views.analytics_dashboard_view` | Auth | Chart.js 7-day velocity and category analytics |
-| `GET` | `/review/` | `apps.ml_engine.views.end_of_day_review_view` | Auth | End-of-Day Review workflow with guided rollover |
-| `GET` | `/assistant/` | `apps.ml_engine.views.smart_assistant_view` | Auth | ML suggestions with accept/reject feedback loop |
-| `POST` | `/assistant/feedback/<id>/<action>/` | `apps.ml_engine.views.recommendation_feedback_view` | Auth | Record feedback & auto-create approved tasks |
-| `GET` | `/notes/` | `apps.notes.views.note_list_view` | Auth | Searchable scratchpad notes repository |
-| `GET`, `POST` | `/login/`, `/register/` | `apps.accounts.views` | Public | Authentication & account registration |
+### 1. Web Application & Portal Routes
+
+| Domain / Module | Modern Enterprise Route | Legacy Alias (Preserved) | Route Name (`{% url %}`) | Access | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Authentication** | `/auth/login/` | `/login/` | `auth_login` / `login` | Public | Auth portal with sliding window rate limiting & anti-timing protection |
+| | `/auth/register/` | `/register/` | `auth_register` / `register` | Public | Account onboarding & referral code binding |
+| | `/auth/logout/` | `/logout/` | `auth_logout` / `logout` | Auth | Session invalidation & secure logout |
+| | `/auth/password-reset/` | `/password-reset/` | `password_reset` | Public | Multi-step password recovery flow (enumeration-proof) |
+| **Account & Profile** | `/account/profile/` | `/profile/` | `account_profile` / `profile` | Auth | User profile, timezone, and productivity stats |
+| | `/account/settings/` | `/settings/` | `account_settings` / `settings` | Auth | Regional localization & notification preferences |
+| | `/account/delete/` | `/delete-account/` | `account_delete` / `delete_account` | Auth | Permanent account & data erasure (GDPR/CCPA compliant) |
+| | `/account/referrals/` | `/referrals/` | `account_referrals` / `referrals` | Auth | Friend referral hub & milestone rewards ledger |
+| | `/account/referrals/redeem/` | `/referrals/redeem/` | `account_referrals_redeem` | Auth | Redeem friend bonus code with anti-abuse guards |
+| **Task Management** | `/tasks/my-day/` | `/tasks/today/` | `task_my_day` / `my_day` | Auth | Today's prioritized focus cockpit (Zero-Reload) |
+| | `/tasks/` | — | `all_tasks` | Auth | Searchable task backlog with multi-criteria filters |
+| | `/tasks/new/` | `/tasks/create/` | `task_new` / `task_create` | Auth | Dedicated task creation interface |
+| | `/tasks/<uuid>/edit/` | — | `task_edit` | Auth | Modify task schedule, duration, or priority |
+| | `/tasks/<uuid>/toggle/` | — | `task_toggle` | Auth | 1-Click optimistic completion toggle (AJAX) |
+| | `/tasks/<uuid>/delete/` | — | `task_delete` | Auth | Soft-delete task to Recently Deleted (AJAX) |
+| | `/tasks/<uuid>/restore/` | — | `task_restore` | Auth | 1-Click recovery from Recently Deleted |
+| | `/tasks/<uuid>/purge/` | `/tasks/<uuid>/permanent-delete/` | `task_purge` / `task_permanent_delete` | Auth | Irreversible task destruction |
+| | `/tasks/trash/` | — | `trash` | Auth | Recently Deleted trash bin manager |
+| | `/tasks/categories/new/` | `/tasks/categories/create/` | `category_new` / `category_create` | Auth | Category creation with color-picker |
+| **College Coursework** | `/assignments/` | — | `assignment_list` | Auth | College Assignment Hub with urgency filters |
+| | `/assignments/new/` | `/assignments/create/` | `assignment_new` / `assignment_create`| Auth | Add coursework deadline & file attachments |
+| | `/assignments/<uuid>/edit/` | — | `assignment_edit` | Auth | Modify assignment details or attachments |
+| | `/assignments/<uuid>/delete/` | — | `assignment_delete` | Auth | Remove assignment record |
+| | `/assignments/<uuid>/submit/` | — | `assignment_submit_toggle` | Auth | 1-Click submission toggle with timestamping |
+| | `/assignments/subjects/` | — | `subject_list` | Auth | Academic course code directory |
+| | `/assignments/professors/` | `/assignments/teachers/` | `professor_list` / `teacher_list` | Auth | Faculty & instructor contact directory |
+| **Habit Tracking** | `/habits/` | — | `habit_list` | Auth | 7-Day Consistency Matrix with streak counters |
+| | `/habits/new/` | `/habits/create/` | `habit_new` / `habit_create` | Auth | Onboard recurring goal with custom schedule |
+| | `/habits/export/csv/` | `/habits/export/` | `habit_export_csv_alias` / `habit_export_csv` | Auth | Download completion report as CSV |
+| | `/habits/<id>/toggle/` | `/habits/<id>/toggle-log/` | `habit_toggle` / `habit_toggle_log` | Auth | 1-Click daily habit check-off (AJAX) |
+| **Quick Notes** | `/notes/` | — | `note_list` | Auth | Pinned notes & study scratchpad |
+| | `/notes/new/` | `/notes/create/` | `note_new` / `note_create` | Auth | Create scratchpad note (bounds validated) |
+| | `/notes/<id>/pin/` | `/notes/<id>/toggle-pin/` | `note_pin` / `note_toggle_pin` | Auth | Pin critical notes to top of feed |
+| **Calendar & Analytics**| `/calendar/` | — | `calendar` | Auth | Unified monthly tasks, deadlines, and habits |
+| | `/analytics/overview/` | `/analytics/` | `analytics_overview` / `analytics_dashboard` | Auth | Productivity velocity & category breakdown |
+| **Intelligence & AI** | `/ai/assistant/` | `/assistant/` | `ai_assistant` / `smart_assistant` | Auth | Hybrid ML recommendations & pattern suggestions |
+| | `/ai/review/` | `/review/` | `ai_review` / `end_of_day_review` | Auth | 21:30 Guided evening reflection & rollover |
+| | `/ai/recommendations/<id>/<act>/` | `/assistant/recommendations/...` | `ai_recommendation_feedback` | Auth | Accept/dismiss suggestions feedback loop |
+| **Notifications** | `/notifications/inbox/`| `/notifications/` | `notification_inbox` / `notification_list` | Auth | Notification center feed |
+| | `/notifications/read-all/` | `/notifications/mark-all-read/` | `notification_mark_all_read` | Auth | Mark all unread notifications as read |
+| **Platform Discovery** | `/health/` | — | `health_check` | Public | Live health check endpoint for orchestrators |
+| | `/robots.txt` | — | `robots_txt` | Public | Crawler privacy directives & sitemap location |
+| | `/sitemap.xml` | — | `sitemap_xml` | Public | Public page discovery sitemap |
+
+### 2. REST API Endpoints (`/api/v1/`)
+
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/` or `/api/v1/` | Interactive API directory & discovery root | Session / Token |
+| `GET`, `POST` | `/api/v1/tasks/` | List user tasks (filter by status, category) / Create task | Authenticated |
+| `POST` | `/api/v1/tasks/<uuid>/toggle/` | 1-Click completion toggle returning updated rate | Authenticated |
+| `GET` | `/api/v1/habits/` | List active habits with streak metrics | Authenticated |
+| `GET` | `/api/v1/assignments/` | List upcoming college assignments & deadlines | Authenticated |
+| `GET` | `/api/v1/analytics/` | Executive productivity metrics & completion velocity | Authenticated |
+
+---
+
+## 🛡️ Security & Enterprise Hardening
+
+The application conforms to modern enterprise security baselines derived from **The Ultimate Vibe Coding Security Audit Guide** and **103 Things Before Shipping to Production**:
+
+- **Authentication Timing Equalization**: Passwords hashed with dummy cycles on non-existent accounts to eliminate timing side-channels and account enumeration.
+- **Multi-Action Sliding Window Rate Limiting**: Distributed rate-limiting enforced on `/auth/login/` (5/min), `/auth/register/` (5/min), `/password-reset/` (3/min), and `/referrals/redeem/` (5/min) with standard RFC headers (`Retry-After`, `X-RateLimit-*`).
+- **Anti-Scanner Probe Defense**: Instant 404 rejection without DB connection for scanner sweeps targeting `.env`, `.git/`, `.aws/`, `wp-admin`, `phpinfo`, `dump.sql`, `backup.zip`, and path traversals (`../`).
+- **Defensive HTTP Headers**: Enforced via custom middleware:
+  - `Content-Security-Policy`: Restricts scripts, styles, frames (`frame-ancestors 'none'`), and form actions.
+  - `Strict-Transport-Security (HSTS)`: `max-age=31536000; includeSubDomains; preload`.
+  - `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
+  - `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-origin`, `X-Permitted-Cross-Domain-Policies: none`.
+- **Stored XSS Elimination**: All chart datasets passed via Django's native `json_script` tag, eliminating raw `|safe` interpolations in `<script>` blocks.
+- **Malicious Upload Guard**: Strict file extension whitelist, dangerous script blocking (`.py`, `.exe`, `.sh`, `.php`), and 10MB memory upload boundaries.
+- **Anti-Abuse Referral Ledger**: Atomic database locks (`select_for_update()`), idempotency key replay defense, self-referral prevention, and 7-day registration eligibility windows.
+- **GDPR / CCPA Erasure**: Dedicated `/account/delete/` endpoint requiring password verification and cascading data deletion.
 
 ---
 
 ## 🧪 Testing & Verification
 
-The platform maintains an automated test suite verifying CRUD operations, multi-tenant isolation, AJAX envelopes, and business services across all 8 modules.
+The platform maintains an automated regression and security test suite verifying CRUD operations, multi-tenant isolation, AJAX envelopes, business services, rate limiting, and URL routing.
 
 ```bash
 # Execute the full automated test suite
 python manage.py test
+
+# Verify production deployment readiness
+python manage.py check --deploy
 ```
 
 ### Test Suite Results:
 ```text
 Creating test database for alias 'default'...
-...................................
+..............................................................
 ----------------------------------------------------------------------
-Ran 35 tests in 45.422s
+Ran 62 tests in 180.146s
 
 OK
 Destroying test database for alias 'default'...
-Found 35 test(s).
+Found 62 test(s).
 System check identified no issues (0 silenced).
 ```
 
@@ -499,13 +561,15 @@ System check identified no issues (0 silenced).
 <tr>
 <td><b>Yashendra Kumar</b></td>
 <td>Lead Architect & Full-Stack Engineer</td>
-<td>System architecture, Django modular backend, database schema, zero-reload PJAX/AJAX client engine, ML recommendation layer, and test suite.</td>
+<td>System architecture, Django modular backend, database schema, zero-reload PJAX/AJAX client engine, ML recommendation layer, security hardening, and test suite.</td>
 </tr>
 </table>
 
 ---
 
-## 🧭 Roadmap
+## 🧭 Roadmap & Future Updates
+
+For our full architectural roadmap of 20 upcoming enterprise features designed by senior systems architects, see **[FUTURE_UPDATES.md](FUTURE_UPDATES.md)**.
 
 - [ ] **Voice-to-Task Transcription** — Rapid voice input converted to categorized tasks using Web Speech API.
 - [ ] **WhatsApp & Telegram Reminders** — Two-way bot integration for receiving morning agendas and checking off habits via chat.
