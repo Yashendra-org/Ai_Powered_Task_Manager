@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from apps.tasks.models import Task
 
 User = get_user_model()
 
@@ -99,3 +100,18 @@ class AuthenticationAndDashboardTests(TestCase):
         response = self.client.post(self.delete_account_url, {'password': 'CorrectPassword123!'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(username='deluser_success').exists())
+
+    def test_account_deletion_cascades_to_user_tasks(self):
+        user = User.objects.create_user(
+            username='deluser_cascade',
+            email='delcascade@example.com',
+            password='Password123!'
+        )
+        Task.objects.create(user=user, title='Task to be cascade deleted')
+        self.assertEqual(Task.objects.filter(user=user).count(), 1)
+
+        self.client.login(username='deluser_cascade', password='Password123!')
+        response = self.client.post(self.delete_account_url, {'password': 'Password123!'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username='deluser_cascade').exists())
+        self.assertEqual(Task.objects.filter(user=user).count(), 0)
