@@ -107,13 +107,19 @@
 {% endblock %}
 
 {% block extra_scripts %}
+{{ velocity_labels|json_script:"velocity-labels-data" }}
+{{ completed_series|json_script:"completed-series-data" }}
+{{ planned_series|json_script:"planned-series-data" }}
+{{ category_labels|json_script:"category-labels-data" }}
+{{ category_counts|json_script:"category-counts-data" }}
+{{ category_colors|json_script:"category-colors-data" }}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // 1. Velocity Chart
         const velocityCtx = document.getElementById('velocityChart').getContext('2d');
-        const velocityLabels = {{ velocity_labels_json|safe }};
-        const completedData = {{ completed_series_json|safe }};
-        const plannedData = {{ planned_series_json|safe }};
+        const velocityLabels = JSON.parse(document.getElementById('velocity-labels-data').textContent || '[]');
+        const completedData = JSON.parse(document.getElementById('completed-series-data').textContent || '[]');
+        const plannedData = JSON.parse(document.getElementById('planned-series-data').textContent || '[]');
 
         new Chart(velocityCtx, {
             type: 'bar',
@@ -151,9 +157,9 @@
 
         // 2. Category Doughnut Chart
         const catCtx = document.getElementById('categoryChart').getContext('2d');
-        const catLabels = {{ category_labels_json|safe }};
-        const catCounts = {{ category_counts_json|safe }};
-        const catColors = {{ category_colors_json|safe }};
+        const catLabels = JSON.parse(document.getElementById('category-labels-data').textContent || '[]');
+        const catCounts = JSON.parse(document.getElementById('category-counts-data').textContent || '[]');
+        const catColors = JSON.parse(document.getElementById('category-colors-data').textContent || '[]');
 
         if (catLabels.length > 0) {
             new Chart(catCtx, {

@@ -21,3 +21,16 @@ class NoteForm(forms.ModelForm):
             }),
         }
 
+    def clean_title(self):
+        title = self.cleaned_data.get('title', '').strip()
+        if len(title) > 255:
+            raise forms.ValidationError("Note title cannot exceed 255 characters.")
+        return title
+
+    def clean_content(self):
+        content = self.cleaned_data.get('content', '')
+        if len(content) > 50000:
+            raise forms.ValidationError("Note content cannot exceed 50,000 characters.")
+        return content
+
+

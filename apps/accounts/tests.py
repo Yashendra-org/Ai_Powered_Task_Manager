@@ -322,3 +322,74 @@ class ProfessionalUrlRoutingTests(TestCase):
         self.assertEqual(self.client.get('/notifications/inbox/').status_code, 200)
 
 
+class HardenedSecurityTests(TestCase):
+    """
+    Tests security protections:
+    - Probe scanner defense
+    - Multi-endpoint rate limiting
+    - Timing attack equalization
+    - Defensive headers
+    - Bounds validation
+    """
+    def setUp(self):
+        self.client = Client()
+        from config.middleware import RATE_LIMIT_STORE
+        RATE_LIMIT_STORE.clear()
+
+    def test_scanner_probe_blocked(self):
+        probes = [
+            '/.env',
+            '/admin/.env.local',
+            '/wp-login.php',
+            '/actuator/health',
+            '/dump.sql',
+            '/.git/config',
+            '/phpinfo.php',
+            '/backup.zip',
+        ]
+        for probe in probes:
+            response = self.client.get(probe)
+            self.assertEqual(response.status_code, 404, f"Probe {probe} should be rejected with 404")
+
+    def test_multi_endpoint_rate_limiting(self):
+        # 1. Login rate limiting
+        for _ in range(5):
+            self.client.post('/auth/login/', {'username': 'attacker', 'password': 'bad'}, REMOTE_ADDR='198.51.100.1')
+        blocked_res = self.client.post('/auth/login/', {'username': 'attacker', 'password': 'bad'}, REMOTE_ADDR='198.51.100.1')
+        self.assertEqual(blocked_res.status_code, 429)
+        self.assertIn('Retry-After', blocked_res.headers)
+        self.assertEqual(blocked_res.headers.get('X-RateLimit-Remaining'), '0')
+
+        # 2. Registration rate limiting
+        for _ in range(5):
+            self.client.post('/auth/register/', {'username': 'spammer'}, REMOTE_ADDR='198.51.100.2')
+        blocked_reg = self.client.post('/auth/register/', {'username': 'spammer'}, REMOTE_ADDR='198.51.100.2')
+        self.assertEqual(blocked_reg.status_code, 429)
+
+    def test_authentication_timing_attack_protection(self):
+        from apps.accounts.backends import EmailOrUsernameModelBackend
+        backend = EmailOrUsernameModelBackend()
+        # Authenticating a non-existent user should invoke dummy hasher and return None safely
+        result = backend.authenticate(request=None, username='completely_non_existent_user_99999', password='AnyPassword123!')
+        self.assertIsNone(result)
+
+    def test_security_defensive_headers_present(self):
+        res = self.client.get('/login/')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('Content-Security-Policy', res.headers)
+        self.assertIn('Strict-Transport-Security', res.headers)
+        self.assertEqual(res.headers.get('X-Content-Type-Options'), 'nosniff')
+        self.assertEqual(res.headers.get('X-Frame-Options'), 'DENY')
+        self.assertEqual(res.headers.get('Cross-Origin-Opener-Policy'), 'same-origin')
+        self.assertEqual(res.headers.get('Cross-Origin-Resource-Policy'), 'same-origin')
+        self.assertEqual(res.headers.get('X-Permitted-Cross-Domain-Policies'), 'none')
+
+    def test_note_content_bounds_validation(self):
+        from apps.notes.forms import NoteForm
+        oversized_content = "X" * 50001
+        form = NoteForm(data={'title': 'Large Note', 'content': oversized_content})
+        self.assertFalse(form.is_valid())
+        self.assertIn('content', form.errors)
+
+
+

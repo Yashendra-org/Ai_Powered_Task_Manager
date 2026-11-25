@@ -296,6 +296,8 @@ def habit_list_view(request):
         'normalized_progress_pct': normalized_progress_pct,
         'momentum_pct': momentum_pct,
         'elapsed_days': elapsed_days,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
         'chart_labels_json': json.dumps(chart_labels),
         'chart_data_json': json.dumps(chart_data),
         'today_str': today.strftime('%Y-%m-%d'),

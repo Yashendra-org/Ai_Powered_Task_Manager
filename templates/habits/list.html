@@ -338,6 +338,8 @@
 <!-- ================================================================= -->
 <!-- CHART.JS INTEGRATION SCRIPT FOR TREND LINE                        -->
 <!-- ================================================================= -->
+{{ chart_labels|json_script:"habit-chart-labels-data" }}
+{{ chart_data|json_script:"habit-chart-data-values" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -356,8 +358,10 @@
             window.myHabitChartInstance.destroy();
         }
 
-        const labels = {{ chart_labels_json|safe }};
-        const dataValues = {{ chart_data_json|safe }};
+        const labelsScript = document.getElementById('habit-chart-labels-data');
+        const dataScript = document.getElementById('habit-chart-data-values');
+        const labels = labelsScript ? JSON.parse(labelsScript.textContent) : [];
+        const dataValues = dataScript ? JSON.parse(dataScript.textContent) : [];
 
         window.myHabitChartInstance = new Chart(ctx, {
             type: 'line',

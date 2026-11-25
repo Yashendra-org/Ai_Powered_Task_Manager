@@ -20,6 +20,9 @@ class EmailOrUsernameModelBackend(ModelBackend):
         try:
             user = User.objects.get(Q(username__iexact=username) | Q(email__iexact=username))
         except User.DoesNotExist:
+            # Run the default password hasher once to reduce the timing
+            # difference between an existing and a non-existing user (prevents enumeration).
+            User().set_password(password)
             return None
         except User.MultipleObjectsReturned:
             user = User.objects.filter(Q(username__iexact=username) | Q(email__iexact=username)).order_by('id').first()
