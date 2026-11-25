@@ -2,7 +2,8 @@ from django.urls import path, reverse_lazy
 from django.contrib.auth import views as auth_views
 from .views import (
     register_view, CustomLoginView, custom_logout_view,
-    settings_view, profile_view, delete_account_view
+    settings_view, profile_view, delete_account_view,
+    referral_hub_view, referral_redeem_view
 )
 
 urlpatterns = [
@@ -14,6 +15,9 @@ urlpatterns = [
     # Account Settings & Deletion (103 Things Guide #84)
     path('settings/', settings_view, name='settings'),
     path('delete-account/', delete_account_view, name='delete_account'),
+    # Secure Referral System (ReelBlink Guide)
+    path('referrals/', referral_hub_view, name='referrals'),
+    path('referrals/redeem/', referral_redeem_view, name='referrals_redeem'),
 
     # Complete Password Reset Flow
     path('password-reset/', auth_views.PasswordResetView.as_view(

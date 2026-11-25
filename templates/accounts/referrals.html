@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Referrals & Rewards — My Habit Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Referrals & Friend Rewards</h1>
+            <p class="text-slate-500 text-sm mt-1">Invite friends and classmates to My Habit Tracker. Both of you receive 7 days of Pro Habit Tracking bonus for every qualified friend.</p>
+        </div>
+        <a href="{% url 'settings' %}" class="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Back to Settings
+        </a>
+    </div>
+
+    <!-- Referral Link & Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Share Card -->
+        <div class="md:col-span-2 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+            <div class="relative z-10 space-y-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm">
+                    ReelBlink Anti-Abuse Protected
+                </span>
+                <h2 class="text-xl font-bold">Your Personal Referral Code</h2>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 flex-1 flex items-center justify-between">
+                        <span id="referralCodeText" class="font-mono text-lg font-bold tracking-widest">{{ summary.referral_code }}</span>
+                        <button type="button" onclick="copyReferralCode('{{ summary.referral_code }}')" class="ml-2 text-xs font-semibold bg-white text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition active:scale-95 shadow-sm touch-press">
+                            Copy Code
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-blue-100">
+                    <svg class="w-4 h-4 shrink-0 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span>Server-side qualification prevents self-referrals and duplicate qualification.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bonus Stats -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="space-y-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Rewards Earned</p>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-4xl font-extrabold text-slate-900">{{ summary.total_bonus_days }}</span>
+                    <span class="text-sm font-medium text-slate-500">Pro Bonus Days</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100 mt-4">
+                <div>
+                    <span class="text-xs text-slate-500 block">Invites Sent</span>
+                    <span class="text-lg font-bold text-slate-800">{{ summary.total_invites }}</span>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-500 block">Rewarded</span>
+                    <span class="text-lg font-bold text-emerald-600">{{ summary.rewarded_invites }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redeem Section & Friend Code -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Redeem Form -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
+                    1
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Have a Friend's Referral Code?</h3>
+                    <p class="text-xs text-slate-500">Enter their code to activate your 7-day bonus.</p>
+                </div>
+            </div>
+
+            {% if summary.referral_received %}
+                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
+                    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <div class="text-sm">
+                        <span class="font-semibold text-emerald-900">Referral already redeemed!</span>
+                        <p class="text-emerald-700 text-xs mt-0.5">Invited by <strong>{{ summary.referral_received.referrer.username }}</strong>. 7 Pro days granted.</p>
+                    </div>
+                </div>
+            {% else %}
+                <form action="{% url 'referrals_redeem' %}" method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label for="{{ redeem_form.code.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                            Invite Code
+                        </label>
+                        {{ redeem_form.code }}
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-blue-700 transition active:scale-95 text-sm shadow-sm touch-press">
+                        Redeem Referral Code
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        <!-- Rules & Anti-Abuse Info Card -->
+        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 shadow-sm space-y-3">
+            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Referral Program Rules</h3>
+            <ul class="text-xs text-slate-600 space-y-2">
+                <li class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span><strong>Eligible new users:</strong> Only accounts registered within the last 7 days are eligible to redeem referral codes.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span><strong>One-time qualification:</strong> Each user can be referred only once in their lifetime.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span><strong>Self-referrals forbidden:</strong> You cannot use your own referral code to earn bonuses.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span><strong>Atomic server claim:</strong> Rewards are verified and claimed atomically to prevent double crediting.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Reward History Audit Ledger -->
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900">Reward Audit Ledger</h3>
+            <span class="text-xs text-slate-400">Complete transaction history</span>
+        </div>
+
+        {% if summary.reward_history %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-100 text-slate-400 font-semibold uppercase tracking-wider">
+                            <th class="py-2.5">Date</th>
+                            <th class="py-2.5">Reward Type</th>
+                            <th class="py-2.5">Bonus Units</th>
+                            <th class="py-2.5">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        {% for rew in summary.reward_history %}
+                            <tr>
+                                <td class="py-3 font-mono text-slate-500">{{ rew.created_at|date:"M d, Y H:i" }}</td>
+                                <td class="py-3 font-medium">{{ rew.reward_type }}</td>
+                                <td class="py-3 font-bold text-emerald-600">+{{ rew.units }} days</td>
+                                <td class="py-3">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                                        Granted
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-8 text-slate-400 text-xs">
+                No rewards recorded yet. Share your code to start earning bonuses!
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function copyReferralCode(code) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+            if (window.showUndoSnackbar) {
+                window.showUndoSnackbar('Referral code copied to clipboard!');
+            } else {
+                alert('Copied referral code: ' + code);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

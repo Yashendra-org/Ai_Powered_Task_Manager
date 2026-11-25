@@ -3,7 +3,10 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import UserRegisterForm, UserLoginForm, UserProfileForm, DeleteAccountForm
+from django.core.exceptions import ValidationError
+from django.urls import reverse
+from .forms import UserRegisterForm, UserLoginForm, UserProfileForm, DeleteAccountForm, ReferralRedeemForm
+from .services.referral_service import get_user_referral_summary, process_referral_submission
 
 
 def register_view(request):
@@ -90,3 +93,45 @@ def delete_account_view(request):
     user.delete()
     messages.success(request, "Your account and all associated data have been permanently deleted.")
     return redirect('login')
+
+
+@login_required
+def referral_hub_view(request):
+    """
+    Renders the Referral & Friend Invitation Hub.
+    Displays user referral code, share link, invite stats, and reward history.
+    """
+    summary = get_user_referral_summary(request.user)
+    redeem_form = ReferralRedeemForm()
+    share_url = request.build_absolute_uri(reverse('register')) + f"?ref={summary['referral_code']}"
+
+    context = {
+        'summary': summary,
+        'redeem_form': redeem_form,
+        'share_url': share_url,
+    }
+    return render(request, 'accounts/referrals.html', context)
+
+
+@login_required
+def referral_redeem_view(request):
+    """
+    Handles submission of a referral code by an authenticated user.
+    """
+    if request.method != 'POST':
+        return redirect('referrals')
+
+    form = ReferralRedeemForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Please enter a valid referral code.")
+        return redirect('referrals')
+
+    code_str = form.cleaned_data['code']
+    try:
+        process_referral_submission(code_str, request.user)
+        messages.success(request, f"Referral code '{code_str}' redeemed successfully! You both earned 7 Pro bonus days!")
+    except ValidationError as e:
+        messages.error(request, str(e.message if hasattr(e, 'message') else e))
+
+    return redirect('referrals')
+

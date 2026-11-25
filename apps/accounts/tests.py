@@ -115,3 +115,115 @@ class AuthenticationAndDashboardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(username='deluser_cascade').exists())
         self.assertEqual(Task.objects.filter(user=user).count(), 0)
+
+
+class SecureReferralSystemTests(TestCase):
+    """
+    Automated verification of Google Play & ReelBlink Secure Referral Anti-Abuse Rules:
+    1. Genuine referral succeeds and creates atomic reward history
+    2. Self-referral fails
+    3. Same account cannot qualify twice (one-time qualification)
+    4. Existing user beyond eligibility window cannot qualify
+    5. Replayed request creates no second reward (idempotency)
+    6. Referral dashboard and redemption views require auth and function correctly
+    """
+
+    def setUp(self):
+        from apps.accounts.services.referral_service import get_or_create_user_referral_code
+        self.referrer = User.objects.create_user(
+            username='referrer_user',
+            email='referrer@example.com',
+            password='TestPassword123!'
+        )
+        self.ref_code_obj = get_or_create_user_referral_code(self.referrer)
+        self.referred = User.objects.create_user(
+            username='referred_user',
+            email='referred@example.com',
+            password='TestPassword123!'
+        )
+
+    def test_genuine_referral_succeeds_and_rewards_both(self):
+        from apps.accounts.services.referral_service import process_referral_submission
+        from apps.accounts.models import RewardHistory
+        claim = process_referral_submission(self.ref_code_obj.code, self.referred)
+        self.assertEqual(claim.status, 'REWARDED')
+        self.assertTrue(claim.reward_granted)
+        self.assertEqual(claim.referrer, self.referrer)
+        self.assertEqual(claim.referred_user, self.referred)
+
+        # Check reward ledger
+        referrer_rewards = RewardHistory.objects.filter(user=self.referrer)
+        referred_rewards = RewardHistory.objects.filter(user=self.referred)
+        self.assertEqual(referrer_rewards.count(), 1)
+        self.assertEqual(referrer_rewards.first().units, 7)
+        self.assertEqual(referred_rewards.count(), 1)
+        self.assertEqual(referred_rewards.first().units, 7)
+
+    def test_self_referral_fails(self):
+        from django.core.exceptions import ValidationError
+        from apps.accounts.services.referral_service import process_referral_submission
+        with self.assertRaises(ValidationError) as ctx:
+            process_referral_submission(self.ref_code_obj.code, self.referrer)
+        self.assertIn("Self-referral", str(ctx.exception))
+
+    def test_same_account_cannot_qualify_twice(self):
+        from django.core.exceptions import ValidationError
+        from apps.accounts.services.referral_service import (
+            process_referral_submission, get_or_create_user_referral_code
+        )
+        process_referral_submission(self.ref_code_obj.code, self.referred)
+        # Second attempt with same referred user
+        other_user = User.objects.create_user(
+            username='other_referrer',
+            email='other@example.com',
+            password='TestPassword123!'
+        )
+        other_code = get_or_create_user_referral_code(other_user)
+        with self.assertRaises(ValidationError) as ctx:
+            process_referral_submission(other_code.code, self.referred)
+        self.assertIn("already redeemed a referral code", str(ctx.exception))
+
+    def test_existing_user_beyond_eligibility_window_rejected(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from django.core.exceptions import ValidationError
+        from apps.accounts.services.referral_service import process_referral_submission
+        old_user = User.objects.create_user(
+            username='old_user',
+            email='old@example.com',
+            password='TestPassword123!'
+        )
+        User.objects.filter(id=old_user.id).update(date_joined=timezone.now() - timedelta(days=30))
+        old_user.refresh_from_db()
+
+        with self.assertRaises(ValidationError) as ctx:
+            process_referral_submission(self.ref_code_obj.code, old_user)
+        self.assertIn("eligibility window", str(ctx.exception))
+
+    def test_replayed_request_idempotency_creates_no_second_reward(self):
+        from apps.accounts.services.referral_service import process_referral_submission
+        from apps.accounts.models import RewardHistory
+        idempotency_key = "test-replay-key-123"
+        claim1 = process_referral_submission(self.ref_code_obj.code, self.referred, idempotency_key=idempotency_key)
+        self.assertEqual(claim1.status, 'REWARDED')
+        initial_reward_count = RewardHistory.objects.count()
+
+        # Replay the exact request
+        claim2 = process_referral_submission(self.ref_code_obj.code, self.referred, idempotency_key=idempotency_key)
+        self.assertEqual(claim1.id, claim2.id)
+        self.assertEqual(RewardHistory.objects.count(), initial_reward_count)
+
+    def test_referral_views_flow(self):
+        from apps.accounts.models import ReferralClaim
+        self.client.login(username='referred_user', password='TestPassword123!')
+        
+        # Test GET referrals hub
+        hub_res = self.client.get(reverse('referrals'))
+        self.assertEqual(hub_res.status_code, 200)
+        self.assertContains(hub_res, "Referrals & Friend Rewards")
+
+        # Test POST redeem referral code
+        redeem_res = self.client.post(reverse('referrals_redeem'), {'code': self.ref_code_obj.code}, follow=True)
+        self.assertEqual(redeem_res.status_code, 200)
+        self.assertTrue(ReferralClaim.objects.filter(referred_user=self.referred, status='REWARDED').exists())
+

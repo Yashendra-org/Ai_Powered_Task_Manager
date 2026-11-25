@@ -1,3 +1,5 @@
+import secrets
+import string
 import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -20,3 +22,91 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class ReferralCode(models.Model):
+    """
+    Referral code assigned to a user for inviting peers.
+    Satisfies Google Play / ReelBlink Secure Referral Guidelines.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referral_codes')
+    code = models.CharField(max_length=32, unique=True, db_index=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "accounts_referral_code"
+        ordering = ["-created_at"]
+
+    @classmethod
+    def generate_unique_code(cls, user):
+        prefix = re_sub_alphanumeric(user.username[:4].upper())
+        if len(prefix) < 2:
+            prefix = "HABIT"
+        chars = string.ascii_uppercase + string.digits
+        for _ in range(10):
+            suffix = ''.join(secrets.choice(chars) for _ in range(6))
+            code = f"{prefix}-{suffix}"
+            if not cls.objects.filter(code=code).exists():
+                return code
+        return f"REF-{uuid.uuid4().hex[:8].upper()}"
+
+    def __str__(self):
+        return f"{self.user.username} ({self.code})"
+
+
+def re_sub_alphanumeric(val):
+    return "".join(c for c in val if c.isalnum())
+
+
+class ReferralClaim(models.Model):
+    """
+    Audit ledger tracking attribution, server-side validation state, and rewards.
+    Enforces one-time qualification and replay idempotency.
+    """
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending Validation'),
+        ('QUALIFIED', 'Qualified'),
+        ('REWARDED', 'Reward Granted'),
+        ('REJECTED', 'Rejected / Abuse Detected'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referrals_given')
+    referred_user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='referral_received')
+    referral_code = models.ForeignKey(ReferralCode, on_delete=models.SET_NULL, null=True, blank=True, related_name='claims')
+    idempotency_key = models.CharField(max_length=64, unique=True, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    rejection_reason = models.CharField(max_length=255, blank=True, default="")
+    reward_granted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    qualified_at = models.DateTimeField(null=True, blank=True)
+    rewarded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "accounts_referral_claim"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.referrer.username} -> {self.referred_user.username} [{self.status}]"
+
+
+class RewardHistory(models.Model):
+    """
+    Immutable audit ledger of earned rewards (not just a counter).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reward_history')
+    referral_claim = models.ForeignKey(ReferralClaim, on_delete=models.CASCADE, related_name='rewards')
+    reward_type = models.CharField(max_length=64, default="PRO_DAYS_BONUS")
+    units = models.IntegerField(default=7, help_text="Number of bonus reward units")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "accounts_reward_history"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} earned {self.units} {self.reward_type}"
+

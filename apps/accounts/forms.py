@@ -99,3 +99,27 @@ class DeleteAccountForm(forms.Form):
             raise forms.ValidationError("Incorrect password. Please enter your correct password to confirm deletion.")
         return password
 
+
+class ReferralRedeemForm(forms.Form):
+    """
+    Form to redeem a peer invitation / referral code.
+    """
+    code = forms.CharField(
+        label="Referral / Invite Code",
+        max_length=32,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 placeholder-slate-400 uppercase tracking-widest',
+            'placeholder': 'CODE-123456',
+            'autocomplete': 'off',
+            'spellcheck': 'false'
+        })
+    )
+
+    def clean_code(self):
+        code = self.cleaned_data.get('code', '').strip().upper()
+        if not code:
+            raise forms.ValidationError("Please enter a valid referral code.")
+        return code
+
+
