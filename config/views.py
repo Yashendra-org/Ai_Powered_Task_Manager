@@ -130,12 +130,18 @@ def robots_txt_view(request):
         "Allow: /$\n"
         "Allow: /login/\n"
         "Allow: /register/\n"
+        "Allow: /auth/\n"
         "Disallow: /dashboard/\n"
+        "Disallow: /account/\n"
         "Disallow: /tasks/\n"
         "Disallow: /habits/\n"
         "Disallow: /assignments/\n"
         "Disallow: /notes/\n"
+        "Disallow: /analytics/\n"
+        "Disallow: /ai/\n"
         "Disallow: /api/\n"
+        "Disallow: /notifications/\n"
+        "Disallow: /calendar/\n"
         "Disallow: /secure-admin/\n"
         "Disallow: /admin/\n\n"
         f"Sitemap: {scheme}://{domain}/sitemap.xml\n"
@@ -158,6 +164,18 @@ def sitemap_xml_view(request):
         <lastmod>{today}</lastmod>
         <changefreq>daily</changefreq>
         <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>{base_url}/auth/login/</loc>
+        <lastmod>{today}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>{base_url}/auth/register/</loc>
+        <lastmod>{today}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
     </url>
     <url>
         <loc>{base_url}/login/</loc>

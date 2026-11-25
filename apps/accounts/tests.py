@@ -240,3 +240,85 @@ class SecureReferralSystemTests(TestCase):
         self.assertEqual(redeem_res.status_code, 200)
         self.assertTrue(ReferralClaim.objects.filter(referred_user=self.referred, status='REWARDED').exists())
 
+
+class ProfessionalUrlRoutingTests(TestCase):
+    """
+    Verifies that modern enterprise semantic URL routes and legacy aliases
+    resolve and function seamlessly across all modules.
+    """
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='url_test_user',
+            email='url_test@example.com',
+            password='TestPassword123!'
+        )
+        from apps.assignments.models import Subject
+        Subject.objects.create(user=self.user, name="Computer Science", code="CS101")
+
+    def test_public_auth_routes(self):
+        # Professional /auth/ namespace
+        res_auth_login = self.client.get('/auth/login/')
+        self.assertEqual(res_auth_login.status_code, 200)
+        res_auth_reg = self.client.get('/auth/register/')
+        self.assertEqual(res_auth_reg.status_code, 200)
+
+        # Legacy routes remain functional
+        res_login = self.client.get('/login/')
+        self.assertEqual(res_login.status_code, 200)
+        res_reg = self.client.get('/register/')
+        self.assertEqual(res_reg.status_code, 200)
+
+    def test_authenticated_account_routes(self):
+        self.client.login(username='url_test_user', password='TestPassword123!')
+        
+        # /account/ namespace
+        self.assertEqual(self.client.get('/account/settings/').status_code, 200)
+        self.assertEqual(self.client.get('/account/profile/').status_code, 200)
+        self.assertEqual(self.client.get('/account/referrals/').status_code, 200)
+
+        # Legacy aliases
+        self.assertEqual(self.client.get('/settings/').status_code, 200)
+        self.assertEqual(self.client.get('/profile/').status_code, 200)
+        self.assertEqual(self.client.get('/referrals/').status_code, 200)
+
+    def test_productivity_and_intelligence_routes(self):
+        self.client.login(username='url_test_user', password='TestPassword123!')
+
+        # Tasks
+        self.assertEqual(self.client.get('/tasks/').status_code, 200)
+        self.assertEqual(self.client.get('/tasks/my-day/').status_code, 200)
+        self.assertEqual(self.client.get('/tasks/today/').status_code, 200)
+        self.assertEqual(self.client.get('/tasks/new/').status_code, 200)
+        self.assertEqual(self.client.get('/tasks/create/').status_code, 200)
+
+        # Assignments
+        self.assertEqual(self.client.get('/assignments/').status_code, 200)
+        self.assertEqual(self.client.get('/assignments/new/').status_code, 200)
+        self.assertEqual(self.client.get('/assignments/create/').status_code, 200)
+        self.assertEqual(self.client.get('/assignments/professors/').status_code, 200)
+        self.assertEqual(self.client.get('/assignments/teachers/').status_code, 200)
+
+        # Habits
+        self.assertEqual(self.client.get('/habits/').status_code, 200)
+        self.assertEqual(self.client.get('/habits/new/').status_code, 200)
+        self.assertEqual(self.client.get('/habits/create/').status_code, 200)
+
+        # Notes
+        self.assertEqual(self.client.get('/notes/').status_code, 200)
+        self.assertEqual(self.client.get('/notes/new/').status_code, 200)
+        self.assertEqual(self.client.get('/notes/create/').status_code, 200)
+
+        # Analytics & AI
+        self.assertEqual(self.client.get('/analytics/').status_code, 200)
+        self.assertEqual(self.client.get('/analytics/overview/').status_code, 200)
+        self.assertEqual(self.client.get('/ai/assistant/').status_code, 200)
+        self.assertEqual(self.client.get('/assistant/').status_code, 200)
+        self.assertEqual(self.client.get('/ai/review/').status_code, 200)
+        self.assertEqual(self.client.get('/review/').status_code, 200)
+
+        # Notifications
+        self.assertEqual(self.client.get('/notifications/').status_code, 200)
+        self.assertEqual(self.client.get('/notifications/inbox/').status_code, 200)
+
+

@@ -559,25 +559,25 @@ document.addEventListener('submit', function (e) {
     }
 
     // 2. Quick Add Task
-    if (form.id === 'quick-add-task-form' || (action.includes('/tasks/today/') && form.method.toLowerCase() === 'post')) {
+    if (form.id === 'quick-add-task-form' || ((action.includes('/tasks/today/') || action.includes('/tasks/my-day/') || action.includes('/tasks/create/') || action.includes('/tasks/new/')) && form.method.toLowerCase() === 'post')) {
         handleQuickAddTask(form, e);
         return;
     }
 
-    // 3. Task Delete
-    if (action.includes('/tasks/') && action.includes('/delete/')) {
+    // 3. Task Delete / Purge
+    if (action.includes('/tasks/') && (action.includes('/delete/') || action.includes('/purge/'))) {
         handleTaskDelete(form, e);
         return;
     }
 
     // 4. Habit Toggle Log
-    if (action.includes('/habits/') && action.includes('/log/')) {
+    if (action.includes('/habits/') && (action.includes('/log/') || action.includes('/toggle/'))) {
         handleHabitToggle(form, e);
         return;
     }
 
     // 5. Assignment Submit Toggle
-    if (action.includes('/assignments/') && action.includes('/submit-toggle/')) {
+    if (action.includes('/assignments/') && (action.includes('/submit-toggle/') || action.includes('/submit/'))) {
         handleAssignmentToggle(form, e);
         return;
     }
@@ -589,7 +589,7 @@ document.addEventListener('submit', function (e) {
     }
 
     // 7. Assistant Feedback
-    if (action.includes('/assistant/feedback/')) {
+    if (action.includes('/assistant/feedback/') || action.includes('/ai/recommendations/')) {
         handleRecommendationFeedback(form, e);
         return;
     }
