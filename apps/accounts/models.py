@@ -14,6 +14,15 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, verbose_name="Email Address")
     timezone = models.CharField(max_length=64, default="Asia/Kolkata", help_text="User's preferred timezone")
     daily_review_time = models.TimeField(default="21:30", help_text="Time to trigger the daily summary & review")
+    morning_briefing_time = models.TimeField(default="08:00", help_text="Time to trigger morning planning & task briefing")
+    email_notifications = models.BooleanField(default=True, help_text="Receive productivity digests and deadline reminders via email")
+    sound_effects = models.BooleanField(default=True, help_text="Play audio cues on task completion and habit check-in")
+    week_start_day = models.CharField(
+        max_length=10,
+        default="monday",
+        choices=[('monday', 'Monday'), ('sunday', 'Sunday')],
+        help_text="Calendar and habit matrix first day of the week"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

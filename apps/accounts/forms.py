@@ -58,21 +58,79 @@ class UserLoginForm(AuthenticationForm):
 
 
 class UserProfileForm(forms.ModelForm):
+    TIMEZONE_CHOICES = [
+        ('Asia/Kolkata', 'Asia/Kolkata (IST - UTC+05:30)'),
+        ('UTC', 'UTC (Coordinated Universal Time)'),
+        ('America/New_York', 'America/New_York (EST - UTC-05:00)'),
+        ('America/Los_Angeles', 'America/Los_Angeles (PST - UTC-08:00)'),
+        ('Europe/London', 'Europe/London (GMT/BST - UTC+00:00)'),
+        ('Europe/Berlin', 'Europe/Berlin (CET - UTC+01:00)'),
+        ('Asia/Tokyo', 'Asia/Tokyo (JST - UTC+09:00)'),
+        ('Asia/Singapore', 'Asia/Singapore (SGT - UTC+08:00)'),
+        ('Australia/Sydney', 'Australia/Sydney (AEST - UTC+10:00)'),
+    ]
+
+    timezone = forms.ChoiceField(
+        choices=TIMEZONE_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 bg-white text-sm'
+        })
+    )
+    morning_briefing_time = forms.TimeField(
+        required=False,
+        widget=forms.TimeInput(attrs={
+            'type': 'time',
+            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 text-sm'
+        })
+    )
+    week_start_day = forms.ChoiceField(
+        choices=[('monday', 'Monday'), ('sunday', 'Sunday')],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 bg-white text-sm'
+        })
+    )
+
     class Meta:
         model = User
-        fields = ('email', 'timezone', 'daily_review_time')
+        fields = (
+            'first_name', 'last_name', 'email', 'timezone',
+            'morning_briefing_time', 'daily_review_time',
+            'email_notifications', 'sound_effects', 'week_start_day'
+        )
         widgets = {
-            'email': forms.EmailInput(attrs={
-                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800'
+            'first_name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 text-sm placeholder-slate-400',
+                'placeholder': 'First Name'
             }),
-            'timezone': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800'
+            'last_name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 text-sm placeholder-slate-400',
+                'placeholder': 'Last Name'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 text-sm'
             }),
             'daily_review_time': forms.TimeInput(attrs={
                 'type': 'time',
-                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800'
+                'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 text-sm'
+            }),
+            'email_notifications': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer'
+            }),
+            'sound_effects': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer'
             }),
         }
+
+    def clean_morning_briefing_time(self):
+        val = self.cleaned_data.get('morning_briefing_time')
+        return val or getattr(self.instance, 'morning_briefing_time', None) or '08:00'
+
+    def clean_week_start_day(self):
+        val = self.cleaned_data.get('week_start_day')
+        return val or getattr(self.instance, 'week_start_day', None) or 'monday'
+
+
 
 
 class DeleteAccountForm(forms.Form):

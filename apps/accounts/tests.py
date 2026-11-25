@@ -60,17 +60,30 @@ class AuthenticationAndDashboardTests(TestCase):
 
         # Update settings
         update_data = {
+            'first_name': 'Alex',
+            'last_name': 'Dev',
             'email': 'updated@example.com',
             'timezone': 'UTC',
+            'morning_briefing_time': '07:30:00',
             'daily_review_time': '22:00:00',
+            'week_start_day': 'sunday',
+            'email_notifications': 'on',
+            'sound_effects': 'on',
         }
         post_response = self.client.post(self.settings_url, update_data, follow=True)
         self.assertEqual(post_response.status_code, 200)
         
         user.refresh_from_db()
+        self.assertEqual(user.first_name, 'Alex')
+        self.assertEqual(user.last_name, 'Dev')
         self.assertEqual(user.email, 'updated@example.com')
         self.assertEqual(user.timezone, 'UTC')
+        self.assertEqual(str(user.morning_briefing_time), '07:30:00')
         self.assertEqual(str(user.daily_review_time), '22:00:00')
+        self.assertEqual(user.week_start_day, 'sunday')
+        self.assertTrue(user.email_notifications)
+        self.assertTrue(user.sound_effects)
+
 
     def test_account_deletion_requires_authentication(self):
         response = self.client.post(self.delete_account_url, {'password': 'any'})
