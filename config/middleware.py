@@ -108,7 +108,9 @@ class SecurityAndRateLimitMiddleware:
         response['Content-Security-Policy'] = csp_policy
 
         # 4. Strict-Transport-Security (HSTS) Header
-        response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+        # Enforce in production and automated test verification; avoid breaking HTTP on local dev server
+        if not settings.DEBUG:
+            response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
 
         # 5. Core Defensive Headers
         response['X-Content-Type-Options'] = 'nosniff'
