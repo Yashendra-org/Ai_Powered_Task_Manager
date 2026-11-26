@@ -392,4 +392,96 @@ class HardenedSecurityTests(TestCase):
         self.assertIn('content', form.errors)
 
 
+class DataPortabilityAndAuditTests(TestCase):
+    """
+    Pillar 2, #8: Self-Service Data Portability & GDPR Exporter Tests
+    Pillar 3, #10: Structured Security Audit Trail Tests
+    Pillar 5, #18: PWA Offline Fallback Tests
+    """
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='exporter_user',
+            email='export@example.com',
+            password='Password123!',
+            timezone='Asia/Kolkata'
+        )
+        self.client.login(username='exporter_user', password='Password123!')
+        self.task = Task.objects.create(
+            user=self.user,
+            title='Exportable Task Item',
+            priority='high',
+            estimated_duration=45
+        )
+
+    def test_export_json_payload_and_audit(self):
+        response = self.client.get(reverse('export_data_json'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertIn('attachment; filename="habittracker_backup_', response['Content-Disposition'])
+
+        data = response.json()
+        self.assertEqual(data['metadata']['user']['username'], 'exporter_user')
+        self.assertEqual(len(data['tasks']), 1)
+        self.assertEqual(data['tasks'][0]['title'], 'Exportable Task Item')
+
+        # Verify audit log was recorded
+        audit = self.user.audit_logs.filter(action='EXPORT_JSON').first()
+        self.assertIsNotNone(audit)
+        self.assertIn('JSON format', audit.description)
+
+    def test_export_csv_payload_and_audit(self):
+        response = self.client.get(reverse('export_data_csv'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response['Content-Type'].startswith('text/csv'))
+        self.assertIn('attachment; filename="habittracker_tasks_', response['Content-Disposition'])
+
+        content = response.content.decode('utf-8')
+        self.assertIn('Title,Description,Category,Priority,Status', content)
+        self.assertIn('Exportable Task Item', content)
+
+        # Verify audit log
+        audit = self.user.audit_logs.filter(action='EXPORT_CSV').first()
+        self.assertIsNotNone(audit)
+
+    def test_export_ics_payload_and_audit(self):
+        # Create a task with due_at
+        from django.utils import timezone
+        Task.objects.create(
+            user=self.user,
+            title='Calendar Synced Exam',
+            due_at=timezone.now() + timezone.timedelta(days=1),
+            estimated_duration=60,
+            priority='high'
+        )
+        response = self.client.get(reverse('export_data_ics'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response['Content-Type'].startswith('text/calendar'))
+        self.assertIn('attachment; filename="habittracker_schedule_', response['Content-Disposition'])
+
+        content = response.content.decode('utf-8')
+        self.assertIn('BEGIN:VCALENDAR', content)
+        self.assertIn('BEGIN:VEVENT', content)
+        self.assertIn('SUMMARY:Calendar Synced Exam', content)
+        self.assertIn('END:VCALENDAR', content)
+
+        # Verify audit log
+        audit = self.user.audit_logs.filter(action='EXPORT_ICS').first()
+        self.assertIsNotNone(audit)
+
+    def test_exports_require_authentication(self):
+        self.client.logout()
+        for endpoint in ['export_data_json', 'export_data_csv', 'export_data_ics']:
+            res = self.client.get(reverse(endpoint))
+            self.assertEqual(res.status_code, 302)
+            self.assertTrue(res.url.startswith('/login/'))
+
+    def test_pwa_offline_fallback_page_renders(self):
+        response = self.client.get('/offline/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'offline.html')
+        self.assertContains(response, "You're Currently Offline")
+
+
+
 

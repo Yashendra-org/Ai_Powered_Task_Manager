@@ -3,7 +3,8 @@ from django.contrib.auth import views as auth_views
 from .views import (
     register_view, CustomLoginView, custom_logout_view,
     settings_view, profile_view, delete_account_view,
-    referral_hub_view, referral_redeem_view
+    referral_hub_view, referral_redeem_view,
+    export_data_json_view, export_data_csv_view, export_data_ics_view
 )
 
 urlpatterns = [
@@ -21,6 +22,14 @@ urlpatterns = [
     path('profile/', profile_view, name='profile'),
     path('settings/', settings_view, name='settings'),
     path('delete-account/', delete_account_view, name='delete_account'),
+
+    # Data Portability & GDPR Exporters (Pillar 2, #8)
+    path('settings/export/json/', export_data_json_view, name='export_data_json'),
+    path('settings/export/csv/', export_data_csv_view, name='export_data_csv'),
+    path('settings/export/ics/', export_data_ics_view, name='export_data_ics'),
+    path('account/export/json/', export_data_json_view, name='account_export_json'),
+    path('account/export/csv/', export_data_csv_view, name='account_export_csv'),
+    path('account/export/ics/', export_data_ics_view, name='account_export_ics'),
 
     # Enterprise /account/ Namespaced Routes
     path('account/profile/', profile_view, name='account_profile'),

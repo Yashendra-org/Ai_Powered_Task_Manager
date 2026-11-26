@@ -1,0 +1,475 @@
+<!-- ================================================================= -->
+<!-- Global Omnibar & Command Palette (Cmd+K / Ctrl+K) (Pillar 5, #17) -->
+<!-- ================================================================= -->
+<div id="commandPaletteModal" class="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-label="Global Command Palette">
+    <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[80vh] transform transition-all duration-200">
+        
+        <!-- Search Input Bar -->
+        <div class="flex items-center px-4 py-3.5 border-b border-slate-100 bg-slate-50/50">
+            <i data-lucide="search" class="w-5 h-5 text-slate-400 mr-3 flex-shrink-0"></i>
+            <input 
+                type="text" 
+                id="commandPaletteInput" 
+                placeholder="Type a command or search tasks, habits, notes... (or 'task <title>' to quick-add)" 
+                class="w-full bg-transparent text-sm text-slate-900 placeholder-slate-400 outline-none font-medium"
+                autocomplete="off"
+                spellcheck="false"
+            >
+            <div class="flex items-center space-x-1 flex-shrink-0 pl-2">
+                <kbd class="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 bg-white border border-slate-200 rounded shadow-sm">ESC</kbd>
+            </div>
+        </div>
+
+        <!-- Quick Create Banner (shown when input starts with 'task ' or '+') -->
+        <div id="paletteQuickCreateBanner" class="px-4 py-2 bg-blue-50 border-b border-blue-100 text-xs text-blue-800 flex items-center justify-between hidden">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-blue-600"></i>
+                <span>Quick-create task: <strong id="paletteQuickCreateTitle" class="font-semibold"></strong></span>
+            </div>
+            <span class="text-[10px] text-blue-600 font-medium">Press Enter to Add</span>
+        </div>
+
+        <!-- Command & Results List -->
+        <div id="commandPaletteResults" class="flex-1 overflow-y-auto p-2 space-y-4 max-h-[60vh] divide-y divide-slate-100">
+            
+            <!-- Dynamic Results Container (populated on search) -->
+            <div id="paletteDynamicResults" class="space-y-1 hidden pb-2">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">Search Results</div>
+                <div id="paletteDynamicResultsList" class="space-y-0.5"></div>
+            </div>
+
+            <!-- Default Actions & Navigation (shown when search is empty or matching) -->
+            <div id="paletteDefaultSection" class="space-y-3">
+                <!-- Quick Actions -->
+                <div class="space-y-0.5">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">Quick Actions</div>
+                    
+                    <a href="{% url 'task_create' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition-colors group cursor-pointer" data-category="action" data-keywords="new task add create">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <span>Add New Task</span>
+                        </div>
+                        <kbd class="text-[10px] font-mono text-slate-400 group-hover:text-blue-600">N</kbd>
+                    </a>
+
+                    <a href="{% url 'habit_list' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 transition-colors group cursor-pointer" data-category="action" data-keywords="habit check streak matrix">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <span>Habit Tracker Matrix</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">Streaks</span>
+                    </a>
+
+                    <a href="{% url 'export_data_json' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-indigo-50 hover:text-indigo-700 transition-colors group cursor-pointer" data-category="action" data-keywords="export download backup json data gdpr">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <span>Export Data Archive (JSON)</span>
+                        </div>
+                        <span class="text-[10px] text-indigo-600 font-medium">Backup</span>
+                    </a>
+
+                    <a href="{% url 'export_data_ics' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-purple-50 hover:text-purple-700 transition-colors group cursor-pointer" data-category="action" data-keywords="export calendar ics google apple outlook sync">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <span>Export Calendar Schedule (ICS)</span>
+                        </div>
+                        <span class="text-[10px] text-purple-600 font-medium">iCal</span>
+                    </a>
+
+                    <button type="button" onclick="toggleHighContrastFromPalette()" class="palette-item w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-slate-100 transition-colors group text-left cursor-pointer" data-category="action" data-keywords="theme dark high contrast accessibility mode">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-6 h-6 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <span>Toggle High Contrast Mode</span>
+                        </div>
+                        <kbd class="text-[10px] font-mono text-slate-400">Ctrl+Shift+H</kbd>
+                    </button>
+                </div>
+
+                <!-- Navigation Destinations -->
+                <div class="space-y-0.5 pt-2">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">Navigation</div>
+
+                    <a href="{% url 'dashboard' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer" data-category="nav" data-keywords="dashboard home overview">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400 group-hover:text-slate-700"></i>
+                            <span>Dashboard</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">/dashboard</span>
+                    </a>
+
+                    <a href="{% url 'my_day' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer" data-category="nav" data-keywords="my day today focus cockpit">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="sun" class="w-4 h-4 text-amber-500"></i>
+                            <span>My Day Focus</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">/tasks/my-day</span>
+                    </a>
+
+                    <a href="{% url 'all_tasks' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer" data-category="nav" data-keywords="all tasks backlog todo">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="check-square" class="w-4 h-4 text-blue-500"></i>
+                            <span>All Tasks Backlog</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">/tasks</span>
+                    </a>
+
+                    <a href="{% url 'habit_list' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer" data-category="nav" data-keywords="habits streaks tracking">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="repeat" class="w-4 h-4 text-emerald-500"></i>
+                            <span>Habits Matrix</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">/habits</span>
+                    </a>
+
+                    <a href="{% url 'assignment_list' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer" data-category="nav" data-keywords="assignments homework university study">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="book-open" class="w-4 h-4 text-indigo-500"></i>
+                            <span>Assignments</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">/assignments</span>
+                    </a>
+
+                    <a href="{% url 'note_list' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer" data-category="nav" data-keywords="notes scratchpad study thoughts">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="file-text" class="w-4 h-4 text-amber-500"></i>
+                            <span>Notes & Scratchpad</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">/notes</span>
+                    </a>
+
+                    <a href="{% url 'analytics_dashboard' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer" data-category="nav" data-keywords="analytics charts stats productivity">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 text-purple-500"></i>
+                            <span>Productivity Analytics</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">/analytics</span>
+                    </a>
+
+                    <a href="{% url 'settings' %}" class="palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer" data-category="nav" data-keywords="settings preferences enterprise security audit">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="settings" class="w-4 h-4 text-slate-500"></i>
+                            <span>Settings & Preferences</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">/settings</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Empty State (when no search results match) -->
+            <div id="paletteEmptyState" class="py-8 text-center hidden">
+                <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-300 mb-2"></i>
+                <p class="text-xs font-semibold text-slate-700">No matching commands or records found</p>
+                <p class="text-[11px] text-slate-400 mt-1">Try searching for tasks, habits, notes or type <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-600">task [title]</code> to create a new task.</p>
+            </div>
+        </div>
+
+        <!-- Footer Shortcuts -->
+        <div class="px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+            <div class="flex items-center space-x-3">
+                <span><kbd class="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] shadow-xs">↑</kbd> <kbd class="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] shadow-xs">↓</kbd> Navigate</span>
+                <span><kbd class="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] shadow-xs">↵</kbd> Select</span>
+                <span><kbd class="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] shadow-xs">ESC</kbd> Close</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">Command Center</span>
+        </div>
+    </div>
+</div>
+
+<script>
+// =========================================================================
+// Command Palette Engine (Cmd+K / Ctrl+K)
+// =========================================================================
+let commandPaletteActiveIndex = 0;
+let commandPaletteDebounceTimer = null;
+
+function openCommandPalette() {
+    const modal = document.getElementById('commandPaletteModal');
+    const input = document.getElementById('commandPaletteInput');
+    if (!modal || !input) return;
+
+    modal.classList.remove('hidden');
+    input.value = '';
+    filterCommandPalette('');
+    input.focus();
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function closeCommandPalette() {
+    const modal = document.getElementById('commandPaletteModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function toggleHighContrastFromPalette() {
+    document.documentElement.classList.toggle('high-contrast');
+    const isHc = document.documentElement.classList.contains('high-contrast');
+    localStorage.setItem('habittracker_high_contrast', isHc ? 'true' : 'false');
+    closeCommandPalette();
+    if (typeof showToast === 'function') {
+        showToast(isHc ? 'High Contrast Mode Enabled' : 'High Contrast Mode Disabled', 'info');
+    }
+}
+
+function filterCommandPalette(query) {
+    const q = query.trim().toLowerCase();
+    const defaultSection = document.getElementById('paletteDefaultSection');
+    const dynamicResults = document.getElementById('paletteDynamicResults');
+    const dynamicList = document.getElementById('paletteDynamicResultsList');
+    const emptyState = document.getElementById('paletteEmptyState');
+    const quickCreateBanner = document.getElementById('paletteQuickCreateBanner');
+    const quickCreateTitle = document.getElementById('paletteQuickCreateTitle');
+
+    // Check for Quick Add syntax (e.g. "task Buy groceries" or "+ Call mom")
+    if (q.startsWith('task ') || q.startsWith('+ ') || q.startsWith('todo ')) {
+        const title = query.trim().replace(/^(task|\+|todo)\s+/i, '');
+        if (title.length > 0) {
+            quickCreateBanner.classList.remove('hidden');
+            quickCreateTitle.textContent = title;
+        } else {
+            quickCreateBanner.classList.add('hidden');
+        }
+    } else {
+        quickCreateBanner.classList.add('hidden');
+    }
+
+    const items = document.querySelectorAll('.palette-item');
+    let visibleCount = 0;
+
+    items.forEach(item => {
+        const text = (item.textContent || '').toLowerCase();
+        const keywords = (item.getAttribute('data-keywords') || '').toLowerCase();
+        if (!q || text.includes(q) || keywords.includes(q)) {
+            item.classList.remove('hidden');
+            visibleCount++;
+        } else {
+            item.classList.add('hidden');
+        }
+    });
+
+    if (q.length >= 2) {
+        clearTimeout(commandPaletteDebounceTimer);
+        commandPaletteDebounceTimer = setTimeout(() => {
+            fetch(`/api/v1/search/?q=${encodeURIComponent(q)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        renderDynamicResults(data.data, q);
+                    }
+                })
+                .catch(err => console.error('Search error:', err));
+        }, 120);
+    } else {
+        dynamicResults.classList.add('hidden');
+        dynamicList.innerHTML = '';
+        if (visibleCount === 0 && !q.startsWith('task ') && !q.startsWith('+')) {
+            emptyState.classList.remove('hidden');
+        } else {
+            emptyState.classList.add('hidden');
+        }
+    }
+    highlightPaletteItem(0);
+}
+
+function renderDynamicResults(data, query) {
+    const dynamicResults = document.getElementById('paletteDynamicResults');
+    const dynamicList = document.getElementById('paletteDynamicResultsList');
+    const emptyState = document.getElementById('paletteEmptyState');
+    dynamicList.innerHTML = '';
+
+    let total = 0;
+
+    // Render Tasks
+    if (data.tasks && data.tasks.length > 0) {
+        data.tasks.forEach(t => {
+            total++;
+            const el = document.createElement('a');
+            el.href = t.url;
+            el.className = 'palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-800 rounded-xl hover:bg-blue-50 transition-colors group cursor-pointer';
+            el.innerHTML = `
+                <div class="flex items-center space-x-2.5 truncate">
+                    <span class="w-5 h-5 rounded bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-[10px]">
+                        <i data-lucide="check-square" class="w-3 h-3"></i>
+                    </span>
+                    <span class="truncate">${escapeHtml(t.title)}</span>
+                    ${t.category ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-600">${escapeHtml(t.category)}</span>` : ''}
+                </div>
+                <div class="flex items-center space-x-2 flex-shrink-0 text-[10px] text-slate-400">
+                    <span class="uppercase font-semibold text-[9px] ${t.priority === 'high' ? 'text-rose-600' : 'text-slate-500'}">${t.priority}</span>
+                    <span>${t.due_at || ''}</span>
+                </div>
+            `;
+            dynamicList.appendChild(el);
+        });
+    }
+
+    // Render Habits
+    if (data.habits && data.habits.length > 0) {
+        data.habits.forEach(h => {
+            total++;
+            const el = document.createElement('a');
+            el.href = h.url;
+            el.className = 'palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-800 rounded-xl hover:bg-emerald-50 transition-colors group cursor-pointer';
+            el.innerHTML = `
+                <div class="flex items-center space-x-2.5 truncate">
+                    <span class="w-5 h-5 rounded bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 text-[10px]">
+                        <i data-lucide="repeat" class="w-3 h-3"></i>
+                    </span>
+                    <span class="truncate">${escapeHtml(h.title)}</span>
+                </div>
+                <span class="text-[10px] text-emerald-600 font-semibold">${escapeHtml(h.frequency)}</span>
+            `;
+            dynamicList.appendChild(el);
+        });
+    }
+
+    // Render Notes
+    if (data.notes && data.notes.length > 0) {
+        data.notes.forEach(n => {
+            total++;
+            const el = document.createElement('a');
+            el.href = n.url;
+            el.className = 'palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-800 rounded-xl hover:bg-amber-50 transition-colors group cursor-pointer';
+            el.innerHTML = `
+                <div class="flex items-center space-x-2.5 truncate">
+                    <span class="w-5 h-5 rounded bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 text-[10px]">
+                        <i data-lucide="file-text" class="w-3 h-3"></i>
+                    </span>
+                    <span class="truncate">${escapeHtml(n.title)}</span>
+                </div>
+                ${n.is_pinned ? `<span class="text-[9px] text-amber-600 font-semibold">Pinned</span>` : ''}
+            `;
+            dynamicList.appendChild(el);
+        });
+    }
+
+    if (total > 0) {
+        dynamicResults.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+    } else {
+        dynamicResults.classList.add('hidden');
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+    highlightPaletteItem(0);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function getVisiblePaletteItems() {
+    return Array.from(document.querySelectorAll('.palette-item')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null);
+}
+
+function highlightPaletteItem(index) {
+    const visible = getVisiblePaletteItems();
+    visible.forEach(el => el.classList.remove('bg-blue-50', 'text-blue-700', 'ring-1', 'ring-blue-300'));
+    if (visible.length === 0) return;
+    commandPaletteActiveIndex = Math.max(0, Math.min(index, visible.length - 1));
+    const active = visible[commandPaletteActiveIndex];
+    if (active) {
+        active.classList.add('bg-blue-50', 'text-blue-700', 'ring-1', 'ring-blue-300');
+        active.scrollIntoView({ block: 'nearest' });
+    }
+}
+
+// Global hotkeys listener
+document.addEventListener('keydown', function(e) {
+    // Cmd+K or Ctrl+K or / (when not focused in an input/textarea)
+    const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const modal = document.getElementById('commandPaletteModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeCommandPalette();
+        } else {
+            openCommandPalette();
+        }
+    } else if (e.key === '/' && !isInput) {
+        e.preventDefault();
+        openCommandPalette();
+    } else if (e.key === 'Escape') {
+        closeCommandPalette();
+    }
+});
+
+// Modal input event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('commandPaletteInput');
+    const modal = document.getElementById('commandPaletteModal');
+
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeCommandPalette();
+            }
+        });
+    }
+
+    if (input) {
+        input.addEventListener('input', function(e) {
+            filterCommandPalette(e.target.value);
+        });
+
+        input.addEventListener('keydown', function(e) {
+            const visible = getVisiblePaletteItems();
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                highlightPaletteItem(commandPaletteActiveIndex + 1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                highlightPaletteItem(commandPaletteActiveIndex - 1);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                const q = input.value.trim();
+
+                // Quick Add handling
+                if (q.startsWith('task ') || q.startsWith('+ ') || q.startsWith('todo ')) {
+                    const title = q.replace(/^(task|\+|todo)\s+/i, '').trim();
+                    if (title) {
+                        fetch('/api/v1/tasks/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': typeof getCsrfToken === 'function' ? getCsrfToken() : ''
+                            },
+                            body: JSON.stringify({ title: title, priority: 'medium' })
+                        })
+                        .then(res => res.json())
+                        .then(resData => {
+                            closeCommandPalette();
+                            if (typeof showToast === 'function') {
+                                showToast(`Task "${title}" created successfully!`, 'success');
+                            }
+                            if (window.location.pathname.includes('/tasks') || window.location.pathname.includes('/dashboard')) {
+                                setTimeout(() => window.location.reload(), 400);
+                            }
+                        })
+                        .catch(err => {
+                            if (typeof showToast === 'function') showToast('Failed to create task.', 'error');
+                        });
+                        return;
+                    }
+                }
+
+                // If regular item is highlighted
+                if (visible[commandPaletteActiveIndex]) {
+                    visible[commandPaletteActiveIndex].click();
+                }
+            }
+        });
+    }
+});
+</script>

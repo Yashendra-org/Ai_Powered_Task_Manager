@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db import models
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from apps.tasks.models import Task, Category
 from apps.habits.models import Habit, HabitLog
 from apps.assignments.models import Assignment
+from apps.notes.models import Note
 
 
 class ApiRootView(APIView):
@@ -228,3 +230,103 @@ class AnalyticsSummaryApiView(APIView):
                 "assignments_pending": assignments_pending,
             }
         })
+
+
+class GlobalSearchApiView(APIView):
+    """
+    Pillar 5, #17: Global Omnibar & Command Palette Search API.
+    Performs high-concurrence fuzzy search across Tasks, Habits, Assignments, and Notes.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()
+        if not query:
+            return Response({
+                "success": True,
+                "data": {
+                    "tasks": [],
+                    "habits": [],
+                    "assignments": [],
+                    "notes": [],
+                    "total_results": 0
+                }
+            })
+
+        user = request.user
+
+        # 1. Tasks search
+        tasks = Task.objects.filter(user=user).filter(
+            models.Q(title__icontains=query) | models.Q(description__icontains=query)
+        ).select_related('category')[:8]
+
+        tasks_data = [
+            {
+                "id": str(t.id),
+                "title": t.title,
+                "category": t.category.name if t.category else None,
+                "priority": t.priority,
+                "status": t.status,
+                "due_at": t.due_at.strftime("%b %d, %H:%M") if t.due_at else None,
+                "url": "/tasks/"
+            }
+            for t in tasks
+        ]
+
+        # 2. Habits search
+        habits = Habit.objects.filter(user=user, is_active=True, title__icontains=query)[:5]
+        habits_data = [
+            {
+                "id": h.id,
+                "title": h.title,
+                "frequency": h.frequency,
+                "color": h.color,
+                "url": "/habits/"
+            }
+            for h in habits
+        ]
+
+        # 3. Assignments search
+        assignments = Assignment.objects.filter(user=user).filter(
+            models.Q(title__icontains=query) | models.Q(subject__name__icontains=query)
+        ).select_related('subject')[:5]
+
+        assignments_data = [
+            {
+                "id": str(a.id),
+                "title": a.title,
+                "subject": a.subject.name if a.subject else None,
+                "status": a.status,
+                "url": "/assignments/"
+            }
+            for a in assignments
+        ]
+
+        # 4. Notes search
+        notes = Note.objects.filter(user=user).filter(
+            models.Q(title__icontains=query) | models.Q(content__icontains=query)
+        )[:5]
+
+        notes_data = [
+            {
+                "id": str(n.id),
+                "title": n.title,
+                "is_pinned": n.is_pinned,
+                "url": "/notes/"
+            }
+            for n in notes
+        ]
+
+        total_count = len(tasks_data) + len(habits_data) + len(assignments_data) + len(notes_data)
+
+        return Response({
+            "success": True,
+            "data": {
+                "tasks": tasks_data,
+                "habits": habits_data,
+                "assignments": assignments_data,
+                "notes": notes_data,
+                "total_results": total_count
+            }
+        })
+

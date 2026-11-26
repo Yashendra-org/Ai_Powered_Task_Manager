@@ -67,4 +67,41 @@ class RestApiModuleTests(TestCase):
         res = self.client.post(url)
         self.assertEqual(res.status_code, 404)
 
+    def test_global_search_api_omnibar(self):
+        """Pillar 5, #17: Global Omnibar Search Endpoint Tests"""
+        # Create user notes and habits
+        from apps.habits.models import Habit
+        from apps.notes.models import Note
+        Habit.objects.create(user=self.user, title='Morning Meditation Routine', frequency='daily')
+        Note.objects.create(user=self.user, title='Physics Lecture Formulae', content='Thermodynamics laws')
+
+        # Create another user's private task
+        other_user = User.objects.create_user(username='other_tenant', email='other_tenant@example.com', password='password123')
+        Task.objects.create(user=other_user, title='Confidential Private Other Task')
+
+        # Search for 'test'
+        res = self.client.get(reverse('api_search') + '?q=test')
+        self.assertEqual(res.status_code, 200)
+        data = res.json()['data']
+        self.assertEqual(len(data['tasks']), 1)
+        self.assertEqual(data['tasks'][0]['title'], 'Test API Task')
+
+        # Search for 'formulae'
+        res_note = self.client.get(reverse('api_search') + '?q=formulae')
+        self.assertEqual(res_note.status_code, 200)
+        self.assertEqual(len(res_note.json()['data']['notes']), 1)
+        self.assertEqual(res_note.json()['data']['notes'][0]['title'], 'Physics Lecture Formulae')
+
+        # Search for 'meditation'
+        res_habit = self.client.get(reverse('api_search') + '?q=meditation')
+        self.assertEqual(res_habit.status_code, 200)
+        self.assertEqual(len(res_habit.json()['data']['habits']), 1)
+        self.assertEqual(res_habit.json()['data']['habits'][0]['title'], 'Morning Meditation Routine')
+
+        # Ensure cross-tenant data leakage is prevented
+        res_leak = self.client.get(reverse('api_search') + '?q=confidential')
+        self.assertEqual(res_leak.status_code, 200)
+        self.assertEqual(len(res_leak.json()['data']['tasks']), 0)
+
+
 

@@ -18,4 +18,8 @@ urlpatterns = [
 
     # Analytics API
     path('v1/analytics/', views.AnalyticsSummaryApiView.as_view(), name='api_analytics_summary'),
+
+    # Global Omnibar & Command Palette Search API (Pillar 5, #17)
+    path('v1/search/', views.GlobalSearchApiView.as_view(), name='api_search'),
+    path('search/', views.GlobalSearchApiView.as_view(), name='api_search_alias'),
 ]

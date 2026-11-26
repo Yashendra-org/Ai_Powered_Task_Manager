@@ -212,3 +212,12 @@ def custom_server_error_view(request):
     UI/UX State 05 & 103 Things Guide (#40): Friendly custom 500 Server Error State.
     """
     return render(request, '500.html', status=500)
+
+
+def offline_view(request):
+    """
+    PWA Offline Fallback View (Pillar 5, #18).
+    Rendered when client is offline or by Service Worker navigation fallback.
+    """
+    return render(request, 'offline.html')
+

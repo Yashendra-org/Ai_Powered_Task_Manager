@@ -7,7 +7,7 @@ from django.http import HttpResponseNotFound
 from .views import (
     dashboard_view, root_redirect, health_check_view,
     robots_txt_view, sitemap_xml_view, custom_page_not_found_view,
-    custom_server_error_view
+    custom_server_error_view, offline_view
 )
 from apps.tasks.calendar_views import calendar_view
 
@@ -29,6 +29,7 @@ if ADMIN_URL != 'admin':
 
 urlpatterns += [
     path('health/', health_check_view, name='health_check'),
+    path('offline/', offline_view, name='offline'),
     path('robots.txt', robots_txt_view, name='robots_txt'),
     path('sitemap.xml', sitemap_xml_view, name='sitemap_xml'),
     path('', root_redirect, name='root'),

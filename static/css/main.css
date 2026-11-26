@@ -198,5 +198,49 @@ select:disabled,
     items-center: center;
 }
 
+/* ==========================================================================
+   20. WCAG 2.2 AAA Accessibility & Sensory Profiles (Pillar 5, #20)
+   ========================================================================== */
+html.high-contrast body,
+html.high-contrast {
+    background-color: #000000 !important;
+    color: #FFFFFF !important;
+}
+
+html.high-contrast aside,
+html.high-contrast header,
+html.high-contrast .bg-white,
+html.high-contrast .bg-slate-50 {
+    background-color: #121212 !important;
+    color: #FFFFFF !important;
+    border-color: #4b5563 !important;
+}
+
+html.high-contrast input,
+html.high-contrast textarea,
+html.high-contrast select {
+    background-color: #1f2937 !important;
+    color: #FFFFFF !important;
+    border-color: #9ca3af !important;
+}
+
+html.high-contrast .text-slate-900,
+html.high-contrast .text-slate-800,
+html.high-contrast .text-slate-700,
+html.high-contrast .text-slate-600,
+html.high-contrast .text-slate-500 {
+    color: #f3f4f6 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
 
 

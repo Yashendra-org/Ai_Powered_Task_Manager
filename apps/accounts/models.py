@@ -143,3 +143,61 @@ class RewardHistory(models.Model):
     def __str__(self):
         return f"{self.user.username} earned {self.units} {self.reward_type}"
 
+
+class AuditLog(models.Model):
+    """
+    Immutable audit ledger of security, access, and account events (Pillar 3, #10).
+    Logs user actions, client IP, user agent, and timestamp for compliance and observability.
+    """
+    ACTION_CHOICES = (
+        ('LOGIN', 'User Sign-in'),
+        ('LOGOUT', 'User Sign-out'),
+        ('PASSWORD_CHANGE', 'Password Changed'),
+        ('PROFILE_UPDATE', 'Profile Updated'),
+        ('SETTINGS_UPDATE', 'Settings & Preferences Updated'),
+        ('EXPORT_JSON', 'Exported Account Data (JSON)'),
+        ('EXPORT_CSV', 'Exported Tasks (CSV)'),
+        ('EXPORT_ICS', 'Exported Schedule (iCalendar)'),
+        ('REFERRAL_REDEEM', 'Redeemed Referral Code'),
+        ('ACCOUNT_DELETE_ATTEMPT', 'Account Deletion Requested'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='audit_logs')
+    action = models.CharField(max_length=32, choices=ACTION_CHOICES, db_index=True)
+    description = models.CharField(max_length=255, blank=True, default="")
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=255, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = "accounts_audit_log"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.action} at {self.created_at}"
+
+
+def record_audit_event(user, action, request=None, description=""):
+    """
+    Records an immutable audit event for compliance and security observability.
+    """
+    ip_address = None
+    user_agent = ""
+    if request:
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip_address = request.META.get('REMOTE_ADDR')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
+
+    return AuditLog.objects.create(
+        user=user,
+        action=action,
+        description=description[:255],
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+
+

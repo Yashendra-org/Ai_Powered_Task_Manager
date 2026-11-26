@@ -51,6 +51,13 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/main.css">
     
+    <!-- PWA Manifest & Meta Tags (Pillar 5, #18) -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="HabbitTracker">
+    
     {% block extra_head %}{% endblock %}
 </head>
 <body class="h-full font-sans text-slate-900 antialiased bg-slate-50 flex overflow-hidden">
@@ -168,10 +175,17 @@
                     </div>
                     <span class="font-bold text-base text-slate-900 tracking-tight">Habbit<span class="text-blue-600">Tracker</span></span>
                 </a>
-                <div class="relative hidden sm:block w-48 sm:w-64 lg:w-72">
-                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" placeholder="Search tasks, assignments, notes..." class="w-full pl-9 pr-4 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 placeholder-slate-400">
-                </div>
+                <!-- Global Omnibar & Search Trigger (Cmd+K) (Pillar 5, #17) -->
+                <button type="button" onclick="openCommandPalette()" class="hidden sm:flex items-center justify-between w-52 sm:w-64 lg:w-72 px-3 py-1.5 text-xs text-slate-400 bg-slate-50 hover:bg-slate-100 hover:text-slate-600 border border-slate-200 rounded-xl transition-all shadow-2xs group" aria-label="Open Command Palette">
+                    <span class="flex items-center truncate">
+                        <i data-lucide="search" class="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-blue-600 transition-colors"></i>
+                        <span class="truncate">Search or command...</span>
+                    </span>
+                    <kbd class="ml-2 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 rounded shadow-xs">⌘K</kbd>
+                </button>
+                <button type="button" onclick="openCommandPalette()" class="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 sm:hidden transition-colors" aria-label="Open Search">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                </button>
             </div>
 
             <div class="flex items-center space-x-2 sm:space-x-3">
@@ -327,6 +341,21 @@
     </script>
     <!-- Seamless Dynamic Engine -->
     <script src="/static/js/app.js"></script>
+
+    {% if user.is_authenticated %}
+    {% include 'includes/command_palette.html' %}
+    {% endif %}
+
+    <!-- PWA Service Worker Registration (Pillar 5, #18) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/sw.js').catch(function(err) {
+                    console.debug('ServiceWorker notice:', err);
+                });
+            });
+        }
+    </script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You are Offline - My Habbit Tracker</title>
+    <script src="/static/js/vendor/tailwindcss.js"></script>
+    <script src="/static/js/vendor/lucide.js"></script>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body class="h-full flex items-center justify-center p-6 bg-slate-50 text-slate-900 font-sans">
+    <div class="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-6">
+        <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+            <i data-lucide="wifi-off" class="w-8 h-8"></i>
+        </div>
+
+        <div class="space-y-2">
+            <h1 class="text-xl font-bold text-slate-900 tracking-tight">You're Currently Offline</h1>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                It looks like your internet connection dropped. My Habbit Tracker will automatically reconnect the moment your Wi-Fi or mobile data resumes.
+            </p>
+        </div>
+
+        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-left space-y-2 text-xs">
+            <div class="font-semibold text-slate-700 flex items-center">
+                <i data-lucide="zap" class="w-3.5 h-3.5 mr-1.5 text-blue-600"></i> Offline Resilience Tip
+            </div>
+            <p class="text-[11px] text-slate-500">
+                Any habits checked off or tasks completed will be synchronized automatically upon network re-establishment.
+            </p>
+        </div>
+
+        <div class="space-y-3 pt-2">
+            <button onclick="window.location.reload()" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-all duration-150 flex items-center justify-center space-x-2">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                <span>Check Connection & Retry</span>
+            </button>
+            <a href="/" class="block text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                Return to Dashboard
+            </a>
+        </div>
+
+        <div id="connectionStatus" class="text-[11px] font-medium text-slate-400">
+            Waiting for network signal...
+        </div>
+    </div>
+
+    <script>
+        if (window.lucide) window.lucide.createIcons();
+
+        // Listen for online event to reload automatically
+        window.addEventListener('online', function() {
+            const status = document.getElementById('connectionStatus');
+            if (status) {
+                status.textContent = 'Connection restored! Reconnecting...';
+                status.className = 'text-[11px] font-medium text-emerald-600';
+            }
+            setTimeout(() => {
+                window.location.reload();
+            }, 800);
+        });
+
+        window.addEventListener('offline', function() {
+            const status = document.getElementById('connectionStatus');
+            if (status) {
+                status.textContent = 'Device is disconnected from the internet.';
+                status.className = 'text-[11px] font-medium text-amber-600';
+            }
+        });
+    </script>
+</body>
+</html>
