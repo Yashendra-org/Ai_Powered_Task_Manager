@@ -45,6 +45,12 @@ if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 if IS_RENDER:
     CSRF_TRUSTED_ORIGINS.append('https://*.onrender.com')
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend([
+        'http://127.0.0.1:8000',
+        'http://localhost:8000',
+        'http://172.16.208.176:8000',
+    ])
 
 # Reverse Proxy SSL Header & SSL Hardening for Production / Render
 if IS_RENDER or not DEBUG or IS_DEPLOY_CHECK:
