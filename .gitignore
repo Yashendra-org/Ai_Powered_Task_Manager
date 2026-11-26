@@ -63,3 +63,7 @@ DEBUGGING.md
 .DS_Store
 Thumbs.db
 
+# Scratch / Diagnostic Scripts
+scratch/
+
+
