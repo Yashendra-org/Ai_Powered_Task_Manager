@@ -23,6 +23,30 @@ class User(AbstractUser):
         choices=[('monday', 'Monday'), ('sunday', 'Sunday')],
         help_text="Calendar and habit matrix first day of the week"
     )
+    # Power-User & Accessibility Preferences
+    keyboard_shortcuts = models.BooleanField(
+        default=True,
+        help_text="Enable global keyboard shortcuts and quick navigation hotkeys"
+    )
+    high_contrast = models.BooleanField(
+        default=False,
+        help_text="Enable high contrast UI mode for enhanced visual readability"
+    )
+    reduced_motion = models.BooleanField(
+        default=False,
+        help_text="Minimize UI transitions, layout shifts, and heavy animations"
+    )
+    default_landing_view = models.CharField(
+        max_length=32,
+        default="dashboard",
+        choices=[
+            ('dashboard', 'Executive Dashboard'),
+            ('my_day', 'My Day Focus Cockpit'),
+            ('all_tasks', 'All Tasks Backlog'),
+            ('analytics', 'Productivity Analytics')
+        ],
+        help_text="Default page destination opened immediately upon sign-in"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

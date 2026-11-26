@@ -90,13 +90,26 @@ class UserProfileForm(forms.ModelForm):
             'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 bg-white text-sm'
         })
     )
+    default_landing_view = forms.ChoiceField(
+        choices=[
+            ('dashboard', 'Executive Dashboard'),
+            ('my_day', 'My Day Focus Cockpit'),
+            ('all_tasks', 'All Tasks Backlog'),
+            ('analytics', 'Productivity Analytics')
+        ],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 bg-white text-sm'
+        })
+    )
 
     class Meta:
         model = User
         fields = (
             'first_name', 'last_name', 'email', 'timezone',
             'morning_briefing_time', 'daily_review_time',
-            'email_notifications', 'sound_effects', 'week_start_day'
+            'email_notifications', 'sound_effects', 'week_start_day',
+            'keyboard_shortcuts', 'high_contrast', 'reduced_motion', 'default_landing_view'
         )
         widgets = {
             'first_name': forms.TextInput(attrs={
@@ -120,6 +133,15 @@ class UserProfileForm(forms.ModelForm):
             'sound_effects': forms.CheckboxInput(attrs={
                 'class': 'w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer'
             }),
+            'keyboard_shortcuts': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer'
+            }),
+            'high_contrast': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer'
+            }),
+            'reduced_motion': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer'
+            }),
         }
 
     def clean_morning_briefing_time(self):
@@ -129,6 +151,10 @@ class UserProfileForm(forms.ModelForm):
     def clean_week_start_day(self):
         val = self.cleaned_data.get('week_start_day')
         return val or getattr(self.instance, 'week_start_day', None) or 'monday'
+
+    def clean_default_landing_view(self):
+        val = self.cleaned_data.get('default_landing_view')
+        return val or getattr(self.instance, 'default_landing_view', None) or 'dashboard'
 
 
 

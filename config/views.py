@@ -93,6 +93,13 @@ def get_greeting(hour):
 
 def root_redirect(request):
     if request.user.is_authenticated:
+        landing = getattr(request.user, 'default_landing_view', 'dashboard')
+        if landing == 'my_day':
+            return redirect('my_day')
+        elif landing == 'all_tasks':
+            return redirect('all_tasks')
+        elif landing == 'analytics':
+            return redirect('analytics_dashboard')
         return redirect('dashboard')
     return redirect('login')
 
