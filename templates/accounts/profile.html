@@ -35,10 +35,13 @@
                 <i data-lucide="settings" class="w-4 h-4 mr-1.5 text-slate-500"></i>
                 Edit Profile
             </a>
-            <a href="{% url 'logout' %}" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">
-                <i data-lucide="log-out" class="w-4 h-4 mr-1.5 text-rose-500"></i>
-                Logout
-            </a>
+            <form method="POST" action="{% url 'logout' %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer">
+                    <i data-lucide="log-out" class="w-4 h-4 mr-1.5 text-rose-500"></i>
+                    Logout
+                </button>
+            </form>
         </div>
     </div>
 

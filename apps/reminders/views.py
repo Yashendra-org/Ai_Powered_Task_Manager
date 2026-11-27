@@ -4,6 +4,7 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.contrib import messages
 from .models import Notification
+from config.security import safe_redirect_back
 
 
 @login_required
@@ -34,7 +35,7 @@ def notification_mark_read_view(request, notification_id):
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
     if is_ajax:
         return JsonResponse({'success': True, 'notification_id': str(notification_id), 'unread_count': unread_count})
-    return redirect(request.META.get('HTTP_REFERER', 'notification_list'))
+    return safe_redirect_back(request, 'notification_list')
 
 
 @login_required

@@ -8,6 +8,7 @@ from django.db.models import Q
 from .models import Task, Category
 from .forms import TaskForm, QuickTaskForm, CategoryForm
 from .services import TaskService
+from config.security import safe_redirect_back
 
 
 @login_required
@@ -113,8 +114,10 @@ def all_tasks_view(request):
 
     # Category filter
     category_id = request.GET.get('category')
-    if category_id:
-        tasks = tasks.filter(category_id=category_id)
+    if category_id and str(category_id).isdigit():
+        tasks = tasks.filter(category_id=int(category_id))
+    else:
+        category_id = None
 
     # Priority filter
     priority_filter = request.GET.get('priority')
@@ -210,7 +213,7 @@ def task_toggle_complete_view(request, task_id):
         })
 
     messages.success(request, f"Task '{task.title}' marked as {task.get_status_display().lower()}!")
-    return redirect(request.META.get('HTTP_REFERER', 'my_day'))
+    return safe_redirect_back(request, 'my_day')
 
 
 @login_required
@@ -240,7 +243,7 @@ def task_delete_view(request, task_id):
         })
 
     messages.info(request, f"Task moved to Trash. You can restore it anytime from Recently Deleted.")
-    return redirect(request.META.get('HTTP_REFERER', 'all_tasks'))
+    return safe_redirect_back(request, 'all_tasks')
 
 
 @login_required

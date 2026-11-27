@@ -1,7 +1,9 @@
 import os
 import sys
+import secrets
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 try:
     import dj_database_url
@@ -14,19 +16,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env if present
 load_dotenv(BASE_DIR / '.env')
 
-# Render Environment Flag or Deploy Check
+# Render Environment Flag, Deploy Check, or Test Runner
 IS_RENDER = os.getenv('RENDER', 'false').lower() == 'true'
 IS_DEPLOY_CHECK = '--deploy' in sys.argv
+IS_TEST_RUN = 'test' in sys.argv
+TRUST_PROXY_HEADERS = os.getenv('TRUST_PROXY_HEADERS', 'False').lower() in ('true', '1', 'yes')
 
-# Quick-start settings - strong default key to prevent security.W009
-SECRET_KEY = os.getenv('SECRET_KEY', 'prod-sec-key-7x9v2m4q8p1z6w0y3b5t8c2d4e7f9a1h5k9j2l8m3n7_enterprise_2026')
+# Cryptographic SECRET_KEY (Fail closed in production if missing or using leaked dev values)
+_ENV_SECRET_KEY = os.getenv('SECRET_KEY', '').strip()
+if IS_RENDER and (not _ENV_SECRET_KEY or 'enterprise_2026' in _ENV_SECRET_KEY or len(_ENV_SECRET_KEY) < 32):
+    raise ImproperlyConfigured(
+        "A unique, high-entropy SECRET_KEY environment variable (>= 32 chars) is required in production."
+    )
+SECRET_KEY = _ENV_SECRET_KEY or secrets.token_urlsafe(64)
+
 if IS_DEPLOY_CHECK:
     DEBUG = False
 else:
     DEBUG = os.getenv('DEBUG', 'False' if IS_RENDER else 'True').lower() in ('true', '1', 'yes')
 
-# Allowed Hosts
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,testserver').split(',') if h.strip()]
+# Allowed Hosts (Never permit wildcard '*' to prevent HTTP Host Header Poisoning)
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,testserver').split(',') if h.strip() and h.strip() != '*']
 
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
@@ -37,7 +47,9 @@ if IS_RENDER:
         ALLOWED_HOSTS.append('.onrender.com')
 
 if DEBUG:
-    ALLOWED_HOSTS.extend(['*', 'testserver'])
+    for dev_host in ('127.0.0.1', 'localhost', 'testserver', '[::1]', '172.16.208.176'):
+        if dev_host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(dev_host)
 
 # CSRF Trusted Origins (Required for Render HTTPS POST requests)
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1,http://localhost').split(',') if o.strip()]
@@ -94,11 +106,11 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'config.middleware.SecurityAndRateLimitMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'config.middleware.SecurityAndRateLimitMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -162,7 +174,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 8,
+            'min_length': 10,
         }
     },
     {
@@ -213,6 +225,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '30/minute',
+        'user': '120/minute',
+    },
 }
 
 # Celery & Redis Configuration
@@ -230,9 +250,11 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '604800'))
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '86400'))
+PASSWORD_RESET_TIMEOUT = int(os.getenv('PASSWORD_RESET_TIMEOUT', '900'))
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024

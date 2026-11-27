@@ -144,6 +144,14 @@ class UserProfileForm(forms.ModelForm):
             }),
         }
 
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip().lower()
+        if not email:
+            raise forms.ValidationError("A valid email address is required.")
+        if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("This email address is already associated with another account.")
+        return email
+
     def clean_morning_briefing_time(self):
         val = self.cleaned_data.get('morning_briefing_time')
         return val or getattr(self.instance, 'morning_briefing_time', None) or '08:00'

@@ -12,6 +12,7 @@ import csv
 
 from .models import Habit, HabitLog
 from .forms import HabitForm
+from config.security import safe_redirect_back, sanitize_csv_cell
 
 
 @login_required
@@ -71,6 +72,7 @@ def habit_list_view(request):
             month = 1
             year += 1
 
+        year = max(1970, min(2100, year))
         days_in_month = calendar.monthrange(year, month)[1]
         start_date = date(year, month, 1)
         end_date = date(year, month, days_in_month)
@@ -123,6 +125,7 @@ def habit_list_view(request):
             year = int(request.GET.get('year', today.year))
         except (ValueError, TypeError):
             year = today.year
+        year = max(1970, min(2100, year))
 
         start_date = date(year, 1, 1)
         end_date = date(year, 12, 31)
@@ -321,8 +324,8 @@ def habit_export_csv_view(request):
 
     for h in habits:
         writer.writerow([
-            h.title,
-            h.get_frequency_display(),
+            sanitize_csv_cell(h.title),
+            sanitize_csv_cell(h.get_frequency_display()),
             h.monthly_goal,
             h.current_streak(),
             'Active' if h.is_active else 'Inactive',
@@ -425,4 +428,4 @@ def habit_toggle_log_view(request, habit_id):
         messages.success(request, msg)
     else:
         messages.info(request, msg)
-    return redirect(request.META.get('HTTP_REFERER', 'habit_list'))
+    return safe_redirect_back(request, 'habit_list')

@@ -105,8 +105,25 @@ class TaskListCreateApiView(APIView):
 
         category = None
         category_id = request.data.get('category_id')
-        if category_id:
-            category = Category.objects.filter(id=category_id, user=request.user).first()
+        if category_id and str(category_id).isdigit():
+            category = Category.objects.filter(id=int(category_id), user=request.user).first()
+
+        due_at_val = timezone.now() + timezone.timedelta(hours=4)
+        raw_due_at = request.data.get('due_at')
+        if raw_due_at:
+            from django.utils.dateparse import parse_datetime
+            parsed_dt = parse_datetime(str(raw_due_at))
+            if not parsed_dt:
+                return Response({
+                    "success": False,
+                    "error": {
+                        "code": "VALIDATION_FAILED",
+                        "message": "Invalid ISO-8601 datetime format for 'due_at'."
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if timezone.is_naive(parsed_dt):
+                parsed_dt = timezone.make_aware(parsed_dt, timezone.get_current_timezone())
+            due_at_val = parsed_dt
 
         task = Task.objects.create(
             user=request.user,
@@ -115,7 +132,7 @@ class TaskListCreateApiView(APIView):
             category=category,
             priority=priority,
             estimated_duration=duration,
-            due_at=request.data.get('due_at') or (timezone.now() + timezone.timedelta(hours=4)),
+            due_at=due_at_val,
         )
 
 
@@ -240,7 +257,7 @@ class GlobalSearchApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        query = request.query_params.get('q', '').strip()
+        query = request.query_params.get('q', '').strip()[:100]
         if not query:
             return Response({
                 "success": True,

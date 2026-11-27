@@ -294,7 +294,7 @@ function renderDynamicResults(data, query) {
         data.tasks.forEach(t => {
             total++;
             const el = document.createElement('a');
-            el.href = t.url;
+            el.href = (typeof safeRelativeUrl === 'function') ? safeRelativeUrl(t.url, '/tasks/') : (String(t.url || '').startsWith('/') ? t.url : '/tasks/');
             el.className = 'palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-800 rounded-xl hover:bg-blue-50 transition-colors group cursor-pointer';
             el.innerHTML = `
                 <div class="flex items-center space-x-2.5 truncate">
@@ -305,8 +305,8 @@ function renderDynamicResults(data, query) {
                     ${t.category ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-600">${escapeHtml(t.category)}</span>` : ''}
                 </div>
                 <div class="flex items-center space-x-2 flex-shrink-0 text-[10px] text-slate-400">
-                    <span class="uppercase font-semibold text-[9px] ${t.priority === 'high' ? 'text-rose-600' : 'text-slate-500'}">${t.priority}</span>
-                    <span>${t.due_at || ''}</span>
+                    <span class="uppercase font-semibold text-[9px] ${t.priority === 'high' ? 'text-rose-600' : 'text-slate-500'}">${escapeHtml(t.priority)}</span>
+                    <span>${escapeHtml(t.due_at || '')}</span>
                 </div>
             `;
             dynamicList.appendChild(el);
@@ -318,7 +318,7 @@ function renderDynamicResults(data, query) {
         data.habits.forEach(h => {
             total++;
             const el = document.createElement('a');
-            el.href = h.url;
+            el.href = (typeof safeRelativeUrl === 'function') ? safeRelativeUrl(h.url, '/habits/') : (String(h.url || '').startsWith('/') ? h.url : '/habits/');
             el.className = 'palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-800 rounded-xl hover:bg-emerald-50 transition-colors group cursor-pointer';
             el.innerHTML = `
                 <div class="flex items-center space-x-2.5 truncate">
@@ -338,7 +338,7 @@ function renderDynamicResults(data, query) {
         data.notes.forEach(n => {
             total++;
             const el = document.createElement('a');
-            el.href = n.url;
+            el.href = (typeof safeRelativeUrl === 'function') ? safeRelativeUrl(n.url, '/notes/') : (String(n.url || '').startsWith('/') ? n.url : '/notes/');
             el.className = 'palette-item flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-800 rounded-xl hover:bg-amber-50 transition-colors group cursor-pointer';
             el.innerHTML = `
                 <div class="flex items-center space-x-2.5 truncate">

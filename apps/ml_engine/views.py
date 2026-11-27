@@ -56,8 +56,17 @@ def apply_rollover_view(request):
     user = request.user
     tomorrow = timezone.now() + timedelta(days=1)
     
-    # Process each task action
-    task_ids = request.POST.getlist('task_ids')
+    # Process each task action with strict UUID validation
+    import uuid
+    raw_task_ids = request.POST.getlist('task_ids')
+    valid_task_ids = []
+    for tid in raw_task_ids[:100]:
+        try:
+            valid_task_ids.append(uuid.UUID(str(tid)))
+        except (ValueError, TypeError):
+            continue
+
+    task_ids = valid_task_ids
     action = request.POST.get('action') # 'rollover_tomorrow' or 'cancel_tasks'
 
     if action == 'rollover_tomorrow':

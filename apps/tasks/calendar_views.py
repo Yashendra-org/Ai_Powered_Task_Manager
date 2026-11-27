@@ -17,17 +17,23 @@ def calendar_view(request):
     user = request.user
     today = timezone.localdate()
 
-    # Get requested year and month, defaulting to current
-    year = int(request.GET.get('year', today.year))
-    month = int(request.GET.get('month', today.month))
+    # Get requested year and month, defaulting to current with strict bounds
+    try:
+        year = int(request.GET.get('year', today.year))
+        month = int(request.GET.get('month', today.month))
+    except (ValueError, TypeError):
+        year = today.year
+        month = today.month
 
-    # Clamp month bounds
+    # Clamp month and year bounds to prevent OverflowError / DoS
     if month < 1:
         month = 12
         year -= 1
     elif month > 12:
         month = 1
         year += 1
+
+    year = max(1970, min(2100, year))
 
     cal = calendar.Calendar(firstweekday=0) # Monday first
     month_days = cal.monthdatescalendar(year, month)

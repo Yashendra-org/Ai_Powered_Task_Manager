@@ -35,7 +35,28 @@ function getCsrfToken(form = null) {
         const input = form.querySelector('input[name="csrfmiddlewaretoken"]');
         if (input) return input.value;
     }
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && meta.content) return meta.content;
     return getCookie('csrftoken') || '';
+}
+
+function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
+function safeRelativeUrl(url, fallback = '/') {
+    if (!url || typeof url !== 'string') return fallback;
+    const trimmed = url.trim();
+    if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+        return trimmed;
+    }
+    return fallback;
 }
 
 // ==========================================================================
@@ -66,11 +87,15 @@ function showToast(message, type = 'success', duration = 3000) {
     toast.className = `flex items-center space-x-3 px-4 py-3 rounded-xl ${bgClasses} text-sm font-medium transform transition-all duration-300 translate-y-3 opacity-0 pointer-events-auto max-w-sm`;
     toast.innerHTML = `
         ${iconHtml}
-        <span class="flex-1 text-xs leading-snug">${message}</span>
-        <button class="text-slate-400 hover:text-white p-0.5 ml-2" onclick="this.parentElement.remove()">
+        <span class="flex-1 text-xs leading-snug"></span>
+        <button type="button" class="text-slate-400 hover:text-white p-0.5 ml-2" aria-label="Dismiss notification">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
     `;
+    const msgSpan = toast.querySelector('span');
+    if (msgSpan) msgSpan.textContent = String(message || '');
+    const closeBtn = toast.querySelector('button');
+    if (closeBtn) closeBtn.addEventListener('click', () => toast.remove());
 
     container.appendChild(toast);
 
@@ -267,36 +292,44 @@ async function handleQuickAddTask(form, e) {
                     ? 'bg-amber-50 text-amber-700 border-amber-200'
                     : 'bg-slate-100 text-slate-700 border-slate-200';
 
+                const safeTitle = escapeHtml(task.title);
+                const safeDuration = parseInt(task.estimated_duration, 10) || 30;
+                const safePriority = escapeHtml(task.priority_display);
+                const safeToggleUrl = escapeHtml(safeRelativeUrl(task.toggle_url, '/tasks/'));
+                const safeEditUrl = escapeHtml(safeRelativeUrl(task.edit_url, '/tasks/'));
+                const safeDeleteUrl = escapeHtml(safeRelativeUrl(task.delete_url, '/tasks/'));
+                const safeCsrf = escapeHtml(getCsrfToken());
+
                 taskCard.innerHTML = `
                     <div class="flex items-center space-x-3.5 flex-1 min-w-0 mr-4">
-                        <form method="POST" action="${task.toggle_url}" class="inline task-toggle-form">
-                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
+                        <form method="POST" action="${safeToggleUrl}" class="inline task-toggle-form">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="${safeCsrf}">
                             <button type="submit" class="w-5 h-5 rounded-md border flex items-center justify-center transition-colors border-slate-300 hover:border-blue-500 bg-white" title="Toggle Complete">
                             </button>
                         </form>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm font-medium text-slate-900 group-hover:text-blue-600 transition-colors truncate">
-                                    ${task.title}
+                                    ${safeTitle}
                                 </span>
                             </div>
                             <div class="flex items-center flex-wrap gap-2 text-xs text-slate-400 mt-1">
                                 <span class="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                    ${task.estimated_duration}m
+                                    ${safeDuration}m
                                 </span>
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-3 flex-shrink-0">
                         <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${priorityBadgeClass}">
-                            ${task.priority_display}
+                            ${safePriority}
                         </span>
-                        <a href="${task.edit_url}" class="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-all" title="Edit Task">
+                        <a href="${safeEditUrl}" class="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-all" title="Edit Task">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                         </a>
-                        <form method="POST" action="${task.delete_url}" class="inline task-delete-form" onsubmit="return confirm('Move this task to Recently Deleted?');">
-                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
+                        <form method="POST" action="${safeDeleteUrl}" class="inline task-delete-form" onsubmit="return confirm('Move this task to Recently Deleted?');">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="${safeCsrf}">
                             <button type="submit" class="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all" title="Delete Task">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             </button>
@@ -599,6 +632,10 @@ document.addEventListener('submit', function (e) {
 // 6. Seamless SPA (PJAX) Page Router
 // ==========================================================================
 async function loadPage(url, pushState = true) {
+    const parsedTarget = new URL(url, window.location.origin);
+    if (parsedTarget.origin !== window.location.origin) {
+        return;
+    }
     TopLoader.start();
     const mainEl = document.querySelector('main');
 
@@ -1038,7 +1075,7 @@ function initSavingStateInterceptor() {
         submitBtn.dataset.origHtml = submitBtn.innerHTML;
         submitBtn.disabled = true;
 
-        const customMsg = submitBtn.getAttribute('data-saving-text') || 'Saving changes...';
+        const customMsg = escapeHtml(submitBtn.getAttribute('data-saving-text') || 'Saving changes...');
         submitBtn.innerHTML = `
             <svg class="animate-spin w-4 h-4 mr-2 inline flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

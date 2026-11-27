@@ -181,16 +181,11 @@ class AuditLog(models.Model):
 def record_audit_event(user, action, request=None, description=""):
     """
     Records an immutable audit event for compliance and security observability.
+    Uses canonical proxy-aware client IP extraction to prevent header spoofing.
     """
-    ip_address = None
-    user_agent = ""
-    if request:
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip_address = x_forwarded_for.split(',')[0].strip()
-        else:
-            ip_address = request.META.get('REMOTE_ADDR')
-        user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
+    from config.security import extract_client_ip
+    ip_address = extract_client_ip(request) if request else None
+    user_agent = request.META.get('HTTP_USER_AGENT', '')[:255] if request else ""
 
     return AuditLog.objects.create(
         user=user,

@@ -101,8 +101,12 @@ class AssignmentForm(forms.ModelForm):
             return attachment
 
         import os
-        filename = attachment.name
+        filename = attachment.name or ""
+        if '\x00' in filename or '/' in filename or '\\' in filename or '..' in filename:
+            raise forms.ValidationError("Invalid filename characters detected.")
+
         ext = os.path.splitext(filename)[1].lower()
+        base_lower = os.path.splitext(filename)[0].lower()
 
         allowed_extensions = {
             '.pdf', '.doc', '.docx', '.txt', '.png', '.jpg', '.jpeg',
@@ -110,11 +114,17 @@ class AssignmentForm(forms.ModelForm):
         }
         dangerous_extensions = {
             '.exe', '.bat', '.cmd', '.sh', '.php', '.py', '.js', '.html',
-            '.htm', '.vbs', '.scr', '.jar', '.msi', '.dll', '.bin', '.phtml', '.cgi'
+            '.htm', '.svg', '.xml', '.vbs', '.scr', '.jar', '.msi', '.dll',
+            '.bin', '.phtml', '.cgi', '.asp', '.aspx', '.jsp'
         }
 
         if ext in dangerous_extensions:
             raise forms.ValidationError(f"File type '{ext}' is dangerous and strictly prohibited for security reasons.")
+
+        # Block disguised double-extension attacks (e.g., payload.php.pdf or payload.html.png)
+        for bad_ext in dangerous_extensions:
+            if bad_ext in base_lower:
+                raise forms.ValidationError("Suspicious double-extension filename rejected for security reasons.")
 
         if ext not in allowed_extensions:
             raise forms.ValidationError(f"Invalid file type '{ext}'. Allowed formats: PDF, Word, Text, Images, and ZIP.")
@@ -123,6 +133,27 @@ class AssignmentForm(forms.ModelForm):
         max_size = 10 * 1024 * 1024
         if attachment.size > max_size:
             raise forms.ValidationError("File size exceeds maximum permitted limit of 10 MB.")
+
+        # Magic-byte header verification for high-risk binary formats
+        magic_signatures = {
+            '.pdf': (b'%PDF-',),
+            '.png': (b'\x89PNG\r\n\x1a\n',),
+            '.jpg': (b'\xff\xd8\xff',),
+            '.jpeg': (b'\xff\xd8\xff',),
+            '.zip': (b'PK\x03\x04', b'PK\x05\x06'),
+            '.docx': (b'PK\x03\x04',),
+            '.xlsx': (b'PK\x03\x04',),
+            '.pptx': (b'PK\x03\x04',),
+        }
+        if ext in magic_signatures:
+            pos = attachment.tell() if hasattr(attachment, 'tell') else 0
+            header = attachment.read(16)
+            if hasattr(attachment, 'seek'):
+                attachment.seek(pos)
+            if not any(header.startswith(sig) for sig in magic_signatures[ext]):
+                raise forms.ValidationError(
+                    f"File contents do not match the declared '{ext}' format."
+                )
 
         return attachment
 

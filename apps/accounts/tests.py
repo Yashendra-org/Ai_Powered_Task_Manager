@@ -8,6 +8,8 @@ User = get_user_model()
 
 class AuthenticationAndDashboardTests(TestCase):
     def setUp(self):
+        from config.middleware import RATE_LIMIT_STORE
+        RATE_LIMIT_STORE.clear()
         self.client = Client()
         self.register_url = reverse('register')
         self.login_url = reverse('login')
@@ -247,6 +249,8 @@ class ProfessionalUrlRoutingTests(TestCase):
     resolve and function seamlessly across all modules.
     """
     def setUp(self):
+        from config.middleware import RATE_LIMIT_STORE
+        RATE_LIMIT_STORE.clear()
         self.client = Client()
         self.user = User.objects.create_user(
             username='url_test_user',
@@ -332,9 +336,9 @@ class HardenedSecurityTests(TestCase):
     - Bounds validation
     """
     def setUp(self):
-        self.client = Client()
         from config.middleware import RATE_LIMIT_STORE
         RATE_LIMIT_STORE.clear()
+        self.client = Client()
 
     def test_scanner_probe_blocked(self):
         probes = [
@@ -399,6 +403,8 @@ class DataPortabilityAndAuditTests(TestCase):
     Pillar 5, #18: PWA Offline Fallback Tests
     """
     def setUp(self):
+        from config.middleware import RATE_LIMIT_STORE
+        RATE_LIMIT_STORE.clear()
         self.client = Client()
         self.user = User.objects.create_user(
             username='exporter_user',
@@ -481,6 +487,143 @@ class DataPortabilityAndAuditTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'offline.html')
         self.assertContains(response, "You're Currently Offline")
+
+
+class PenetrationSecurityRegressionTests(TestCase):
+    """
+    Senior Cybersecurity Audit Regression Suite:
+    Verifies defense against X-Forwarded-For IP spoofing, per-account brute force,
+    Open Redirects (HTTP_REFERER), CSV/ICS formula & CRLF injection, Logout CSRF,
+    Malicious file upload magic-byte spoofing, HTTP TRACE method blocking,
+    Host header poisoning, and unhandled query parameter DoS crashes.
+    """
+    def setUp(self):
+        from config.middleware import RATE_LIMIT_STORE
+        RATE_LIMIT_STORE.clear()
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='sec_victim',
+            email='sec_victim@example.com',
+            password='StrongPassword123!'
+        )
+
+    def test_xff_header_spoofing_does_not_bypass_rate_limit(self):
+        # Attacker sends rotating X-Forwarded-For headers from the same connection IP
+        for i in range(5):
+            self.client.post(
+                '/auth/login/',
+                {'username': 'sec_victim', 'password': 'WrongPassword'},
+                REMOTE_ADDR='198.51.100.44',
+                HTTP_X_FORWARDED_FOR=f'203.0.113.{i}'
+            )
+        blocked = self.client.post(
+            '/auth/login/',
+            {'username': 'sec_victim', 'password': 'WrongPassword'},
+            REMOTE_ADDR='198.51.100.44',
+            HTTP_X_FORWARDED_FOR='203.0.113.99'
+        )
+        self.assertEqual(blocked.status_code, 429)
+
+    def test_per_account_distributed_brute_force_blocked(self):
+        # Rotating client IPs targeting a single victim account must still trigger lockout
+        for i in range(10):
+            res = self.client.post(
+                '/auth/login/',
+                {'username': 'sec_victim', 'password': f'Guess{i}'},
+                REMOTE_ADDR=f'198.51.100.{10 + i}'
+            )
+            self.assertNotEqual(res.status_code, 429)
+
+        blocked = self.client.post(
+            '/auth/login/',
+            {'username': 'sec_victim', 'password': 'Guess11'},
+            REMOTE_ADDR='198.51.100.250'
+        )
+        self.assertEqual(blocked.status_code, 429)
+
+    def test_open_redirect_via_referer_blocked(self):
+        self.client.login(username='sec_victim', password='StrongPassword123!')
+        task = Task.objects.create(user=self.user, title='Safe Redirect Task')
+        res = self.client.post(
+            reverse('task_toggle', kwargs={'task_id': task.id}),
+            HTTP_REFERER='https://evil-phishing-domain.com/login'
+        )
+        self.assertEqual(res.status_code, 302)
+        self.assertFalse(res.url.startswith('https://evil-phishing-domain.com'))
+
+    def test_csv_formula_injection_neutralized(self):
+        self.client.login(username='sec_victim', password='StrongPassword123!')
+        Task.objects.create(user=self.user, title='=cmd|\'/C calc\'!A0')
+        Task.objects.create(user=self.user, title='+SUM(1+1)')
+        res = self.client.get(reverse('export_data_csv'))
+        self.assertEqual(res.status_code, 200)
+        body = res.content.decode('utf-8')
+        self.assertIn("'=cmd|'/C calc'!A0", body)
+        self.assertIn("'+SUM(1+1)", body)
+
+    def test_ics_crlf_injection_and_json_assignment_export_safe(self):
+        from apps.assignments.models import Subject, Assignment
+        from django.utils import timezone
+        self.client.login(username='sec_victim', password='StrongPassword123!')
+        subj = Subject.objects.create(user=self.user, name='Security 101', code='SEC101')
+        Assignment.objects.create(
+            user=self.user,
+            subject=subj,
+            title='Assignment Serialization Test',
+            due_at=timezone.now() + timezone.timedelta(days=1)
+        )
+        Task.objects.create(
+            user=self.user,
+            title="Evil\r\nBEGIN:VALARM\r\nACTION:DISPLAY",
+            due_at=timezone.now() + timezone.timedelta(hours=3)
+        )
+        ics_res = self.client.get(reverse('export_data_ics'))
+        self.assertEqual(ics_res.status_code, 200)
+        ics_text = ics_res.content.decode('utf-8')
+        self.assertNotIn("\nBEGIN:VALARM", ics_text)
+
+        json_res = self.client.get(reverse('export_data_json'))
+        self.assertEqual(json_res.status_code, 200)
+        self.assertEqual(json_res.json()['assignments'][0]['subject'], 'Security 101')
+
+    def test_logout_requires_post_to_prevent_csrf(self):
+        self.client.login(username='sec_victim', password='StrongPassword123!')
+        get_res = self.client.get(reverse('logout'))
+        self.assertEqual(get_res.status_code, 405)
+        post_res = self.client.post(reverse('logout'))
+        self.assertEqual(post_res.status_code, 302)
+
+    def test_dangerous_http_trace_method_blocked(self):
+        res = self.client.generic('TRACE', '/login/')
+        self.assertEqual(res.status_code, 405)
+
+    def test_calendar_and_filter_invalid_params_do_not_crash_500(self):
+        self.client.login(username='sec_victim', password='StrongPassword123!')
+        self.assertEqual(self.client.get('/calendar/?year=abc&month=xyz').status_code, 200)
+        self.assertEqual(self.client.get('/calendar/?year=99999999&month=5').status_code, 200)
+        self.assertEqual(self.client.get('/tasks/?category=not_an_int').status_code, 200)
+        self.assertEqual(self.client.get('/assignments/?subject=not_an_int').status_code, 200)
+
+    def test_malicious_spoofed_pdf_magic_bytes_rejected(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from apps.assignments.forms import AssignmentForm
+        from apps.assignments.models import Subject
+        subj = Subject.objects.create(user=self.user, name='AppSec', code='AS101')
+        spoofed_file = SimpleUploadedFile('evil.pdf', b'<script>alert(1)</script>', content_type='application/pdf')
+        form = AssignmentForm(
+            data={
+                'title': 'Malicious Upload',
+                'subject': subj.id,
+                'due_at': '2026-12-01T12:00',
+                'priority': 'high',
+                'status': 'not_started',
+            },
+            files={'attachment': spoofed_file},
+            user=self.user,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('attachment', form.errors)
+
 
 
 

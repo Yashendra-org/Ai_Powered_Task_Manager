@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.db.models import Q
 from .models import Assignment, Subject, Teacher
 from .forms import AssignmentForm, SubjectForm, TeacherForm
+from config.security import safe_redirect_back
 
 
 @login_required
@@ -48,8 +49,10 @@ def assignment_list_view(request):
 
     # Subject filter
     subject_id = request.GET.get('subject')
-    if subject_id:
-        assignments = assignments.filter(subject_id=subject_id)
+    if subject_id and str(subject_id).isdigit():
+        assignments = assignments.filter(subject_id=int(subject_id))
+    else:
+        subject_id = None
 
     assignments = assignments.order_by('due_at', '-priority')
 
@@ -150,7 +153,7 @@ def assignment_submit_toggle_view(request, assignment_id):
         messages.success(request, msg)
     else:
         messages.info(request, msg)
-    return redirect(request.META.get('HTTP_REFERER', 'assignment_list'))
+    return safe_redirect_back(request, 'assignment_list')
 
 
 @login_required

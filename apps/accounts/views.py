@@ -6,12 +6,14 @@ from django.utils import timezone
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from .forms import UserRegisterForm, UserLoginForm, UserProfileForm, DeleteAccountForm, ReferralRedeemForm
 from .models import record_audit_event
 from .services.referral_service import get_user_referral_summary, process_referral_submission
+from config.security import sanitize_csv_cell
 from apps.tasks.models import Task, Category
 from apps.habits.models import Habit
 from apps.notes.models import Note
@@ -47,6 +49,7 @@ class CustomLoginView(LoginView):
         return super().form_valid(form)
 
 
+@require_POST
 def custom_logout_view(request):
     if request.user.is_authenticated:
         record_audit_event(request.user, 'LOGOUT', request, f"User {request.user.username} signed out")
@@ -153,10 +156,11 @@ def export_data_json_view(request):
             {
                 "id": str(a.id),
                 "title": a.title,
-                "subject": a.subject,
-                "due_date": a.due_date.isoformat() if a.due_date else None,
+                "subject": a.subject.name if a.subject else None,
+                "priority": a.priority,
+                "due_at": a.due_at.isoformat() if a.due_at else None,
                 "status": a.status,
-                "grade": a.grade,
+                "submitted_at": a.submitted_at.isoformat() if a.submitted_at else None,
                 "created_at": a.created_at.isoformat(),
             }
             for a in assignments
@@ -174,7 +178,7 @@ def export_data_json_view(request):
 def export_data_csv_view(request):
     """
     Pillar 2, #8: Tabular Task Exporter (CSV).
-    Generates an RFC 4180 CSV spreadsheet of all tasks.
+    Generates an RFC 4180 CSV spreadsheet of all tasks with formula-injection protection.
     """
     user = request.user
     tasks = Task.objects.filter(user=user).select_related('category').order_by('-created_at')
@@ -192,11 +196,11 @@ def export_data_csv_view(request):
     for t in tasks:
         writer.writerow([
             str(t.id),
-            t.title,
-            t.description,
-            t.category.name if t.category else '',
-            t.priority,
-            t.status,
+            sanitize_csv_cell(t.title),
+            sanitize_csv_cell(t.description),
+            sanitize_csv_cell(t.category.name if t.category else ''),
+            sanitize_csv_cell(t.priority),
+            sanitize_csv_cell(t.status),
             t.estimated_duration,
             t.due_at.isoformat() if t.due_at else '',
             t.completed_at.isoformat() if t.completed_at else '',
@@ -213,8 +217,12 @@ def export_data_ics_view(request):
     Pillar 4, #15 & Pillar 2, #8: RFC 5545 iCalendar Exporter.
     Generates standards-compliant .ics schedule importable into Google Calendar, Apple Calendar, and Outlook.
     """
+    from zoneinfo import available_timezones
     user = request.user
     tasks = Task.objects.filter(user=user, due_at__isnull=False).order_by('due_at')
+
+    safe_tz = user.timezone if (user.timezone in available_timezones()) else "Asia/Kolkata"
+    safe_cal_name = "".join(c for c in user.username if c.isalnum() or c in ('_', '-'))
 
     lines = [
         "BEGIN:VCALENDAR",
@@ -222,8 +230,8 @@ def export_data_ics_view(request):
         "PRODID:-//My Habit Tracker//Task & Schedule Exporter 1.0//EN",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
-        f"X-WR-CALNAME:HabitTracker - {user.username}",
-        "X-WR-TIMEZONE:" + (user.timezone or "Asia/Kolkata"),
+        f"X-WR-CALNAME:HabitTracker - {safe_cal_name}",
+        f"X-WR-TIMEZONE:{safe_tz}",
     ]
 
     now_str = timezone.now().strftime("%Y%m%dT%H%M%SZ")
@@ -234,8 +242,8 @@ def export_data_ics_view(request):
         dtstart = start_time.strftime("%Y%m%dT%H%M%SZ")
         dtend = end_time.strftime("%Y%m%dT%H%M%SZ")
 
-        clean_summary = t.title.replace("\n", " ").replace(";", "\\;").replace(",", "\\,")
-        clean_desc = (t.description or "").replace("\n", "\\n").replace(";", "\\;").replace(",", "\\,")
+        clean_summary = t.title.replace("\r", "").replace("\n", " ").replace(";", "\\;").replace(",", "\\,")
+        clean_desc = (t.description or "").replace("\r", "").replace("\n", "\\n").replace(";", "\\;").replace(",", "\\,")
 
         priority_val = "1" if t.priority == 'high' else ("5" if t.priority == 'medium' else "9")
         status_val = "COMPLETED" if t.status == 'completed' else "CONFIRMED"
@@ -275,6 +283,12 @@ def delete_account_view(request):
 
     form = DeleteAccountForm(request.user, request.POST)
     if not form.is_valid():
+        record_audit_event(
+            request.user,
+            'ACCOUNT_DELETE_ATTEMPT',
+            request,
+            "Failed account deletion attempt (incorrect password)"
+        )
         for error in form.errors.get('password', []):
             messages.error(request, error)
         return redirect('settings')
