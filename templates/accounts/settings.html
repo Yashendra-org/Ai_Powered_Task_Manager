@@ -288,9 +288,14 @@
                                     <p class="text-xs text-slate-500">Active sessions, device security history, and password credentials</p>
                                 </div>
                             </div>
-                            <a href="{% url 'password_reset' %}" class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50 text-slate-700 transition">
-                                Reset Password
-                            </a>
+                            <div class="flex items-center space-x-2">
+                                <a href="{% url 'password_change' %}" class="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition shadow-sm">
+                                    Change Password
+                                </a>
+                                <a href="{% url 'password_reset' %}" class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50 text-slate-700 transition">
+                                    Reset via Email
+                                </a>
+                            </div>
                         </div>
 
                         <!-- Active Sessions & Login History Table -->

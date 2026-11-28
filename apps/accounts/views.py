@@ -3,7 +3,8 @@ import json
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.utils import timezone
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -270,6 +271,31 @@ def export_data_ics_view(request):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
 
+
+
+@login_required
+def password_change_view(request):
+    """
+    Authenticated Password Change / Reset View.
+    Updates password safely, preserves current session hash, and logs audit event.
+    """
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            record_audit_event(user, 'PASSWORD_CHANGE', request, "User changed account password")
+            messages.success(request, "Your password has been updated successfully!")
+            return redirect('settings')
+    else:
+        form = PasswordChangeForm(request.user)
+
+    for field in form.fields.values():
+        field.widget.attrs.update({
+            'class': 'w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 text-sm'
+        })
+
+    return render(request, 'accounts/password_change.html', {'form': form})
 
 
 @login_required

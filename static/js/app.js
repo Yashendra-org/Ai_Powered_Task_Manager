@@ -890,7 +890,7 @@ document.addEventListener('click', function (e) {
     if (link.target === '_blank') return;
     if (link.hasAttribute('download')) return;
     if (link.getAttribute('href').startsWith('#')) return;
-    if (targetUrl.pathname === '/logout/' || targetUrl.pathname === '/login/' || targetUrl.pathname === '/register/') return;
+    if (targetUrl.pathname === '/logout/' || targetUrl.pathname === '/login/' || targetUrl.pathname === '/register/' || targetUrl.pathname.startsWith('/password-reset') || targetUrl.pathname.startsWith('/auth/password-reset')) return;
     if (targetUrl.pathname.startsWith('/admin/')) return;
     if (targetUrl.pathname.startsWith('/media/')) return;
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;

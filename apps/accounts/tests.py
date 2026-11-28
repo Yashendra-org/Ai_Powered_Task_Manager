@@ -624,6 +624,34 @@ class PenetrationSecurityRegressionTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('attachment', form.errors)
 
+    def test_password_change_and_reset_frontend_flows(self):
+        # 1. Login page contains Reset Password link
+        login_res = self.client.get(reverse('login'))
+        self.assertEqual(login_res.status_code, 200)
+        self.assertContains(login_res, reverse('password_reset'))
+
+        # 2. Password reset page renders and accepts email POST
+        reset_get = self.client.get(reverse('password_reset'))
+        self.assertEqual(reset_get.status_code, 200)
+        reset_post = self.client.post(reverse('password_reset'), {'email': 'sec_victim@example.com'}, follow=True)
+        self.assertEqual(reset_post.status_code, 200)
+        self.assertTemplateUsed(reset_post, 'accounts/password_reset_done.html')
+
+        # 3. Authenticated Password Change view works, preserves session, and logs audit event
+        self.client.login(username='sec_victim', password='StrongPassword123!')
+        change_get = self.client.get(reverse('password_change'))
+        self.assertEqual(change_get.status_code, 200)
+        change_post = self.client.post(reverse('password_change'), {
+            'old_password': 'StrongPassword123!',
+            'new_password1': 'EvenStrongerPass!99',
+            'new_password2': 'EvenStrongerPass!99',
+        }, follow=True)
+        self.assertEqual(change_post.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('EvenStrongerPass!99'))
+        self.assertTrue(self.user.audit_logs.filter(action='PASSWORD_CHANGE').exists())
+
+
 
 
 
