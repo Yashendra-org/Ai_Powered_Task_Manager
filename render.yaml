@@ -30,6 +30,8 @@ services:
         value: "true"
       - key: DJANGO_ADMIN_URL
         value: "secure-admin/"
+      - key: TRUST_PROXY_HEADERS
+        value: "true"
 
 databases:
   - name: task-manager-db

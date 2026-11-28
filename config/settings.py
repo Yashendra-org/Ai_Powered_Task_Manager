@@ -20,15 +20,43 @@ load_dotenv(BASE_DIR / '.env')
 IS_RENDER = os.getenv('RENDER', 'false').lower() == 'true'
 IS_DEPLOY_CHECK = '--deploy' in sys.argv
 IS_TEST_RUN = 'test' in sys.argv
+IS_BUILD_COMMAND = (
+    any(cmd in sys.argv for cmd in ('collectstatic', 'makemigrations', 'check'))
+    and not IS_DEPLOY_CHECK
+)
 TRUST_PROXY_HEADERS = os.getenv('TRUST_PROXY_HEADERS', 'False').lower() in ('true', '1', 'yes')
 
+
+def _resolve_secret_key(env_secret_key: str, *, is_render: bool, is_build_command: bool = False) -> str:
+    """Validate and resolve SECRET_KEY, failing closed on Render runtime when insecure or missing."""
+    key = (env_secret_key or '').strip()
+    if is_render and not is_build_command:
+        blocked_markers = ('enterprise_2026', 'django-insecure-', 'replace-with-')
+        if not key:
+            raise ImproperlyConfigured(
+                "SECRET_KEY environment variable is not set on Render. "
+                "Add a >=32-char random SECRET_KEY in Render Dashboard -> Environment "
+                "(generate with: python -c \"import secrets; print(secrets.token_urlsafe(64))\")."
+            )
+        if any(marker in key for marker in blocked_markers):
+            raise ImproperlyConfigured(
+                "SECRET_KEY is using a leaked or placeholder value from .env.example. "
+                "Replace SECRET_KEY in Render Dashboard -> Environment with a newly generated key."
+            )
+        if len(key) < 32:
+            raise ImproperlyConfigured(
+                f"SECRET_KEY must be at least 32 characters in production (got {len(key)})."
+            )
+    return key or secrets.token_urlsafe(64)
+
+
 # Cryptographic SECRET_KEY (Fail closed in production if missing or using leaked dev values)
-_ENV_SECRET_KEY = os.getenv('SECRET_KEY', '').strip()
-if IS_RENDER and (not _ENV_SECRET_KEY or 'enterprise_2026' in _ENV_SECRET_KEY or len(_ENV_SECRET_KEY) < 32):
-    raise ImproperlyConfigured(
-        "A unique, high-entropy SECRET_KEY environment variable (>= 32 chars) is required in production."
-    )
-SECRET_KEY = _ENV_SECRET_KEY or secrets.token_urlsafe(64)
+_ENV_SECRET_KEY = os.getenv('SECRET_KEY', '')
+SECRET_KEY = _resolve_secret_key(
+    _ENV_SECRET_KEY,
+    is_render=IS_RENDER,
+    is_build_command=IS_BUILD_COMMAND,
+)
 
 if IS_DEPLOY_CHECK:
     DEBUG = False

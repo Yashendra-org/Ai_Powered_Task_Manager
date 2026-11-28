@@ -723,6 +723,31 @@ class HighConcurrencyScaleTests(TestCase):
             self.assertEqual(router.db_for_write(Task), 'default')
             self.assertEqual(router.db_for_read(User), 'default')
 
+    def test_render_secret_key_validation_and_collectstatic_exemption(self):
+        from django.core.exceptions import ImproperlyConfigured
+        from config.settings import _resolve_secret_key
+
+        # Runtime on Render must fail closed if missing, leaked, or too short
+        with self.assertRaises(ImproperlyConfigured) as missing_ctx:
+            _resolve_secret_key('', is_render=True, is_build_command=False)
+        self.assertIn('not set on Render', str(missing_ctx.exception))
+
+        with self.assertRaises(ImproperlyConfigured) as leaked_ctx:
+            _resolve_secret_key('prod-sec-key-1234567890_enterprise_2026', is_render=True, is_build_command=False)
+        self.assertIn('leaked or placeholder', str(leaked_ctx.exception))
+
+        with self.assertRaises(ImproperlyConfigured) as short_ctx:
+            _resolve_secret_key('too-short-secret-key', is_render=True, is_build_command=False)
+        self.assertIn('at least 32 characters', str(short_ctx.exception))
+
+        # Build commands like collectstatic should succeed with an ephemeral key
+        build_key = _resolve_secret_key('', is_render=True, is_build_command=True)
+        self.assertGreaterEqual(len(build_key), 32)
+
+        # Valid >= 32-char secret passes intact on Render runtime
+        valid_key = 's' * 48
+        self.assertEqual(_resolve_secret_key(valid_key, is_render=True, is_build_command=False), valid_key)
+
 
 
 
