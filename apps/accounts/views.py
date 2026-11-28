@@ -29,7 +29,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user, backend='apps.accounts.backends.EmailOrUsernameModelBackend')
-            messages.success(request, f"Welcome to My Habbit Tracker, {user.username}!")
+            messages.success(request, f"Welcome to My Habit Tracker, {user.username}!")
             return redirect('dashboard')
     else:
         form = UserRegisterForm()

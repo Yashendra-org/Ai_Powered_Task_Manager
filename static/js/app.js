@@ -665,19 +665,41 @@ async function loadPage(url, pushState = true) {
         mainEl.style.transition = 'opacity 0.12s ease-out';
         mainEl.style.opacity = '0';
 
-        setTimeout(() => {
+        setTimeout(async () => {
             mainEl.innerHTML = newMain.innerHTML;
             document.title = doc.title || document.title;
 
-            // Execute any dynamic script tags inside newMain (e.g. Chart.js)
-            const scripts = mainEl.querySelectorAll('script');
-            scripts.forEach(s => {
+            // Ensure external scripts (e.g. Chart.js in extra_head or main) are loaded before inline scripts execute
+            const headExtScripts = Array.from(doc.head.querySelectorAll('script[src]'));
+            const mainScripts = Array.from(mainEl.querySelectorAll('script'));
+            const extScripts = [...headExtScripts, ...mainScripts.filter(s => s.src)];
+
+            for (const s of extScripts) {
+                const absSrc = new URL(s.src, window.location.origin).href;
+                if (!document.querySelector(`script[src="${absSrc}"]`) && !document.querySelector(`script[src="${s.getAttribute('src')}"]`)) {
+                    await new Promise((resolve) => {
+                        const tag = document.createElement('script');
+                        tag.src = absSrc;
+                        tag.onload = resolve;
+                        tag.onerror = resolve;
+                        document.head.appendChild(tag);
+                    });
+                }
+            }
+
+            // Execute inline script blocks inside newMain
+            for (const s of mainScripts) {
+                if (s.src) continue;
+                const typeAttr = (s.type || '').trim();
+                if (typeAttr && typeAttr !== 'text/javascript' && typeAttr !== 'application/javascript') {
+                    // Preserve application/json data blocks (e.g. Django json_script)
+                    continue;
+                }
                 const newScript = document.createElement('script');
-                if (s.src) newScript.src = s.src;
-                else newScript.textContent = s.textContent;
+                newScript.textContent = s.textContent;
                 document.body.appendChild(newScript);
                 newScript.remove();
-            });
+            }
 
             // Re-render Lucide icons
             if (window.lucide) lucide.createIcons();
@@ -707,30 +729,38 @@ function updateSidebarActiveLinks(currentUrl) {
     const currentPath = new URL(currentUrl, window.location.origin).pathname;
 
     if (sidebar) {
+        const accentMap = {
+            blue: { bg: 'bg-blue-50', text: 'text-blue-700', icon: 'text-blue-600' },
+            indigo: { bg: 'bg-indigo-50', text: 'text-indigo-700', icon: 'text-indigo-600' },
+            emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'text-emerald-600' },
+            amber: { bg: 'bg-amber-50', text: 'text-amber-700', icon: 'text-amber-600' },
+        };
+        const allAccentClasses = ['bg-blue-50', 'text-blue-700', 'text-blue-600', 'bg-indigo-50', 'text-indigo-700', 'text-indigo-600', 'bg-emerald-50', 'text-emerald-700', 'text-emerald-600', 'bg-amber-50', 'text-amber-700', 'text-amber-600'];
+
         const links = sidebar.querySelectorAll('nav a');
         links.forEach(link => {
             const linkPath = new URL(link.href, window.location.origin).pathname;
             const icon = link.querySelector('[data-lucide], i, svg');
-            
+            const accent = accentMap[link.getAttribute('data-accent') || 'blue'] || accentMap.blue;
+
             let isActive = false;
             if (linkPath === '/' && currentPath === '/') {
                 isActive = true;
-            } else if (linkPath !== '/' && currentPath.startsWith(linkPath)) {
+            } else if (linkPath !== '/' && (currentPath === linkPath || (linkPath !== '/tasks/' && currentPath.startsWith(linkPath)))) {
+                isActive = true;
+            } else if (linkPath === '/tasks/' && (currentPath === '/tasks/' || currentPath.includes('/tasks/create') || currentPath.includes('/tasks/trash') || currentPath.includes('/edit/'))) {
                 isActive = true;
             }
 
+            link.classList.remove(...allAccentClasses, 'font-semibold', 'font-medium', 'text-slate-600', 'hover:bg-slate-100', 'hover:text-slate-900');
+            if (icon) icon.classList.remove(...allAccentClasses, 'text-slate-400');
+
             if (isActive) {
-                link.className = "flex items-center px-3 py-2.5 text-sm font-semibold rounded-lg bg-blue-50 text-blue-700 transition-colors";
-                if (icon) {
-                    icon.classList.remove('text-slate-400');
-                    icon.classList.add('text-blue-600');
-                }
+                link.classList.add(accent.bg, accent.text, 'font-semibold');
+                if (icon) icon.classList.add(accent.icon);
             } else {
-                link.className = "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors";
-                if (icon) {
-                    icon.classList.remove('text-blue-600');
-                    icon.classList.add('text-slate-400');
-                }
+                link.classList.add('font-medium', 'text-slate-600', 'hover:bg-slate-100', 'hover:text-slate-900');
+                if (icon) icon.classList.add('text-slate-400');
             }
         });
     }
@@ -820,15 +850,23 @@ function initMobileNavigation() {
         };
     }
 
-    // Close on Escape key
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && sidebar && sidebar.classList.contains('translate-x-0')) {
-            closeSidebar();
-        }
-    });
+    // Close on Escape key (bind once globally)
+    if (!window.__mobileNavEscapeBound) {
+        window.__mobileNavEscapeBound = true;
+        document.addEventListener('keydown', function (e) {
+            const sb = document.getElementById('sidebar');
+            const bd = document.getElementById('sidebarBackdrop');
+            if (e.key === 'Escape' && sb && sb.classList.contains('translate-x-0')) {
+                sb.classList.remove('translate-x-0');
+                sb.classList.add('-translate-x-full');
+                if (bd) bd.classList.add('hidden');
+            }
+        });
+    }
 
     // Close mobile drawer on link navigation
-    if (sidebar) {
+    if (sidebar && !sidebar.dataset.linksBound) {
+        sidebar.dataset.linksBound = 'true';
         sidebar.querySelectorAll('a').forEach(a => {
             a.addEventListener('click', function () {
                 if (window.innerWidth < 768) {
@@ -908,17 +946,30 @@ function initMobileFab() {
         };
     }
 
-    document.addEventListener('click', function (e) {
-        if (isOpen && !e.target.closest('#mobileFabContainer')) {
-            closeFab();
-        }
-    });
+    if (!window.__mobileFabGlobalBound) {
+        window.__mobileFabGlobalBound = true;
+        document.addEventListener('click', function (e) {
+            const menu = document.getElementById('mobileFabMenu');
+            const bd = document.getElementById('mobileFabBackdrop');
+            const ic = document.getElementById('mobileFabIcon');
+            if (menu && !menu.classList.contains('hidden') && !e.target.closest('#mobileFabContainer')) {
+                menu.classList.add('hidden');
+                if (bd) bd.classList.add('hidden');
+                if (ic) ic.classList.remove('rotate-45');
+            }
+        });
 
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && isOpen) {
-            closeFab();
-        }
-    });
+        document.addEventListener('keydown', function (e) {
+            const menu = document.getElementById('mobileFabMenu');
+            const bd = document.getElementById('mobileFabBackdrop');
+            const ic = document.getElementById('mobileFabIcon');
+            if (e.key === 'Escape' && menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+                if (bd) bd.classList.add('hidden');
+                if (ic) ic.classList.remove('rotate-45');
+            }
+        });
+    }
 
     fabMenu.querySelectorAll('a').forEach(a => {
         a.addEventListener('click', function () {

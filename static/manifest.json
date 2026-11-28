@@ -1,6 +1,6 @@
 {
-  "name": "My Habbit Tracker - Distributed Productivity Engine",
-  "short_name": "HabbitTracker",
+  "name": "My Habit Tracker - Distributed Productivity Engine",
+  "short_name": "HabitTracker",
   "description": "High-concurrence, resilient habit tracking and task management platform.",
   "start_url": "/",
   "display": "standalone",

@@ -25,7 +25,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         <!-- Left Navigation Sidebar -->
-        <aside class="lg:col-span-3 sticky top-4 space-y-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <aside class="lg:col-span-3 lg:sticky lg:top-4 space-y-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
             <!-- Group 1: Personal Settings -->
             <div class="space-y-1">
                 <div class="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -78,7 +78,7 @@
         </aside>
 
         <!-- Right Content Area -->
-        <main class="lg:col-span-9 space-y-6">
+        <section class="lg:col-span-9 space-y-6">
             <form method="POST" action="{% url 'settings' %}" id="mainSettingsForm">
                 {% csrf_token %}
 
@@ -862,7 +862,7 @@
                     </div>
                 </div>
             </div>
-        </main>
+        </section>
     </div>
 </div>
 
@@ -967,15 +967,22 @@ function switchSettingsTab(tabName) {
     if (window.lucide) lucide.createIcons();
 }
 
-// Initialize on page load based on URL hash
-document.addEventListener('DOMContentLoaded', function() {
+// Initialize on initial load OR immediately on PJAX swap
+function initSettingsTabs() {
+    if (!document.getElementById('tab-pane-profile')) return;
     const hash = window.location.hash.replace('#', '');
     if (hash && document.getElementById('tab-pane-' + hash)) {
         switchSettingsTab(hash);
     } else {
         switchSettingsTab('profile');
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSettingsTabs);
+} else {
+    initSettingsTabs();
+}
 </script>
 {% endblock %}
 

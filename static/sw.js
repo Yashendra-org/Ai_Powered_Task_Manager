@@ -11,6 +11,9 @@ const PRECACHE_ASSETS = [
   '/static/js/app.js',
   '/static/js/vendor/tailwindcss.js',
   '/static/js/vendor/lucide.js',
+  '/static/images/logo.svg',
+  '/static/images/logo.png',
+  '/static/images/icon-192.png',
   '/static/manifest.json',
   '/offline/'
 ];

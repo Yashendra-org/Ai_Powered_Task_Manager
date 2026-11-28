@@ -2,14 +2,19 @@
 <html lang="en" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>{% block title %}My Habbit Tracker{% endblock %}</title>
+    <title>{% block title %}My Habit Tracker{% endblock %}</title>
+
+    <!-- Brand Favicon & App Icons -->
+    <link rel="icon" type="image/svg+xml" href="/static/images/logo.svg">
+    <link rel="alternate icon" type="image/png" href="/static/images/logo.png">
+    <link rel="apple-touch-icon" href="/static/images/icon-192.png">
     
-    <!-- Google Font: Inter -->
+    <!-- Google Fonts: Inter, Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS (Local offline bundle with Play CDN fallback) -->
     <script src="/static/js/vendor/tailwindcss.js"></script>
@@ -23,7 +28,9 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
                     },
                     colors: {
                         brand: {
@@ -57,11 +64,11 @@
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="HabbitTracker">
+    <meta name="apple-mobile-web-app-title" content="HabitTracker">
     
     {% block extra_head %}{% endblock %}
 </head>
-<body class="h-full font-sans text-slate-900 antialiased bg-slate-50 flex overflow-hidden">
+<body class="{% if user.is_authenticated %}h-full flex overflow-hidden{% else %}min-h-full flex flex-col{% endif %} font-sans text-slate-900 antialiased bg-slate-50">
 
     {% if user.is_authenticated %}
     <!-- Mobile Backdrop Overlay -->
@@ -70,12 +77,10 @@
     <!-- Navigation Sidebar (Drawer on mobile, fixed on desktop) -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-slate-200 flex flex-col transform -translate-x-full md:translate-x-0 md:static md:w-64 md:z-30 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none flex-shrink-0">
         <!-- Brand Logo & Header -->
-        <div class="h-16 px-6 flex items-center justify-between border-b border-slate-100 flex-shrink-0">
-            <a href="{% url 'dashboard' %}" class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-200">
-                    <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-                </div>
-                <span class="font-bold text-lg text-slate-900 tracking-tight">Habbit<span class="text-blue-600">Tracker</span></span>
+        <div class="h-16 px-5 flex items-center justify-between border-b border-slate-100 flex-shrink-0">
+            <a href="{% url 'dashboard' %}" class="flex items-center space-x-2.5 group">
+                <img src="/static/images/logo.png" alt="HabitTracker Logo" class="w-8 h-8 rounded-xl shadow-sm object-cover flex-shrink-0">
+                <span class="font-display font-bold text-lg text-slate-900 tracking-tight">Habit<span class="text-blue-600">Tracker</span></span>
             </a>
             <!-- Mobile Close Button -->
             <button id="sidebarClose" class="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 md:hidden transition-colors" aria-label="Close Sidebar">
@@ -87,55 +92,51 @@
         <nav class="flex-1 px-4 py-5 space-y-1 overflow-y-auto">
             <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-3 mb-2">Main</div>
             
-            <a href="{% url 'dashboard' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+            <a href="{% url 'dashboard' %}" data-accent="blue" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
                 <i data-lucide="layout-dashboard" class="w-4 h-4 mr-3 {% if request.resolver_match.url_name == 'dashboard' %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
                 Dashboard
             </a>
 
             <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-3 pt-4 mb-2">Productivity</div>
 
-            <a href="{% url 'my_day' %}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'my_day' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
-                <div class="flex items-center">
-                    <i data-lucide="sun" class="w-4 h-4 mr-3 {% if request.resolver_match.url_name == 'my_day' %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
-                    My Day
-                </div>
+            <a href="{% url 'my_day' %}" data-accent="blue" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'my_day' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <i data-lucide="sun" class="w-4 h-4 mr-3 {% if request.resolver_match.url_name == 'my_day' %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
+                My Day
             </a>
 
-            <a href="{% url 'all_tasks' %}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'all_tasks' or request.resolver_match.url_name == 'task_create' or request.resolver_match.url_name == 'task_edit' or request.resolver_match.url_name == 'trash' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
-                <div class="flex items-center">
-                    <i data-lucide="check-square" class="w-4 h-4 mr-3 {% if request.resolver_match.url_name == 'all_tasks' %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
-                    All Tasks
-                </div>
+            <a href="{% url 'all_tasks' %}" data-accent="blue" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if request.resolver_match.url_name == 'all_tasks' or request.resolver_match.url_name == 'task_create' or request.resolver_match.url_name == 'task_edit' or request.resolver_match.url_name == 'trash' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+                <i data-lucide="check-square" class="w-4 h-4 mr-3 {% if request.resolver_match.url_name == 'all_tasks' %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
+                All Tasks
             </a>
 
-            <a href="{% url 'assignment_list' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'assignments' in request.path %}bg-indigo-50 text-indigo-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+            <a href="{% url 'assignment_list' %}" data-accent="indigo" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'assignments' in request.path %}bg-indigo-50 text-indigo-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
                 <i data-lucide="graduation-cap" class="w-4 h-4 mr-3 {% if 'assignments' in request.path %}text-indigo-600{% else %}text-slate-400{% endif %}"></i>
                 Assignments
             </a>
 
-            <a href="{% url 'habit_list' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'habits' in request.path %}bg-emerald-50 text-emerald-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+            <a href="{% url 'habit_list' %}" data-accent="emerald" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'habits' in request.path %}bg-emerald-50 text-emerald-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
                 <i data-lucide="flame" class="w-4 h-4 mr-3 {% if 'habits' in request.path %}text-emerald-600{% else %}text-slate-400{% endif %}"></i>
                 Habit Tracker
             </a>
 
-            <a href="{% url 'calendar' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'calendar' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+            <a href="{% url 'calendar' %}" data-accent="blue" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'calendar' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
                 <i data-lucide="calendar" class="w-4 h-4 mr-3 {% if 'calendar' in request.path %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
                 Calendar
             </a>
 
-            <a href="{% url 'note_list' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'notes' in request.path %}bg-amber-50 text-amber-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+            <a href="{% url 'note_list' %}" data-accent="amber" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'notes' in request.path %}bg-amber-50 text-amber-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
                 <i data-lucide="sticky-note" class="w-4 h-4 mr-3 {% if 'notes' in request.path %}text-amber-600{% else %}text-slate-400{% endif %}"></i>
                 Quick Notes
             </a>
 
             <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-3 pt-4 mb-2">Intelligence</div>
 
-            <a href="{% url 'analytics_dashboard' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'analytics' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+            <a href="{% url 'analytics_dashboard' %}" data-accent="blue" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'analytics' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
                 <i data-lucide="bar-chart-3" class="w-4 h-4 mr-3 {% if 'analytics' in request.path %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
                 Analytics
             </a>
 
-            <a href="{% url 'smart_assistant' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'assistant' in request.path or 'review' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
+            <a href="{% url 'smart_assistant' %}" data-accent="blue" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {% if 'assistant' in request.path or 'review' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %} transition-colors">
                 <i data-lucide="sparkles" class="w-4 h-4 mr-3 {% if 'assistant' in request.path or 'review' in request.path %}text-blue-600{% else %}text-slate-400{% endif %}"></i>
                 Smart Assistant
             </a>
@@ -171,18 +172,16 @@
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
                 <a href="{% url 'dashboard' %}" class="flex items-center space-x-2 md:hidden">
-                    <div class="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-200">
-                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                    </div>
-                    <span class="font-bold text-base text-slate-900 tracking-tight">Habbit<span class="text-blue-600">Tracker</span></span>
+                    <img src="/static/images/logo.png" alt="HabitTracker Logo" class="w-7 h-7 rounded-lg shadow-sm object-cover">
+                    <span class="font-display font-bold text-base text-slate-900 tracking-tight">Habit<span class="text-blue-600">Tracker</span></span>
                 </a>
                 <!-- Global Omnibar & Search Trigger (Cmd+K) (Pillar 5, #17) -->
-                <button type="button" onclick="openCommandPalette()" class="hidden sm:flex items-center justify-between w-52 sm:w-64 lg:w-72 px-3 py-1.5 text-xs text-slate-400 bg-slate-50 hover:bg-slate-100 hover:text-slate-600 border border-slate-200 rounded-xl transition-all shadow-2xs group" aria-label="Open Command Palette">
+                <button type="button" onclick="openCommandPalette()" class="hidden sm:flex items-center justify-between w-52 sm:w-64 lg:w-72 px-3 py-1.5 text-xs text-slate-400 bg-slate-50 hover:bg-slate-100 hover:text-slate-600 border border-slate-200 rounded-xl transition-all shadow-sm group" aria-label="Open Command Palette">
                     <span class="flex items-center truncate">
                         <i data-lucide="search" class="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-blue-600 transition-colors"></i>
                         <span class="truncate">Search or command...</span>
                     </span>
-                    <kbd class="ml-2 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 rounded shadow-xs">⌘K</kbd>
+                    <kbd class="ml-2 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 rounded shadow-sm">⌘K</kbd>
                 </button>
                 <button type="button" onclick="openCommandPalette()" class="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 sm:hidden transition-colors" aria-label="Open Search">
                     <i data-lucide="search" class="w-5 h-5"></i>
@@ -223,8 +222,9 @@
         {% endif %}
 
         <!-- Main Scrollable Content -->
-        <main id="main-content" class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 pb-24 md:pb-8">
+        <main id="main-content" class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 {% if user.is_authenticated %}pb-24 md:pb-8{% else %}pb-8{% endif %}">
             {% block content %}{% endblock %}
+            {% block extra_scripts %}{% endblock %}
         </main>
     </div>
 
@@ -360,6 +360,5 @@
             });
         }
     </script>
-    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

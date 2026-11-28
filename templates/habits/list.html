@@ -120,7 +120,7 @@
             </div>
 
             <!-- Right Success Rate KPI Card -->
-            <div class="lg:col-span-3 flex flex-col items-center justify-center p-4 bg-slate-850/80 rounded-2xl border border-slate-800 text-center">
+            <div class="lg:col-span-3 flex flex-col items-center justify-center p-4 bg-slate-800/80 rounded-2xl border border-slate-700 text-center">
                 <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Success Rate</span>
                 <div class="text-4xl font-extrabold text-white mt-1 tracking-tight font-mono" id="top-success-rate">
                     {{ overall_success_rate }}%
@@ -201,10 +201,10 @@
                                     {% csrf_token %}
                                     <input type="hidden" name="date" value="{{ day.date_str }}">
                                     <button type="submit" 
-                                            class="w-6 h-6 rounded-md border flex items-center justify-center mx-auto transition-all font-bold text-xs {% if day.is_completed %}text-white shadow-sm font-mono{% else %}border-dashed border-slate-300 hover:border-slate-400 bg-white text-transparent hover:text-slate-300{% endif %}"
+                                            class="w-6 h-6 rounded-md border flex items-center justify-center mx-auto transition-all {% if day.is_completed %}text-white shadow-sm{% else %}border-dashed border-slate-300 hover:border-slate-400 bg-white text-transparent hover:text-slate-300{% endif %}"
                                             style="{% if day.is_completed %}background-color: {{ row.color }}; border-color: {{ row.color }};{% endif %}"
                                             title="{{ row.habit.title }} on {{ day.date_str }}">
-                                        X
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     </button>
                                 </form>
                             </td>
@@ -342,16 +342,15 @@
 {{ chart_data|json_script:"habit-chart-data-values" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initHabitTrendChart);
+    } else {
         initHabitTrendChart();
-    });
-
-    // Also re-init if PJAX loads page
-    if (window.initHabitTrendChart) initHabitTrendChart();
+    }
 
     function initHabitTrendChart() {
         const ctx = document.getElementById('dailyTrendChart');
-        if (!ctx) return;
+        if (!ctx || typeof Chart === 'undefined') return;
 
         // Destroy old chart instance if existing
         if (window.myHabitChartInstance) {
@@ -416,62 +415,66 @@
         });
     }
 
-    // Enhanced interactive cell click delegation for instant matrix updates
-    document.addEventListener('submit', function (e) {
-        const form = e.target.closest('.habit-cell-form');
-        if (!form) return;
+    // Enhanced interactive cell click delegation for instant matrix updates (bind once)
+    if (!window.__habitMatrixSubmitBound) {
+        window.__habitMatrixSubmitBound = true;
+        document.addEventListener('submit', function (e) {
+            const form = e.target.closest('.habit-cell-form');
+            if (!form) return;
 
-        e.preventDefault();
-        const btn = form.querySelector('button[type="submit"]');
-        const habitId = form.getAttribute('data-habit-id');
-        const color = form.getAttribute('data-color') || '#10b981';
+            e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            const habitId = form.getAttribute('data-habit-id');
+            const color = form.getAttribute('data-color') || '#10b981';
 
-        const isCurrentlyCompleted = btn.classList.contains('text-white');
-        const nextState = !isCurrentlyCompleted;
+            const isCurrentlyCompleted = btn.classList.contains('text-white');
+            const nextState = !isCurrentlyCompleted;
 
-        // Optimistic UI update
-        if (nextState) {
-            btn.className = "w-6 h-6 rounded-md border flex items-center justify-center mx-auto transition-all font-bold text-xs text-white shadow-sm font-mono";
-            btn.style.backgroundColor = color;
-            btn.style.borderColor = color;
-            btn.textContent = "X";
-        } else {
-            btn.className = "w-6 h-6 rounded-md border flex items-center justify-center mx-auto transition-all font-bold text-xs border-dashed border-slate-300 hover:border-slate-400 bg-white text-transparent hover:text-slate-300";
-            btn.style.backgroundColor = "transparent";
-            btn.style.borderColor = "#cbd5e1";
-            btn.textContent = "X";
-        }
-
-        const formData = new FormData(form);
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                'Accept': 'application/json',
+            // Optimistic UI update
+            const checkSvg = '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            if (nextState) {
+                btn.className = "w-6 h-6 rounded-md border flex items-center justify-center mx-auto transition-all text-white shadow-sm";
+                btn.style.backgroundColor = color;
+                btn.style.borderColor = color;
+                btn.innerHTML = checkSvg;
+            } else {
+                btn.className = "w-6 h-6 rounded-md border flex items-center justify-center mx-auto transition-all border-dashed border-slate-300 hover:border-slate-400 bg-white text-transparent hover:text-slate-300";
+                btn.style.backgroundColor = "transparent";
+                btn.style.borderColor = "#cbd5e1";
+                btn.innerHTML = checkSvg;
             }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // Update row's progress bar & text
-                const row = document.getElementById(`habit-row-${habitId}`);
-                if (row && data.habit_progress_rate !== undefined) {
-                    const bar = row.querySelector('.habit-progress-bar');
-                    const text = row.querySelector('.habit-progress-text');
-                    if (bar) bar.style.width = `${data.habit_progress_rate}%`;
-                    if (text) text.textContent = `${data.habit_progress_rate}%`;
-                }
 
-                if (window.showToast) {
-                    showToast(data.message, 'success');
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    'Accept': 'application/json',
                 }
-            }
-        })
-        .catch(err => {
-            console.error('Habit matrix error:', err);
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update row's progress bar & text
+                    const row = document.getElementById(`habit-row-${habitId}`);
+                    if (row && data.habit_progress_rate !== undefined) {
+                        const bar = row.querySelector('.habit-progress-bar');
+                        const text = row.querySelector('.habit-progress-text');
+                        if (bar) bar.style.width = `${data.habit_progress_rate}%`;
+                        if (text) text.textContent = `${data.habit_progress_rate}%`;
+                    }
+
+                    if (window.showToast) {
+                        showToast(data.message, 'success');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Habit matrix error:', err);
+            });
         });
-    });
+    }
 </script>
 {% endblock %}

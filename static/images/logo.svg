@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="ht-bg" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="60%" stop-color="#3B5BDB"/>
+      <stop offset="100%" stop-color="#3730A3"/>
+    </linearGradient>
+    <linearGradient id="ht-arc" x1="16" y1="42" x2="48" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="55%" stop-color="#2DD4BF"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#ht-bg)"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="14.25" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1.5"/>
+  <!-- Glowing emerald-to-cyan momentum streak ribbon -->
+  <path d="M16.5 39.5C18.5 47.5 27.5 51.5 35.5 44.5C40.5 40 43.5 32.5 45.5 23.5" stroke="url(#ht-arc)" stroke-width="5.2" stroke-linecap="round"/>
+  <!-- Crisp ascending white checkmark -->
+  <path d="M18.5 34.5L25.5 41.5L44.5 22.5" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 4-point AI spark accent -->
+  <path d="M47 11.5L48.7 16.3L53.5 18L48.7 19.7L47 24.5L45.3 19.7L40.5 18L45.3 16.3L47 11.5Z" fill="#2DD4BF"/>
+</svg>

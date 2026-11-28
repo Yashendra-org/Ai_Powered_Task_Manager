@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Productivity Analytics — My Habbit Tracker{% endblock %}
+{% block title %}Productivity Analytics — My Habit Tracker{% endblock %}
 
 {% block extra_head %}
 <!-- Chart.js CDN -->
@@ -114,14 +114,21 @@
 {{ category_counts|json_script:"category-counts-data" }}
 {{ category_colors|json_script:"category-colors-data" }}
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    function initAnalyticsCharts() {
+        const velEl = document.getElementById('velocityChart');
+        const catEl = document.getElementById('categoryChart');
+        if (!velEl || !catEl || typeof Chart === 'undefined') return;
+
+        if (window.__velocityChartInstance) window.__velocityChartInstance.destroy();
+        if (window.__categoryChartInstance) window.__categoryChartInstance.destroy();
+
         // 1. Velocity Chart
-        const velocityCtx = document.getElementById('velocityChart').getContext('2d');
+        const velocityCtx = velEl.getContext('2d');
         const velocityLabels = JSON.parse(document.getElementById('velocity-labels-data').textContent || '[]');
         const completedData = JSON.parse(document.getElementById('completed-series-data').textContent || '[]');
         const plannedData = JSON.parse(document.getElementById('planned-series-data').textContent || '[]');
 
-        new Chart(velocityCtx, {
+        window.__velocityChartInstance = new Chart(velocityCtx, {
             type: 'bar',
             data: {
                 labels: velocityLabels,
@@ -156,13 +163,13 @@
         });
 
         // 2. Category Doughnut Chart
-        const catCtx = document.getElementById('categoryChart').getContext('2d');
+        const catCtx = catEl.getContext('2d');
         const catLabels = JSON.parse(document.getElementById('category-labels-data').textContent || '[]');
         const catCounts = JSON.parse(document.getElementById('category-counts-data').textContent || '[]');
         const catColors = JSON.parse(document.getElementById('category-colors-data').textContent || '[]');
 
         if (catLabels.length > 0) {
-            new Chart(catCtx, {
+            window.__categoryChartInstance = new Chart(catCtx, {
                 type: 'doughnut',
                 data: {
                     labels: catLabels,
@@ -182,7 +189,13 @@
                 }
             });
         }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener("DOMContentLoaded", initAnalyticsCharts);
+    } else {
+        initAnalyticsCharts();
+    }
 </script>
 {% endblock %}
 

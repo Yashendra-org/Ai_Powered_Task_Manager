@@ -1,3 +1,20 @@
+/* Typography & Rendering Enhancements */
+html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, .font-display {
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.02em;
+}
+
+.font-mono, kbd, code {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 /* Custom styles and scrollbar overrides */
 ::-webkit-scrollbar {
     width: 6px;
@@ -195,7 +212,7 @@ select:disabled,
     line-height: 1rem;
     margin-top: 0.35rem;
     display: flex;
-    items-center: center;
+    align-items: center;
 }
 
 /* ==========================================================================
