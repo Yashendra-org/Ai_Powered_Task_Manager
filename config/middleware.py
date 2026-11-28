@@ -172,13 +172,17 @@ class SecurityAndRateLimitMiddleware:
             response.setdefault('Expires', '0')
 
         # 4. Content-Security-Policy (CSP) Header
+        connect_src = "connect-src 'self' https:"
+        if settings.DEBUG:
+            connect_src += " http://127.0.0.1:4400 ws://127.0.0.1:4400 http://localhost:4400 ws://localhost:4400"
+
         csp_directives = [
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
             "font-src 'self' https://fonts.gstatic.com data:",
             "img-src 'self' data: https: blob:",
-            "connect-src 'self' https:",
+            connect_src,
             "object-src 'none'",
             "frame-ancestors 'none'",
             "base-uri 'self'",
