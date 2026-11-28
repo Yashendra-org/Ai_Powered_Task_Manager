@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from django.contrib import messages
 from django.utils import timezone
 from datetime import datetime, timedelta, date
@@ -308,29 +308,34 @@ def habit_list_view(request):
     return render(request, 'habits/list.html', context)
 
 
+class _HabitCsvEcho:
+    def write(self, value):
+        return value
+
+
 @login_required
 def habit_export_csv_view(request):
     """
-    Export current habit completion report as CSV (matching the Download button in screenshot).
+    Export current habit completion report as streaming CSV with batched streak calculation.
     """
     user = request.user
-    habits = Habit.objects.filter(user=user, is_active=True)
+    habits = list(Habit.objects.filter(user=user, is_active=True))
+    streaks_map, _ = Habit.compute_streaks_for_habits(habits)
 
-    response = HttpResponse(content_type='text/csv')
+    def stream_habit_csv():
+        writer = csv.writer(_HabitCsvEcho())
+        yield writer.writerow(['Habit Title', 'Frequency', 'Monthly Goal', 'Current Streak (Days)', 'Status'])
+        for h in habits:
+            yield writer.writerow([
+                sanitize_csv_cell(h.title),
+                sanitize_csv_cell(h.get_frequency_display()),
+                h.monthly_goal,
+                streaks_map.get(h.id, 0),
+                'Active' if h.is_active else 'Inactive',
+            ])
+
+    response = StreamingHttpResponse(stream_habit_csv(), content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="my_habit_tracker_export.csv"'
-
-    writer = csv.writer(response)
-    writer.writerow(['Habit Title', 'Frequency', 'Monthly Goal', 'Current Streak (Days)', 'Status'])
-
-    for h in habits:
-        writer.writerow([
-            sanitize_csv_cell(h.title),
-            sanitize_csv_cell(h.get_frequency_display()),
-            h.monthly_goal,
-            h.current_streak(),
-            'Active' if h.is_active else 'Inactive',
-        ])
-
     return response
 
 

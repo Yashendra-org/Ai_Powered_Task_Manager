@@ -62,6 +62,9 @@ class Assignment(models.Model):
     class Meta:
         db_table = 'assignments_assignment'
         ordering = ['due_at', '-priority']
+        indexes = [
+            models.Index(fields=['user', 'status', 'due_at'], name='idx_assign_user_stat_due'),
+        ]
 
     def __str__(self):
         return f"{self.title} - {self.subject.name}"

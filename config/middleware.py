@@ -50,9 +50,31 @@ NO_CACHE_PATH_PREFIXES = (
 
 def _prune_and_record(key: str, window_sec: int, max_attempts: int, now: float):
     """
-    Prunes expired timestamps for `key` and enforces bounded store size.
+    Distributed-ready sliding-window / fixed-bucket rate limiter.
+    Uses shared Redis cache across horizontally scaled pods when USE_REDIS_CACHE is active,
+    falling back seamlessly to the bounded local OrderedDict store.
     Returns (is_blocked, retry_after_sec, remaining).
     """
+    if getattr(settings, 'USE_REDIS_CACHE', False):
+        try:
+            from django.core.cache import cache
+            bucket = int(now // window_sec)
+            cache_key = f"rl:{key}:{bucket}"
+            if cache.add(cache_key, 1, timeout=window_sec + 5):
+                count = 1
+            else:
+                try:
+                    count = cache.incr(cache_key)
+                except ValueError:
+                    cache.set(cache_key, 1, timeout=window_sec + 5)
+                    count = 1
+            if count > max_attempts:
+                retry_after = max(1, int(((bucket + 1) * window_sec) - now))
+                return True, retry_after, 0
+            return False, 0, max(0, max_attempts - count)
+        except Exception as exc:
+            logger.warning(f"Distributed rate-limit cache fallback triggered: {exc}")
+
     timestamps = [t for t in RATE_LIMIT_STORE.get(key, ()) if now - t < window_sec]
 
     if len(timestamps) >= max_attempts:

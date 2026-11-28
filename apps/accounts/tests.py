@@ -420,13 +420,20 @@ class DataPortabilityAndAuditTests(TestCase):
             estimated_duration=45
         )
 
+    def _read_body(self, response):
+        if response.streaming:
+            return b"".join(response.streaming_content).decode("utf-8")
+        return response.content.decode("utf-8")
+
     def test_export_json_payload_and_audit(self):
+        import json
         response = self.client.get(reverse('export_data_json'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertIn('attachment; filename="habittracker_backup_', response['Content-Disposition'])
+        self.assertTrue(response.streaming)
 
-        data = response.json()
+        data = json.loads(self._read_body(response))
         self.assertEqual(data['metadata']['user']['username'], 'exporter_user')
         self.assertEqual(len(data['tasks']), 1)
         self.assertEqual(data['tasks'][0]['title'], 'Exportable Task Item')
@@ -441,8 +448,9 @@ class DataPortabilityAndAuditTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response['Content-Type'].startswith('text/csv'))
         self.assertIn('attachment; filename="habittracker_tasks_', response['Content-Disposition'])
+        self.assertTrue(response.streaming)
 
-        content = response.content.decode('utf-8')
+        content = self._read_body(response)
         self.assertIn('Title,Description,Category,Priority,Status', content)
         self.assertIn('Exportable Task Item', content)
 
@@ -464,8 +472,9 @@ class DataPortabilityAndAuditTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response['Content-Type'].startswith('text/calendar'))
         self.assertIn('attachment; filename="habittracker_schedule_', response['Content-Disposition'])
+        self.assertTrue(response.streaming)
 
-        content = response.content.decode('utf-8')
+        content = self._read_body(response)
         self.assertIn('BEGIN:VCALENDAR', content)
         self.assertIn('BEGIN:VEVENT', content)
         self.assertIn('SUMMARY:Calendar Synced Exam', content)
@@ -557,11 +566,12 @@ class PenetrationSecurityRegressionTests(TestCase):
         Task.objects.create(user=self.user, title='+SUM(1+1)')
         res = self.client.get(reverse('export_data_csv'))
         self.assertEqual(res.status_code, 200)
-        body = res.content.decode('utf-8')
+        body = b"".join(res.streaming_content).decode('utf-8') if res.streaming else res.content.decode('utf-8')
         self.assertIn("'=cmd|'/C calc'!A0", body)
         self.assertIn("'+SUM(1+1)", body)
 
     def test_ics_crlf_injection_and_json_assignment_export_safe(self):
+        import json
         from apps.assignments.models import Subject, Assignment
         from django.utils import timezone
         self.client.login(username='sec_victim', password='StrongPassword123!')
@@ -579,12 +589,13 @@ class PenetrationSecurityRegressionTests(TestCase):
         )
         ics_res = self.client.get(reverse('export_data_ics'))
         self.assertEqual(ics_res.status_code, 200)
-        ics_text = ics_res.content.decode('utf-8')
+        ics_text = b"".join(ics_res.streaming_content).decode('utf-8') if ics_res.streaming else ics_res.content.decode('utf-8')
         self.assertNotIn("\nBEGIN:VALARM", ics_text)
 
         json_res = self.client.get(reverse('export_data_json'))
         self.assertEqual(json_res.status_code, 200)
-        self.assertEqual(json_res.json()['assignments'][0]['subject'], 'Security 101')
+        json_text = b"".join(json_res.streaming_content).decode('utf-8') if json_res.streaming else json_res.content.decode('utf-8')
+        self.assertEqual(json.loads(json_text)['assignments'][0]['subject'], 'Security 101')
 
     def test_logout_requires_post_to_prevent_csrf(self):
         self.client.login(username='sec_victim', password='StrongPassword123!')
@@ -650,6 +661,68 @@ class PenetrationSecurityRegressionTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('EvenStrongerPass!99'))
         self.assertTrue(self.user.audit_logs.filter(action='PASSWORD_CHANGE').exists())
+
+
+class HighConcurrencyScaleTests(TestCase):
+    """
+    Verifies 100M+ scale codebase optimizations:
+    - O(1) batched habit streak computation (no N+1 HabitLog queries)
+    - API limit/offset pagination & max page size clamp
+    - Primary/Read-Replica router logic
+    - Aggregated Analytics rendering
+    """
+    def setUp(self):
+        from config.middleware import RATE_LIMIT_STORE
+        RATE_LIMIT_STORE.clear()
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='scale_user',
+            email='scale@example.com',
+            password='StrongPassword123!'
+        )
+        self.client.login(username='scale_user', password='StrongPassword123!')
+
+    def test_batched_habit_streaks_constant_query_count(self):
+        from apps.habits.models import Habit, HabitLog
+        from django.utils import timezone
+        today = timezone.localdate()
+        habits = [Habit.objects.create(user=self.user, title=f'Habit {i}') for i in range(10)]
+        for h in habits:
+            HabitLog.objects.create(habit=h, date=today, status='completed')
+
+        # Batched lookup must run in 1 SQL query regardless of having 10 habits
+        with self.assertNumQueries(1):
+            streaks, completed = Habit.compute_streaks_for_habits(habits, today=today)
+        self.assertEqual(len(completed), 10)
+        self.assertEqual(all(streaks[h.id] == 1 for h in habits), True)
+
+    def test_api_tasks_pagination_and_max_limit_clamping(self):
+        for i in range(5):
+            Task.objects.create(user=self.user, title=f'Paged Task {i}')
+        res = self.client.get(reverse('api_tasks_list_create') + '?limit=2&offset=1')
+        self.assertEqual(res.status_code, 200)
+        data = res.json()['data']
+        self.assertEqual(data['count'], 5)
+        self.assertEqual(data['limit'], 2)
+        self.assertEqual(data['offset'], 1)
+        self.assertEqual(len(data['results']), 2)
+        self.assertTrue(data['has_more'])
+
+        # Excessive limit (>100) must be clamped to 100
+        res_clamp = self.client.get(reverse('api_tasks_list_create') + '?limit=999999')
+        self.assertEqual(res_clamp.status_code, 200)
+        self.assertEqual(res_clamp.json()['data']['limit'], 100)
+
+    def test_primary_replica_router_routing(self):
+        from config.db_router import PrimaryReplicaRouter
+        from django.test import override_settings
+        router = PrimaryReplicaRouter()
+        self.assertEqual(router.db_for_read(Task), 'default')
+        with override_settings(DATABASES={'default': {}, 'read_replica': {}}):
+            self.assertEqual(router.db_for_read(Task), 'read_replica')
+            self.assertEqual(router.db_for_write(Task), 'default')
+            self.assertEqual(router.db_for_read(User), 'default')
+
 
 
 

@@ -173,6 +173,9 @@ class AuditLog(models.Model):
     class Meta:
         db_table = "accounts_audit_log"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=['user', '-created_at'], name='idx_audit_user_created'),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.action} at {self.created_at}"

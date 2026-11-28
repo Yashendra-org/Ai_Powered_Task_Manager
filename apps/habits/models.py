@@ -24,6 +24,9 @@ class Habit(models.Model):
     class Meta:
         db_table = 'habits_habit'
         ordering = ['title']
+        indexes = [
+            models.Index(fields=['user', 'is_active'], name='idx_habit_user_active'),
+        ]
 
     def __str__(self):
         return self.title
@@ -44,6 +47,47 @@ class Habit(models.Model):
             current -= timezone.timedelta(days=1)
         return streak
 
+    @staticmethod
+    def compute_streaks_for_habits(habits, today=None, lookback_days=365):
+        """
+        Batched O(1)-query streak and today-completion calculation for a list of habits.
+        Eliminates N+1 HabitLog queries on Dashboard and REST API list endpoints.
+        Returns tuple: (streaks_by_habit_id, completed_today_ids)
+        """
+        habit_list = list(habits)
+        if not habit_list:
+            return {}, set()
+
+        today = today or timezone.localdate()
+        cutoff = today - timezone.timedelta(days=lookback_days)
+        rows = HabitLog.objects.filter(
+            habit_id__in=[h.id for h in habit_list],
+            status='completed',
+            date__gte=cutoff,
+        ).values_list('habit_id', 'date')
+
+        dates_by_habit = {}
+        completed_today_ids = set()
+        for hid, log_date in rows:
+            dates_by_habit.setdefault(hid, set()).add(log_date)
+            if log_date == today:
+                completed_today_ids.add(hid)
+
+        streaks = {}
+        for h in habit_list:
+            logs = dates_by_habit.get(h.id)
+            if not logs:
+                streaks[h.id] = 0
+                continue
+            streak = 0
+            current = today if today in logs else (today - timezone.timedelta(days=1))
+            while current in logs:
+                streak += 1
+                current -= timezone.timedelta(days=1)
+            streaks[h.id] = streak
+
+        return streaks, completed_today_ids
+
 
 class HabitLog(models.Model):
     STATUS_CHOICES = [
@@ -62,6 +106,9 @@ class HabitLog(models.Model):
         db_table = 'habits_habit_log'
         unique_together = ('habit', 'date')
         ordering = ['-date']
+        indexes = [
+            models.Index(fields=['habit', 'status', '-date'], name='idx_hlog_habit_stat_date'),
+        ]
 
     def __str__(self):
         return f"{self.habit.title} on {self.date} ({self.status})"

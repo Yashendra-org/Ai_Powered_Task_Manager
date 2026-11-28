@@ -135,18 +135,27 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
-# Database Configuration
-# Priority: 1) DATABASE_URL (Render PostgreSQL), 2) Individual DB_* vars, 3) SQLite fallback
+# Database Configuration (Primary + Read Replica Splitting + PgBouncer Pooling)
+# Priority: 1) DATABASE_URL (PostgreSQL), 2) Individual DB_* vars, 3) SQLite fallback
 DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_READ_REPLICA_URL = os.getenv('DATABASE_READ_REPLICA_URL')
+USE_PGBOUNCER = os.getenv('USE_PGBOUNCER', 'False').lower() in ('true', '1', 'yes')
+_CONN_MAX_AGE = 0 if USE_PGBOUNCER else int(os.getenv('DB_CONN_MAX_AGE', '600'))
 
 if dj_database_url and DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
-            conn_max_age=600,
+            conn_max_age=_CONN_MAX_AGE,
             conn_health_checks=True,
         )
     }
+    if DATABASE_READ_REPLICA_URL:
+        DATABASES['read_replica'] = dj_database_url.config(
+            default=DATABASE_READ_REPLICA_URL,
+            conn_max_age=_CONN_MAX_AGE,
+            conn_health_checks=True,
+        )
 elif 'postgresql' in os.getenv('DB_ENGINE', '') and os.getenv('DB_NAME'):
     DATABASES = {
         'default': {
@@ -156,6 +165,7 @@ elif 'postgresql' in os.getenv('DB_ENGINE', '') and os.getenv('DB_NAME'):
             'PASSWORD': os.getenv('DB_PASSWORD', ''),
             'HOST': os.getenv('DB_HOST', 'localhost'),
             'PORT': os.getenv('DB_PORT', '5432'),
+            'CONN_MAX_AGE': _CONN_MAX_AGE,
         }
     }
 else:
@@ -165,6 +175,13 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
+if USE_PGBOUNCER:
+    for _db_cfg in DATABASES.values():
+        _db_cfg['DISABLE_SERVER_SIDE_CURSORS'] = True
+
+if 'read_replica' in DATABASES:
+    DATABASE_ROUTERS = ['config.db_router.PrimaryReplicaRouter']
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -196,9 +213,16 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+USE_S3_STORAGE = os.getenv('USE_S3_STORAGE', 'False').lower() in ('true', '1', 'yes')
+_DEFAULT_STORAGE_BACKEND = (
+    "storages.backends.s3.S3Storage"
+    if USE_S3_STORAGE
+    else "django.core.files.storage.FileSystemStorage"
+)
+
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": _DEFAULT_STORAGE_BACKEND,
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -235,8 +259,35 @@ REST_FRAMEWORK = {
     },
 }
 
-# Celery & Redis Configuration
+# Celery, Distributed Redis Cache & High-Concurrency Session Store
 REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/0')
+USE_REDIS_CACHE = (
+    not IS_TEST_RUN
+    and (
+        os.getenv('USE_REDIS_CACHE', 'False').lower() in ('true', '1', 'yes')
+        or (IS_RENDER and bool(os.getenv('REDIS_URL')))
+    )
+)
+
+if USE_REDIS_CACHE:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'KEY_PREFIX': 'ht_prod',
+            'TIMEOUT': 300,
+        }
+    }
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'habittracker-local-cache',
+            'TIMEOUT': 300,
+        }
+    }
+
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', REDIS_URL)
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', REDIS_URL)
 CELERY_TIMEZONE = TIME_ZONE

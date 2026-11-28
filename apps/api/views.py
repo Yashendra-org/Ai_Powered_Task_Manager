@@ -1,10 +1,27 @@
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db import models
+from django.db.models import Count, Q
+from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
+
+
+def _parse_pagination(request, default_limit=50, max_limit=100):
+    """Parses and clamps limit/offset parameters to protect memory and DB latency."""
+    try:
+        limit = int(request.query_params.get('limit', default_limit))
+    except (ValueError, TypeError):
+        limit = default_limit
+    try:
+        offset = int(request.query_params.get('offset', 0))
+    except (ValueError, TypeError):
+        offset = 0
+    limit = max(1, min(max_limit, limit))
+    offset = max(0, offset)
+    return limit, offset
 
 from apps.tasks.models import Task, Category
 from apps.habits.models import Habit, HabitLog
@@ -39,7 +56,7 @@ class TaskListCreateApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        tasks = Task.objects.filter(user=request.user)
+        tasks = Task.objects.active().filter(user=request.user).select_related('category')
         status_param = request.query_params.get('status')
         if status_param:
             tasks = tasks.filter(status=status_param)
@@ -47,8 +64,12 @@ class TaskListCreateApiView(APIView):
         if priority_param:
             tasks = tasks.filter(priority=priority_param)
 
+        limit, offset = _parse_pagination(request)
+        total_count = tasks.count()
+        paged_tasks = tasks.order_by('-created_at')[offset:offset + limit]
+
         data = []
-        for t in tasks:
+        for t in paged_tasks:
             data.append({
                 "id": str(t.id),
                 "title": t.title,
@@ -64,7 +85,10 @@ class TaskListCreateApiView(APIView):
         return Response({
             "success": True,
             "data": {
-                "count": len(data),
+                "count": total_count,
+                "limit": limit,
+                "offset": offset,
+                "has_more": (offset + len(data)) < total_count,
                 "results": data
             }
         })
@@ -176,12 +200,10 @@ class HabitListApiView(APIView):
 
     def get(self, request):
         today = timezone.localdate()
-        habits = Habit.objects.filter(user=request.user, is_active=True).order_by('id')
-        completed_today_ids = set(HabitLog.objects.filter(
-            habit__in=habits,
-            date=today,
-            status='completed'
-        ).values_list('habit_id', flat=True))
+        limit, offset = _parse_pagination(request)
+        qs = Habit.objects.filter(user=request.user, is_active=True).order_by('id')
+        habits = list(qs[offset:offset + limit])
+        streaks_map, completed_today_ids = Habit.compute_streaks_for_habits(habits, today=today)
 
         data = []
         for h in habits:
@@ -191,7 +213,7 @@ class HabitListApiView(APIView):
                 "frequency": h.frequency,
                 "monthly_goal": h.monthly_goal,
                 "color": h.color,
-                "current_streak": h.current_streak(),
+                "current_streak": streaks_map.get(h.id, 0),
                 "is_completed_today": h.id in completed_today_ids
             })
 
@@ -205,7 +227,8 @@ class AssignmentListApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        assignments = Assignment.objects.filter(user=request.user).select_related('subject')
+        limit, offset = _parse_pagination(request)
+        assignments = Assignment.objects.filter(user=request.user).select_related('subject')[offset:offset + limit]
         data = []
         for a in assignments:
             data.append({
@@ -230,22 +253,33 @@ class AnalyticsSummaryApiView(APIView):
 
     def get(self, request):
         user = request.user
-        tasks_total = Task.objects.filter(user=user).count()
-        tasks_completed = Task.objects.filter(user=user, status='completed').count()
+        cache_key = f"api_analytics_summary:v1:{user.id}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response({"success": True, "data": cached})
+
+        task_agg = Task.objects.active().filter(user=user).aggregate(
+            tasks_total=Count('id'),
+            tasks_completed=Count('id', filter=Q(status='completed')),
+        )
+        tasks_total = task_agg['tasks_total'] or 0
+        tasks_completed = task_agg['tasks_completed'] or 0
         habits_active = Habit.objects.filter(user=user, is_active=True).count()
         assignments_pending = Assignment.objects.filter(user=user).exclude(status='submitted').count()
 
         completion_rate = round((tasks_completed / tasks_total) * 100) if tasks_total > 0 else 0
+        payload = {
+            "tasks_total": tasks_total,
+            "tasks_completed": tasks_completed,
+            "task_completion_rate": completion_rate,
+            "habits_active": habits_active,
+            "assignments_pending": assignments_pending,
+        }
+        cache.set(cache_key, payload, timeout=45)
 
         return Response({
             "success": True,
-            "data": {
-                "tasks_total": tasks_total,
-                "tasks_completed": tasks_completed,
-                "task_completion_rate": completion_rate,
-                "habits_active": habits_active,
-                "assignments_pending": assignments_pending,
-            }
+            "data": payload
         })
 
 
