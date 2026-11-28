@@ -66,3 +66,8 @@ def sanitize_csv_cell(value) -> str:
     if text[0] in ("=", "+", "-", "@", "\t", "\r") or (stripped and stripped[0] in ("=", "+", "-", "@")):
         return f"'{text}"
     return text
+
+
+def clamp_search_query(raw_query: str, max_len: int = 100) -> str:
+    """Normalize and bound free-text search queries to protect DB LIKE/icontains scans."""
+    return (raw_query or "").strip()[:max_len]

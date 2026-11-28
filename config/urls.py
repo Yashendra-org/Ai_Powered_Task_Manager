@@ -5,7 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponseNotFound
 from .views import (
-    dashboard_view, root_redirect, health_check_view,
+    dashboard_view, dismiss_dashboard_insight_view, root_redirect, health_check_view,
     robots_txt_view, sitemap_xml_view, custom_page_not_found_view,
     custom_server_error_view, offline_view
 )
@@ -34,6 +34,7 @@ urlpatterns += [
     path('sitemap.xml', sitemap_xml_view, name='sitemap_xml'),
     path('', root_redirect, name='root'),
     path('dashboard/', dashboard_view, name='dashboard'),
+    path('dashboard/insights/dismiss/', dismiss_dashboard_insight_view, name='dismiss_dashboard_insight'),
     path('api/', include('apps.api.urls')),
     path('tasks/', include('apps.tasks.urls')),
     path('assignments/', include('apps.assignments.urls')),
@@ -47,7 +48,6 @@ urlpatterns += [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # Custom Error State Handlers (UI/UX Guide State 05 & 103 Things Guide #40)

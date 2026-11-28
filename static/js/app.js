@@ -591,9 +591,32 @@ document.addEventListener('submit', function (e) {
         return;
     }
 
-    // 2. Quick Add Task
-    if (form.id === 'quick-add-task-form' || ((action.includes('/tasks/today/') || action.includes('/tasks/my-day/') || action.includes('/tasks/create/') || action.includes('/tasks/new/')) && form.method.toLowerCase() === 'post')) {
+    // 2. Quick Add Task (only inline My Day / Today bar, never full task create page)
+    if (form.id === 'quick-add-task-form' || ((action.includes('/tasks/today/') || action.includes('/tasks/my-day/')) && form.method.toLowerCase() === 'post')) {
         handleQuickAddTask(form, e);
+        return;
+    }
+
+    // 2b. Dashboard insight dismiss banner
+    if (action.includes('/dashboard/insights/dismiss/') && form.method.toLowerCase() === 'post') {
+        e.preventDefault();
+        const banner = form.closest('[data-insight-banner]');
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken(form),
+                'Accept': 'application/json',
+            },
+            body: new FormData(form),
+        }).then(r => r.json()).then(data => {
+            if (data.success && banner) {
+                banner.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
+                banner.style.opacity = '0';
+                banner.style.transform = 'translateY(-4px)';
+                setTimeout(() => banner.remove(), 220);
+            }
+        }).catch(() => form.submit());
         return;
     }
 

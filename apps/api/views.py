@@ -291,7 +291,8 @@ class GlobalSearchApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        query = request.query_params.get('q', '').strip()[:100]
+        from config.security import clamp_search_query
+        query = clamp_search_query(request.query_params.get('q', ''))
         if not query:
             return Response({
                 "success": True,

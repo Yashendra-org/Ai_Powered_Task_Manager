@@ -14,7 +14,7 @@ from django.urls import reverse
 from .forms import UserRegisterForm, UserLoginForm, UserProfileForm, DeleteAccountForm, ReferralRedeemForm
 from .models import record_audit_event
 from .services.referral_service import get_user_referral_summary, process_referral_submission
-from config.security import sanitize_csv_cell
+from config.security import sanitize_csv_cell, extract_client_ip
 from apps.tasks.models import Task, Category
 from apps.habits.models import Habit
 from apps.notes.models import Note
@@ -44,10 +44,18 @@ class CustomLoginView(LoginView):
     redirect_authenticated_user = True
 
     def form_valid(self, form):
+        response = super().form_valid(form)
         user = form.get_user()
+        remember_me = self.request.POST.get('remember-me') or self.request.POST.get('remember_me')
+        if remember_me in ('on', 'true', '1', 'yes'):
+            # Persistent 14-day session when Remember Me is explicitly checked
+            self.request.session.set_expiry(14 * 24 * 60 * 60)
+        else:
+            # Session cookie expires on browser close when unchecked
+            self.request.session.set_expiry(0)
         record_audit_event(user, 'LOGIN', self.request, f"User {user.username} signed in successfully")
         messages.success(self.request, f"Welcome back, {user.username}!")
-        return super().form_valid(form)
+        return response
 
 
 @require_POST
@@ -74,21 +82,39 @@ def profile_view(request):
 @login_required
 def settings_view(request):
     delete_form = DeleteAccountForm(user=request.user)
+    original_email = (request.user.email or '').strip().lower()
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=request.user)
         if form.is_valid():
-            form.save()
-            record_audit_event(request.user, 'SETTINGS_UPDATE', request, "Updated account & accessibility preferences")
+            user = form.save()
+            new_email = (user.email or '').strip().lower()
+            if original_email and new_email != original_email:
+                user.bump_session_version()
+                update_session_auth_hash(request, user)
+                record_audit_event(
+                    user,
+                    'EMAIL_CHANGE',
+                    request,
+                    f"Changed account email from {original_email} to {new_email} and revoked prior sessions"
+                )
+            else:
+                record_audit_event(user, 'SETTINGS_UPDATE', request, "Updated account & accessibility preferences")
             messages.success(request, "Your preferences have been updated.")
             return redirect('settings')
     else:
         form = UserProfileForm(instance=request.user)
-    
+
+    current_ip = extract_client_ip(request)
+    current_ua = (request.META.get('HTTP_USER_AGENT') or 'Unknown Client')[:120]
+    recent_logins = request.user.audit_logs.filter(action='LOGIN')[:5]
     audit_logs = request.user.audit_logs.all()[:20]
     return render(request, 'accounts/settings.html', {
         'form': form,
         'delete_form': delete_form,
         'audit_logs': audit_logs,
+        'recent_logins': recent_logins,
+        'current_session_ip': current_ip,
+        'current_session_ua': current_ua,
     })
 
 
@@ -307,15 +333,17 @@ def export_data_ics_view(request):
 def password_change_view(request):
     """
     Authenticated Password Change / Reset View.
-    Updates password safely, preserves current session hash, and logs audit event.
+    Updates password safely, revokes all other device sessions in O(1),
+    preserves current session hash, and logs audit event.
     """
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
+            user.bump_session_version()
             update_session_auth_hash(request, user)
-            record_audit_event(user, 'PASSWORD_CHANGE', request, "User changed account password")
-            messages.success(request, "Your password has been updated successfully!")
+            record_audit_event(user, 'PASSWORD_CHANGE', request, "User changed account password and revoked other sessions")
+            messages.success(request, "Your password has been updated and all other sessions have been signed out.")
             return redirect('settings')
     else:
         form = PasswordChangeForm(request.user)
@@ -326,6 +354,21 @@ def password_change_view(request):
         })
 
     return render(request, 'accounts/password_change.html', {'form': form})
+
+
+@login_required
+@require_POST
+def revoke_sessions_view(request):
+    """
+    O(1) Global Session Revocation: increments user.session_version so every
+    other browser/device fails get_session_auth_hash() verification immediately,
+    while rotating the current session's auth hash so this session stays active.
+    """
+    request.user.bump_session_version()
+    update_session_auth_hash(request, request.user)
+    record_audit_event(request.user, 'SESSION_REVOKE', request, "Revoked all other active sessions across devices")
+    messages.success(request, "All other active sessions have been signed out.")
+    return redirect('settings')
 
 
 @login_required

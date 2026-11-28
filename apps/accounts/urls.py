@@ -3,7 +3,8 @@ from django.contrib.auth import views as auth_views
 from .views import (
     register_view, CustomLoginView, custom_logout_view,
     settings_view, profile_view, delete_account_view,
-    password_change_view, referral_hub_view, referral_redeem_view,
+    password_change_view, revoke_sessions_view,
+    referral_hub_view, referral_redeem_view,
     export_data_json_view, export_data_csv_view, export_data_ics_view
 )
 
@@ -23,6 +24,8 @@ urlpatterns = [
     path('settings/', settings_view, name='settings'),
     path('password-change/', password_change_view, name='password_change'),
     path('account/change-password/', password_change_view, name='account_password_change'),
+    path('settings/sessions/revoke/', revoke_sessions_view, name='revoke_sessions'),
+    path('account/sessions/revoke/', revoke_sessions_view, name='account_revoke_sessions'),
     path('delete-account/', delete_account_view, name='delete_account'),
 
     # Data Portability & GDPR Exporters (Pillar 2, #8)

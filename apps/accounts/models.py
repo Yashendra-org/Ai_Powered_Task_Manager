@@ -3,6 +3,7 @@ import string
 import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils.crypto import salted_hmac
 
 
 class User(AbstractUser):
@@ -47,11 +48,27 @@ class User(AbstractUser):
         ],
         help_text="Default page destination opened immediately upon sign-in"
     )
+    session_version = models.PositiveIntegerField(
+        default=1,
+        help_text="Monotonic counter incremented when revoking active user sessions in O(1)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "accounts_user"
         ordering = ["-date_joined"]
+
+    def get_session_auth_hash(self):
+        """Include session_version in Django's HMAC session hash for O(1) global session revocation."""
+        key_salt = "apps.accounts.models.User.get_session_auth_hash"
+        payload = f"{self.password}:{self.session_version}"
+        return salted_hmac(key_salt, payload, algorithm="sha256").hexdigest()
+
+    def bump_session_version(self):
+        """Atomically increment session_version and sync in-memory instance to revoke other sessions."""
+        User.objects.filter(pk=self.pk).update(session_version=models.F('session_version') + 1)
+        self.refresh_from_db(fields=['session_version'])
+        return self.session_version
 
     def __str__(self):
         return self.username
@@ -153,6 +170,8 @@ class AuditLog(models.Model):
         ('LOGIN', 'User Sign-in'),
         ('LOGOUT', 'User Sign-out'),
         ('PASSWORD_CHANGE', 'Password Changed'),
+        ('EMAIL_CHANGE', 'Email Address Changed'),
+        ('SESSION_REVOKE', 'All Other Sessions Revoked'),
         ('PROFILE_UPDATE', 'Profile Updated'),
         ('SETTINGS_UPDATE', 'Settings & Preferences Updated'),
         ('EXPORT_JSON', 'Exported Account Data (JSON)'),

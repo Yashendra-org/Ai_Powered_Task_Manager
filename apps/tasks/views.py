@@ -8,7 +8,7 @@ from django.db.models import Q
 from .models import Task, Category
 from .forms import TaskForm, QuickTaskForm, CategoryForm
 from .services import TaskService
-from config.security import safe_redirect_back
+from config.security import safe_redirect_back, clamp_search_query
 
 
 @login_required
@@ -97,8 +97,8 @@ def all_tasks_view(request):
     tasks = Task.objects.active().filter(user=user)
     categories = Category.objects.filter(user=user)
 
-    # Search filter
-    query = request.GET.get('q', '').strip()
+    # Search filter (bounded to prevent excessive pattern matching cost)
+    query = clamp_search_query(request.GET.get('q', ''))
     if query:
         tasks = tasks.filter(Q(title__icontains=query) | Q(description__icontains=query))
 
@@ -144,18 +144,16 @@ def task_create_view(request):
     if request.method == 'POST':
         form = TaskForm(request.POST, user=user)
         if form.is_valid():
-            task = form.save(commit=False)
-            task.user = user
-            task.save()
-            TaskService.create_task(
+            cd = form.cleaned_data
+            task = TaskService.create_task(
                 user=user,
-                title=task.title,
-                description=task.description,
-                category=task.category,
-                priority=task.priority,
-                scheduled_start=task.scheduled_start,
-                due_at=task.due_at,
-                estimated_duration=task.estimated_duration
+                title=cd['title'],
+                description=cd.get('description', ''),
+                category=cd.get('category'),
+                priority=cd.get('priority') or 'medium',
+                scheduled_start=cd.get('scheduled_start'),
+                due_at=cd.get('due_at'),
+                estimated_duration=cd.get('estimated_duration') or 30,
             )
             messages.success(request, f"Task '{task.title}' created successfully!")
             return redirect('all_tasks')

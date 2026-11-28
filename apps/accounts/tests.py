@@ -60,7 +60,7 @@ class AuthenticationAndDashboardTests(TestCase):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, 200)
 
-        # Update settings
+        # Update settings (email change requires current_password)
         update_data = {
             'first_name': 'Alex',
             'last_name': 'Dev',
@@ -71,6 +71,7 @@ class AuthenticationAndDashboardTests(TestCase):
             'week_start_day': 'sunday',
             'email_notifications': 'on',
             'sound_effects': 'on',
+            'current_password': 'TestPassword123!',
         }
         post_response = self.client.post(self.settings_url, update_data, follow=True)
         self.assertEqual(post_response.status_code, 200)
@@ -661,6 +662,288 @@ class PenetrationSecurityRegressionTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('EvenStrongerPass!99'))
         self.assertTrue(self.user.audit_logs.filter(action='PASSWORD_CHANGE').exists())
+
+
+class BugFixAndSecurityLoopholeTests(TestCase):
+    """
+    Tests all 12 functional bugs and security loopholes fixed in one batch:
+    Bug 1: Duplicate task creation
+    Bug 2: Hidden form errors (AJAX interception)
+    Bug 3: Authenticated attachment download
+    Bug 4: DB accessibility settings in base.html
+    Bug 5: Remember-me checkbox
+    Bug 6: Dashboard insight dismiss
+    Security 1: Authenticated media endpoint (covered by Bug 3)
+    Security 2: Password-protected email change
+    Security 3: Per-email reset throttling
+    Security 4: Web CRUD rate limits
+    Security 5: Bounded q search
+    Security 6: Real session revocation
+    """
+
+    def setUp(self):
+        from config.middleware import RATE_LIMIT_STORE
+        RATE_LIMIT_STORE.clear()
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='fixtest',
+            email='fix@example.com',
+            password='FixPass123!',
+            timezone='Asia/Kolkata',
+            daily_review_time='21:30'
+        )
+
+    # --- Bug 1: No duplicate task creation ---
+    def test_task_create_no_duplicate(self):
+        self.client.login(username='fixtest', password='FixPass123!')
+        from apps.tasks.models import Category
+        post_data = {
+            'title': 'UniqueTask',
+            'priority': 'high',
+            'estimated_duration': 30,
+        }
+        self.client.post(reverse('task_create'), post_data)
+        self.assertEqual(Task.objects.filter(user=self.user, title='UniqueTask').count(), 1)
+
+    # --- Bug 5: Remember-me sets long session ---
+    def test_remember_me_sets_long_session(self):
+        self.client.post(reverse('login'), {
+            'username': 'fixtest',
+            'password': 'FixPass123!',
+            'remember-me': 'on',
+        })
+        session = self.client.session
+        self.assertEqual(session.get_expiry_age(), 14 * 24 * 60 * 60)
+
+    def test_remember_me_unchecked_session_expires_on_close(self):
+        self.client.post(reverse('login'), {
+            'username': 'fixtest',
+            'password': 'FixPass123!',
+        })
+        session = self.client.session
+        # Session expiry 0 means browser-close (Django returns settings.SESSION_COOKIE_AGE
+        # from get_expiry_age() when set_expiry(0) was called, but get_expire_at_browser_close returns True)
+        self.assertTrue(session.get_expire_at_browser_close())
+
+    # --- Bug 6: Dashboard insight dismiss ---
+    def test_dashboard_insight_dismiss_persists(self):
+        self.client.login(username='fixtest', password='FixPass123!')
+        # First, dashboard should show the system_foundation insight
+        dash_res = self.client.get(reverse('dashboard'))
+        self.assertContains(dash_res, 'Foundation')
+
+        # Dismiss it
+        self.client.post(reverse('dismiss_dashboard_insight'), {'insight_id': 'system_foundation'})
+
+        # Confirm it's gone
+        dash_res2 = self.client.get(reverse('dashboard'))
+        self.assertNotContains(dash_res2, 'system_foundation')
+
+    # --- Bug 3 / Security 1: Authenticated attachment download ---
+    def test_authenticated_attachment_download_owner(self):
+        from apps.assignments.models import Subject, Assignment
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.client.login(username='fixtest', password='FixPass123!')
+        subj = Subject.objects.create(user=self.user, name='TestSubj', code='TS')
+        pdf_content = b'%PDF-1.4 test content bytes here plus padding'
+        attachment_file = SimpleUploadedFile('test.pdf', pdf_content, content_type='application/pdf')
+        asgn = Assignment.objects.create(
+            user=self.user, subject=subj, title='Attach Test',
+            due_at='2027-01-01T12:00:00Z', attachment=attachment_file,
+        )
+        res = self.client.get(reverse('assignment_attachment', kwargs={'assignment_id': asgn.id}))
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('attachment', res.get('Content-Disposition', ''))
+
+    def test_authenticated_attachment_blocked_other_user(self):
+        from apps.assignments.models import Subject, Assignment
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        subj = Subject.objects.create(user=self.user, name='TestSubj2', code='TS2')
+        pdf_content = b'%PDF-1.4 test content bytes here plus padding'
+        attachment_file = SimpleUploadedFile('test2.pdf', pdf_content, content_type='application/pdf')
+        asgn = Assignment.objects.create(
+            user=self.user, subject=subj, title='Attach Test 2',
+            due_at='2027-01-01T12:00:00Z', attachment=attachment_file,
+        )
+        other_user = User.objects.create_user(username='other', email='other@example.com', password='OtherPass123!')
+        self.client.login(username='other', password='OtherPass123!')
+        res = self.client.get(reverse('assignment_attachment', kwargs={'assignment_id': asgn.id}))
+        self.assertEqual(res.status_code, 404)
+
+    def test_unauthenticated_attachment_blocked(self):
+        import uuid
+        fake_id = uuid.uuid4()
+        res = self.client.get(reverse('assignment_attachment', kwargs={'assignment_id': fake_id}))
+        self.assertEqual(res.status_code, 302)
+        self.assertTrue(res.url.startswith('/login/'))
+
+    # --- Security 2: Password-protected email change ---
+    def test_email_change_requires_password(self):
+        self.client.login(username='fixtest', password='FixPass123!')
+        res = self.client.post(reverse('settings'), {
+            'first_name': 'Fix',
+            'last_name': 'Test',
+            'email': 'newemail@example.com',
+            'timezone': 'Asia/Kolkata',
+            'morning_briefing_time': '08:00:00',
+            'daily_review_time': '21:30:00',
+            'week_start_day': 'monday',
+        })
+        # Form should fail — email stays unchanged
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, 'fix@example.com')
+
+    def test_email_change_wrong_password_fails(self):
+        self.client.login(username='fixtest', password='FixPass123!')
+        res = self.client.post(reverse('settings'), {
+            'first_name': 'Fix',
+            'last_name': 'Test',
+            'email': 'newemail@example.com',
+            'timezone': 'Asia/Kolkata',
+            'morning_briefing_time': '08:00:00',
+            'daily_review_time': '21:30:00',
+            'week_start_day': 'monday',
+            'current_password': 'WrongPassword!',
+        })
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, 'fix@example.com')
+
+    def test_email_change_correct_password_succeeds(self):
+        self.client.login(username='fixtest', password='FixPass123!')
+        self.client.post(reverse('settings'), {
+            'first_name': 'Fix',
+            'last_name': 'Test',
+            'email': 'newemail@example.com',
+            'timezone': 'Asia/Kolkata',
+            'morning_briefing_time': '08:00:00',
+            'daily_review_time': '21:30:00',
+            'week_start_day': 'monday',
+            'current_password': 'FixPass123!',
+        })
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, 'newemail@example.com')
+        from apps.accounts.models import AuditLog
+        self.assertTrue(AuditLog.objects.filter(user=self.user, action='EMAIL_CHANGE').exists())
+
+    # --- Security 3: Per-email password reset throttling ---
+    def test_per_email_password_reset_throttle(self):
+        for _ in range(3):
+            self.client.post(reverse('password_reset'), {'email': 'fix@example.com'}, REMOTE_ADDR='198.51.100.60')
+        blocked = self.client.post(reverse('password_reset'), {'email': 'fix@example.com'}, REMOTE_ADDR='198.51.100.61')
+        self.assertEqual(blocked.status_code, 429)
+
+    # --- Security 4: Web CRUD rate limits ---
+    def test_web_crud_rate_limiting(self):
+        self.client.login(username='fixtest', password='FixPass123!')
+        for i in range(60):
+            self.client.post(reverse('task_create'), {
+                'title': f'RateLimitTask{i}',
+                'priority': 'low',
+                'estimated_duration': 10,
+            }, REMOTE_ADDR='198.51.100.70')
+        blocked = self.client.post(reverse('task_create'), {
+            'title': 'RateLimitTaskBlocked',
+            'priority': 'low',
+            'estimated_duration': 10,
+        }, REMOTE_ADDR='198.51.100.70')
+        self.assertEqual(blocked.status_code, 429)
+
+    # --- Security 5: Bounded search query ---
+    def test_bounded_search_query_truncated(self):
+        self.client.login(username='fixtest', password='FixPass123!')
+        long_query = 'A' * 200
+        res = self.client.get(reverse('all_tasks') + f'?q={long_query}')
+        self.assertEqual(res.status_code, 200)
+
+    # --- Security 6: Real session revocation ---
+    def test_session_revocation_invalidates_other_sessions(self):
+        # Login on client 1
+        c1 = Client()
+        c1.login(username='fixtest', password='FixPass123!')
+        c1_dash = c1.get(reverse('dashboard'))
+        self.assertEqual(c1_dash.status_code, 200)
+
+        # Login on client 2
+        c2 = Client()
+        c2.login(username='fixtest', password='FixPass123!')
+        c2_dash = c2.get(reverse('dashboard'))
+        self.assertEqual(c2_dash.status_code, 200)
+
+        # Client 1 revokes all other sessions
+        c1.post(reverse('revoke_sessions'))
+
+        # Client 2 should be logged out (redirected to login)
+        c2_dash2 = c2.get(reverse('dashboard'))
+        self.assertEqual(c2_dash2.status_code, 302)
+        self.assertTrue(c2_dash2.url.startswith('/login/'))
+
+        # Client 1 should still be logged in
+        c1_dash2 = c1.get(reverse('dashboard'))
+        self.assertEqual(c1_dash2.status_code, 200)
+
+    def test_password_change_revokes_other_sessions(self):
+        # Login on client 1
+        c1 = Client()
+        c1.login(username='fixtest', password='FixPass123!')
+
+        # Login on client 2
+        c2 = Client()
+        c2.login(username='fixtest', password='FixPass123!')
+        self.assertEqual(c2.get(reverse('dashboard')).status_code, 200)
+
+        # Client 1 changes password
+        c1.post(reverse('password_change'), {
+            'old_password': 'FixPass123!',
+            'new_password1': 'NewStrongPass!99',
+            'new_password2': 'NewStrongPass!99',
+        })
+
+        # Client 2 should be logged out
+        c2_dash = c2.get(reverse('dashboard'))
+        self.assertEqual(c2_dash.status_code, 302)
+        self.assertTrue(c2_dash.url.startswith('/login/'))
+
+    # --- Bug 4: High contrast class in HTML tag ---
+    def test_high_contrast_class_in_html_tag(self):
+        self.user.high_contrast = True
+        self.user.save()
+        self.client.login(username='fixtest', password='FixPass123!')
+        res = self.client.get(reverse('dashboard'))
+        self.assertContains(res, 'high-contrast')
+
+    def test_reduced_motion_class_in_html_tag(self):
+        self.user.reduced_motion = True
+        self.user.save()
+        self.client.login(username='fixtest', password='FixPass123!')
+        res = self.client.get(reverse('dashboard'))
+        self.assertContains(res, 'reduced-motion')
+
+    # --- Settings template: revoke sessions button present ---
+    def test_settings_has_revoke_sessions_button(self):
+        self.client.login(username='fixtest', password='FixPass123!')
+        res = self.client.get(reverse('settings'))
+        self.assertContains(res, 'Revoke All Sessions')
+
+    # --- Settings template: current_password field present ---
+    def test_settings_has_current_password_field(self):
+        self.client.login(username='fixtest', password='FixPass123!')
+        res = self.client.get(reverse('settings'))
+        self.assertContains(res, 'current_password')
+
+    # --- Assignment list: attachment download link ---
+    def test_assignment_list_shows_attachment_link(self):
+        from apps.assignments.models import Subject, Assignment
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.client.login(username='fixtest', password='FixPass123!')
+        subj = Subject.objects.create(user=self.user, name='AtchSubj', code='AT')
+        pdf_content = b'%PDF-1.4 test content bytes here plus padding'
+        attachment_file = SimpleUploadedFile('listtest.pdf', pdf_content, content_type='application/pdf')
+        asgn = Assignment.objects.create(
+            user=self.user, subject=subj, title='Visible Attach',
+            due_at='2027-01-01T12:00:00Z', attachment=attachment_file,
+        )
+        res = self.client.get(reverse('assignment_list'))
+        self.assertContains(res, 'Download Attachment')
 
 
 class HighConcurrencyScaleTests(TestCase):

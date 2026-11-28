@@ -19,10 +19,12 @@ RATE_LIMIT_RULES = {
     'login_ip': (60, 15),          # Max 15 login attempts per min per IP across all usernames
     'register': (60, 5),           # Max 5 registrations per min per IP
     'password_reset': (60, 3),     # Max 3 reset requests per min per IP
+    'password_reset_email': (300, 3),  # Max 3 reset requests per 5 min per target email across all IPs
     'referral_redeem': (60, 5),    # Max 5 referral redemptions per min per IP/user
     'account_delete': (60, 3),     # Max 3 account deletion attempts per min
     'data_export': (60, 10),       # Max 10 data exports per min
     'api_write': (60, 60),         # Max 60 API mutations per min per IP/user
+    'web_write': (60, 60),         # Max 60 authenticated web CRUD mutations per min per IP/user
 }
 
 # Suspicious Scanner Probe Patterns (Security Guide: 7,778 Suspicious Requests Case Study)
@@ -218,6 +220,9 @@ class SecurityAndRateLimitMiddleware:
             targets.append(('register', f"register:{client_ip}", {'POST'}))
         elif path in ('/password-reset', '/auth/password-reset'):
             targets.append(('password_reset', f"password_reset:{client_ip}", {'POST'}))
+            target_email = request.POST.get('email', '').strip().lower()[:254]
+            if target_email:
+                targets.append(('password_reset_email', f"password_reset_email:{target_email}", {'POST'}))
         elif path in ('/referrals/redeem', '/account/referrals/redeem'):
             user = getattr(request, 'user', None)
             user_id = user.id if user and getattr(user, 'is_authenticated', False) else 'anon'
@@ -232,5 +237,9 @@ class SecurityAndRateLimitMiddleware:
             targets.append(('data_export', f"export:{client_ip}:{user_id}", {'GET'}))
         elif path.startswith('/api/'):
             targets.append(('api_write', f"api:{client_ip}", {'POST', 'PUT', 'PATCH', 'DELETE'}))
+        elif request.method in ('POST', 'PUT', 'PATCH', 'DELETE') and path not in ('/logout', '/auth/logout'):
+            user = getattr(request, 'user', None)
+            user_id = user.id if user and getattr(user, 'is_authenticated', False) else 'anon'
+            targets.append(('web_write', f"web_write:{client_ip}:{user_id}", {'POST', 'PUT', 'PATCH', 'DELETE'}))
 
         return targets

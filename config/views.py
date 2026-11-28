@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.db import connection
@@ -59,6 +60,17 @@ def dashboard_view(request):
         })
     completed_habits_count = len(completed_today_ids)
 
+    all_recommendations = [
+        {
+            'id': 'system_foundation',
+            'title': 'Foundation & Database Ready',
+            'explanation': f'Phase 1 active. {total_tasks_count} tasks and {len(upcoming_assignments)} assignments tracked for today.',
+            'type': 'system'
+        }
+    ]
+    dismissed_ids = set(request.session.get('dismissed_insights', []))
+    recommendations = [rec for rec in all_recommendations if rec['id'] not in dismissed_ids]
+
     context = {
         'current_date': now.strftime('%A, %d %B %Y'),
         'greeting': get_greeting(now.hour),
@@ -72,15 +84,27 @@ def dashboard_view(request):
         'habits_today': habits_today,
         'completed_habits_count': completed_habits_count,
         'total_habits_count': len(habits_today),
-        'recommendations': [
-            {
-                'title': 'Foundation & Database Ready',
-                'explanation': f'Phase 1 active. {total_tasks_count} tasks and {len(upcoming_assignments)} assignments tracked for today.',
-                'type': 'system'
-            }
-        ]
+        'recommendations': recommendations,
     }
     return render(request, 'dashboard/index.html', context)
+
+
+@login_required
+@require_POST
+def dismiss_dashboard_insight_view(request):
+    """Persistently dismisses a dashboard insight card in the user's session."""
+    insight_id = (request.POST.get('insight_id') or '').strip()[:64]
+    if insight_id:
+        dismissed = list(request.session.get('dismissed_insights', []))
+        if insight_id not in dismissed:
+            dismissed.append(insight_id)
+            request.session['dismissed_insights'] = dismissed[-25:]
+            request.session.modified = True
+
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        return JsonResponse({'success': True, 'dismissed_id': insight_id})
+    return redirect('dashboard')
 
 
 def get_greeting(hour):

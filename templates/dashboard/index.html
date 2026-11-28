@@ -85,7 +85,7 @@
 
     <!-- Smart Suggestions Banner (ML / System) -->
     {% if recommendations %}
-    <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl flex items-start space-x-4">
+    <div data-insight-banner class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl flex items-start space-x-4">
         <div class="p-2 bg-blue-600 text-white rounded-xl shadow-sm flex-shrink-0 mt-0.5">
             <i data-lucide="sparkles" class="w-5 h-5"></i>
         </div>
@@ -96,9 +96,13 @@
             </div>
             <p class="text-xs text-slate-600 mt-1 leading-relaxed">{{ recommendations.0.explanation }}</p>
         </div>
-        <button class="text-slate-400 hover:text-slate-600 p-1">
-            <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
+        <form method="POST" action="{% url 'dismiss_dashboard_insight' %}" class="flex-shrink-0">
+            {% csrf_token %}
+            <input type="hidden" name="insight_id" value="{{ recommendations.0.id }}">
+            <button type="submit" aria-label="Dismiss insight" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-white/60 transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </form>
     </div>
     {% endif %}
 

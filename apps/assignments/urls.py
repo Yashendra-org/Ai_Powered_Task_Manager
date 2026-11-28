@@ -6,6 +6,7 @@ urlpatterns = [
     path('create/', views.assignment_create_view, name='assignment_create'),
     path('new/', views.assignment_create_view, name='assignment_new'),
     path('<uuid:assignment_id>/edit/', views.assignment_edit_view, name='assignment_edit'),
+    path('<uuid:assignment_id>/attachment/', views.assignment_attachment_download_view, name='assignment_attachment'),
     path('<uuid:assignment_id>/delete/', views.assignment_delete_view, name='assignment_delete'),
     path('<uuid:assignment_id>/submit/', views.assignment_submit_toggle_view, name='assignment_submit_toggle'),
     path('subjects/', views.subject_list_view, name='subject_list'),

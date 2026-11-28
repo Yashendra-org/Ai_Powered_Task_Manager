@@ -1,13 +1,14 @@
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, Http404
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from .models import Assignment, Subject, Teacher
 from .forms import AssignmentForm, SubjectForm, TeacherForm
-from config.security import safe_redirect_back
+from config.security import safe_redirect_back, clamp_search_query
 
 
 @login_required
@@ -20,8 +21,8 @@ def assignment_list_view(request):
     assignments = Assignment.objects.filter(user=user)
     subjects = Subject.objects.filter(user=user)
 
-    # Search filter
-    query = request.GET.get('q', '').strip()
+    # Search filter (bounded)
+    query = clamp_search_query(request.GET.get('q', ''))
     if query:
         assignments = assignments.filter(
             Q(title__icontains=query) |
@@ -104,6 +105,26 @@ def assignment_edit_view(request, assignment_id):
         form = AssignmentForm(instance=assignment, user=user)
 
     return render(request, 'assignments/form.html', {'form': form, 'assignment': assignment, 'title': 'Edit Assignment'})
+
+
+@login_required
+def assignment_attachment_download_view(request, assignment_id):
+    """
+    Authenticated owner-only file download endpoint for assignment attachments.
+    Replaces raw public /media/ exposure and enforces Content-Disposition: attachment + nosniff.
+    """
+    assignment = get_object_or_404(Assignment, id=assignment_id, user=request.user)
+    if not assignment.attachment:
+        raise Http404("Attachment not found.")
+
+    file_field = assignment.attachment
+    if not file_field.storage.exists(file_field.name):
+        raise Http404("Attachment file no longer exists on storage.")
+
+    safe_name = os.path.basename(file_field.name) or "attachment"
+    response = FileResponse(file_field.open('rb'), as_attachment=True, filename=safe_name)
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 @login_required

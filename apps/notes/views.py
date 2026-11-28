@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db.models import Q
 from .models import Note
 from .forms import NoteForm
+from config.security import clamp_search_query
 
 
 @login_required
@@ -17,7 +18,7 @@ def note_list_view(request):
     user = request.user
     notes = Note.objects.filter(user=user)
 
-    query = request.GET.get('q', '').strip()
+    query = clamp_search_query(request.GET.get('q', ''))
     if query:
         notes = notes.filter(Q(title__icontains=query) | Q(content__icontains=query))
 

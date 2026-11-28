@@ -102,6 +102,15 @@ class UserProfileForm(forms.ModelForm):
             'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 bg-white text-sm'
         })
     )
+    current_password = forms.CharField(
+        required=False,
+        label="Current Password (Required to Change Email)",
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 text-sm placeholder-slate-400',
+            'placeholder': 'Enter current password only if changing email',
+            'autocomplete': 'current-password'
+        })
+    )
 
     class Meta:
         model = User
@@ -163,6 +172,19 @@ class UserProfileForm(forms.ModelForm):
     def clean_default_landing_view(self):
         val = self.cleaned_data.get('default_landing_view')
         return val or getattr(self.instance, 'default_landing_view', None) or 'dashboard'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_email = (cleaned_data.get('email') or '').strip().lower()
+        original_email = (getattr(self.instance, 'email', '') or '').strip().lower()
+        if new_email and original_email and new_email != original_email:
+            current_pw = cleaned_data.get('current_password') or ''
+            if not self.instance.check_password(current_pw):
+                self.add_error(
+                    'current_password',
+                    "Please enter your current password to authorize changing your email address."
+                )
+        return cleaned_data
 
 
 
